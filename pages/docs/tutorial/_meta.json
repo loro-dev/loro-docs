@@ -1,0 +1,15 @@
+{
+  "get_started": "Getting Started",
+  "loro_doc": "Loro Document",
+  "text": "Text",
+  "composition": "Composing CRDTs",
+  "list": "List and Movable List",
+  "map": "Map",
+  "tree": "Tree",
+  "counter": "Counter",
+  "version": "Version",
+  "event": "Event Handling",
+  "encoding": "Export Mode",
+  "cursor": "Cursor",
+  "time_travel": "Time Travel"
+}

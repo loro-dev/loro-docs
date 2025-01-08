@@ -1,0 +1,6 @@
+{
+    "nodeModulesDir": "auto",
+    "tasks": {
+        "check": "deno run -A ./run_code_blocks.ts"
+    }
+}

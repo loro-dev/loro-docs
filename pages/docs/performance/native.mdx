@@ -1,0 +1,18 @@
+# Native Benchmarks
+
+[This native benchmark](https://github.com/zxch3n/crdt-bench-native) is based on
+the Rust implementation of each crate.
+
+- Conducted on a M2 Max CPU, dated 2024-10-18.
+- The tasks with names starting with `automerge` use the automerge paper
+  dataset.
+- In this benchmark, compression is disabled for both automerge and loro.
+- Diamond-type doesn't support the list type yet.
+
+| Tasks                   | automerge | loro      | diamond-type | yrs       |
+| :---------------------- | :-------- | :-------- | :----------- | :-------- |
+| automerge - apply       | 450.91 ms | 88.19 ms  | 15.63 ms     | 4238.8 ms |
+| automerge - decode time | 506.30 ms | 0.189 ms  | 2.19 ms      | 3.82 ms   |
+| automerge - encode time | 17.65 ms  | 0.416 ms  | 1.15 ms      | 0.759 ms  |
+| concurrent list inserts | 81.07 ms  | 130.63 ms | 57.08 ms     | 13.95 ms  |
+| list_random_insert_1k   | 296.64 ms | 12.15 ms  | 4.32 ms      | 5.83 ms   |

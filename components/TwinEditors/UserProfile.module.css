@@ -1,0 +1,41 @@
+.UserProfile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.Avatar {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 60px;
+  overflow: hidden;
+}
+
+.UserInformation {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: -2px;
+}
+
+.UserName {
+  color: #fff;
+  font-family: Poppins, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: normal;
+}
+
+.Version {
+  color: rgba(255, 255, 255, 0.2);
+  font-family: Poppins, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  cursor: default;
+}

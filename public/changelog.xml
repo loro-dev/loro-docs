@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Loro Changelog</title>
+        <link>https://loro.dev</link>
+        <description>changelog of loro crdt</description>
+        <lastBuildDate>Wed, 08 Jan 2025 15:37:10 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[release v1.0.0]]></title>
+            <link>/changelog/v1.0.0-beta</link>
+            <guid>/changelog/v1.0.0-beta</guid>
+            <pubDate>Sun, 20 Oct 2024 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<p>We are very excited to announce the release of Loro v1.0, a major milestone.</p>
+<p>It has a stable encoding format, faster document import and export speed, better version control capabilities, and a shallow snapshot. For more information, please check <a href="https://loro.dev/blog/v1.0">the blog</a>.</p>
+<p>The following are the specific API changes:</p>
+<h2>New</h2>
+<h3>LoroDoc</h3>
+<ul>
+<li><code>getChange(id: ID)</code>: get <code>ChangeMeta</code> by <code>ID</code>.</li>
+<li><code>setDetachedEditing(flag: boolean)</code>: Enables editing in detached mode, which is disabled by default.</li>
+<li><code>isDetachedEditingEnabled()</code>: Whether the editing is enabled in detached mode.</li>
+<li><code>setNextCommitMessage(msg: string)</code>: Set the commit message of the next commit.</li>
+<li><code>shallowSinceVV()</code>: The doc only contains the history since this version.</li>
+<li><code>shallowSinceFrontiers()</code>: The doc only contains the history since this version.</li>
+<li><code>export(mode: ExportMode)</code>: Export the document based on the specified ExportMode. see more details <a href="/docs/tutorial/encoding">here</a>.</li>
+<li><code>getDeepValueWithID()</code>: Get deep value of the document with container id.</li>
+<li><code>subscribeLocalUpdates(callback:(bytes: Uint8Array) =&gt; void)</code>: Subscribe to updates from local edits.</li>
+<li><code>getPathToContainer(id: ContainerID)</code>: Get the path from the root to the container.</li>
+<li><code>JSONPath(jsonPath: string)</code>: Evaluate JSONPath against a LoroDoc.</li>
+<li><code>forkAt(frontiers: Frontiers): LoroDoc</code>: Creates a new LoroDoc at a specified version (Frontiers)</li>
+<li><code>getPendingTxnLength():number</code>: Get the number of operations in the pending transaction.</li>
+<li><code>travelChangeAncestors(ids: ID[], callback: (meta: ChangeMeta)-&gt;bool)</code>: Iterate over all changes including the input id in order, and stop iterating if the callback returns false.</li>
+</ul>
+<h3>LoroText</h3>
+<ul>
+<li><code>updateByLine(text: string)</code>: Update the current text based on the provided text line by line like git.</li>
+</ul>
+<h3>LoroList</h3>
+<ul>
+<li><code>toArray(): ValueOrContainer[]</code>: Get elements of the list. If the value is a child container, the corresponding <code>Container</code> will be returned.</li>
+<li><code>clear()</code>: Delete all elements in the list.</li>
+</ul>
+<h3>LoroMovableList</h3>
+<ul>
+<li><code>toArray(): ValueOrContainer[]</code>: Get elements of the list. If the value is a child container, the corresponding <code>Container</code> will be returned.</li>
+<li><code>clear()</code>: Delete all elements in the list.</li>
+</ul>
+<h3>LoroMap</h3>
+<ul>
+<li><code>clear()</code>: Delete all key-value pairs in the map.</li>
+</ul>
+<h3>LoroTree</h3>
+<ul>
+<li><code>enableFractionalIndex(jitter: number)</code>: Set whether to generate fractional index for Tree Position.</li>
+<li><code>disableFractionalIndex()</code>: Disable the fractional index generation for Tree Position when
+you don&#39;t need the Tree&#39;s siblings to be sorted. The fractional index will be always default.</li>
+<li><code>isFractionalIndexEnabled()</code>: Whether the tree enables the fractional index generation.</li>
+<li><code>isNodeDeleted(id: TreeID)</code>: Return <code>undefined</code> if the node is not exist, otherwise return <code>true</code> if the node is deleted.</li>
+<li><code>getNodes(prop: getNodesProp): LoroTreeNode[]</code>: Get the flat array of the forest. If <code>with_deleted</code> is true, the deleted nodes will be included.</li>
+</ul>
+<h3>UndoManager</h3>
+<ul>
+<li><code>clear()</code>: Clear the Undo and Redo stack of <code>UndoManager</code></li>
+</ul>
+<h2>Changes</h2>
+<h3>LoroDoc</h3>
+<ul>
+<li>Move <code>setFractionalIndexJitter()</code> to <code>LoroTree</code>, you can set whether to enable or disable it for each <code>Tree Container</code>.</li>
+<li><code>import()</code>, <code>importWith()</code> and <code>importJsonUpdates</code> will return <code>ImportStatus</code> for indicating which ops have been successfully applied and which ops are pending.</li>
+<li>New Subscription for event.</li>
+<li>In Loro 1.0, <code>doc.version()</code> <code>doc.frontiers()</code> <code>doc.oplogVersion()</code> and <code>doc.oplogFrontiers()</code> even if ops has not been committed, it indicates the latest version of all operations.</li>
+<li>rename <code>Loro</code> to <code>LoroDoc</code>.</li>
+</ul>
+<h3>LoroTree</h3>
+<ul>
+<li><code>contains(id: TreeID)</code>: Return true even if the node exists in the internal state and has been deleted.</li>
+<li><code>nodes()</code>: deleted nodes will be included now, you can use <code>isDeleted()</code> to filter.</li>
+<li><code>toJSON()</code>: Now use the hierarchical approach to express the tree structure.</li>
+</ul>
+<h2>Deprecation</h2>
+<h3>LoroDoc</h3>
+<ul>
+<li><code>exportFrom(version)</code> and <code>exportSnapshot()</code> are deprecated, use <code>export(mode: ExportMode)</code> instead.</li>
+</ul>
+]]></content:encoded>
+        </item>
+    </channel>
+</rss>

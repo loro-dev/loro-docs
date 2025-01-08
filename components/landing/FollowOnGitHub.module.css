@@ -1,0 +1,18 @@
+.GitHubIcon {
+  flex-shrink: 0;
+  fill: var(--blue---green, linear-gradient(94deg, #98b0ff 0%, #42ffa4 93.93%));
+}
+
+.AdvertisingText {
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  background: var(
+    --blue---green,
+    linear-gradient(94deg, #98b0ff 0%, #42ffa4 93.93%)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

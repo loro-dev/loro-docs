@@ -1,0 +1,85 @@
+---
+version: "v1.0.0"
+title: "release v1.0.0"
+date: 2024/10/21
+# breakingChange: false
+# category: ["Encoding", "Tree"]
+---
+
+We are very excited to announce the release of Loro v1.0, a major milestone.
+
+It has a stable encoding format, faster document import and export speed, better version control capabilities, and a shallow snapshot. For more information, please check [the blog](https://loro.dev/blog/v1.0).
+
+The following are the specific API changes:
+
+## New
+
+### LoroDoc
+
+- `getChange(id: ID)`: get `ChangeMeta` by `ID`.
+- `setDetachedEditing(flag: boolean)`: Enables editing in detached mode, which is disabled by default.
+- `isDetachedEditingEnabled()`: Whether the editing is enabled in detached mode.
+- `setNextCommitMessage(msg: string)`: Set the commit message of the next commit.
+- `shallowSinceVV()`: The doc only contains the history since this version.
+- `shallowSinceFrontiers()`: The doc only contains the history since this version.
+- `export(mode: ExportMode)`: Export the document based on the specified ExportMode. see more details [here](/docs/tutorial/encoding).
+- `getDeepValueWithID()`: Get deep value of the document with container id.
+- `subscribeLocalUpdates(callback:(bytes: Uint8Array) => void)`: Subscribe to updates from local edits.
+- `getPathToContainer(id: ContainerID)`: Get the path from the root to the container.
+- `JSONPath(jsonPath: string)`: Evaluate JSONPath against a LoroDoc.
+- `forkAt(frontiers: Frontiers): LoroDoc`: Creates a new LoroDoc at a specified version (Frontiers)
+- `getPendingTxnLength():number`: Get the number of operations in the pending transaction.
+- `travelChangeAncestors(ids: ID[], callback: (meta: ChangeMeta)->bool)`: Iterate over all changes including the input id in order, and stop iterating if the callback returns false.
+
+### LoroText
+
+- `updateByLine(text: string)`: Update the current text based on the provided text line by line like git.
+
+### LoroList
+
+- `toArray(): ValueOrContainer[]`: Get elements of the list. If the value is a child container, the corresponding `Container` will be returned.
+- `clear()`: Delete all elements in the list.
+
+### LoroMovableList
+
+- `toArray(): ValueOrContainer[]`: Get elements of the list. If the value is a child container, the corresponding `Container` will be returned.
+- `clear()`: Delete all elements in the list.
+
+### LoroMap
+
+- `clear()`: Delete all key-value pairs in the map.
+
+### LoroTree
+
+- `enableFractionalIndex(jitter: number)`: Set whether to generate fractional index for Tree Position.
+- `disableFractionalIndex()`: Disable the fractional index generation for Tree Position when
+  you don't need the Tree's siblings to be sorted. The fractional index will be always default.
+- `isFractionalIndexEnabled()`: Whether the tree enables the fractional index generation.
+- `isNodeDeleted(id: TreeID)`: Return `undefined` if the node is not exist, otherwise return `true` if the node is deleted.
+- `getNodes(prop: getNodesProp): LoroTreeNode[]`: Get the flat array of the forest. If `with_deleted` is true, the deleted nodes will be included.
+
+### UndoManager
+
+- `clear()`: Clear the Undo and Redo stack of `UndoManager`
+
+## Changes
+
+### LoroDoc
+
+- Move `setFractionalIndexJitter()` to `LoroTree`, you can set whether to enable or disable it for each `Tree Container`.
+- `import()`, `importWith()` and `importJsonUpdates` will return `ImportStatus` for indicating which ops have been successfully applied and which ops are pending.
+- New Subscription for event.
+- In Loro 1.0, `doc.version()` `doc.frontiers()` `doc.oplogVersion()` and `doc.oplogFrontiers()` even if ops has not been committed, it indicates the latest version of all operations.
+- rename `Loro` to `LoroDoc`.
+
+### LoroTree
+
+- `contains(id: TreeID)`: Return true even if the node exists in the internal state and has been deleted.
+- `nodes()`: deleted nodes will be included now, you can use `isDeleted()` to filter.
+- `toJSON()`: Now use the hierarchical approach to express the tree structure.
+
+## Deprecation
+
+### LoroDoc
+
+- `exportFrom(version)` and `exportSnapshot()` are deprecated, use `export(mode: ExportMode)` instead.

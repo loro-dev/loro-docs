@@ -1,0 +1,181 @@
+---
+keywords: "crdt, undo, redo, undo manager, cursor, selection, collaborate"
+description: "how to use loro undo manager and show all APIs of loro undo manager."
+---
+
+# Undo
+
+We provide an `UndoManager` that helps you manage the undo/redo stack and can be
+used during concurrent editing. It also supports cursor position transformation.
+In the case of concurrent editing, you will want the undo/redo to be **local**,
+meaning it should only undo/redo local operations without affecting other
+collaborators' edits.
+
+### Why Local Undo/Redo?
+
+If undo/redo is global, it often does not meet expectations. Consider the
+following scenario:
+
+- **User A and User B are collaborating**: They are likely editing different
+  parts of the document.
+- **User A performs an undo**: If this undoes User B's operations, User A might
+  see no changes and think the undo failed, as User B might be editing content
+  outside of User A's view.
+- **User B's perspective**: User B would find their recent edits deleted without
+  knowing how it happened.
+
+## Usage
+
+To create an `UndoManager`, you can specify:
+
+- Which local operations are not recorded.
+- The merge range for undo operations.
+- The stack depth.
+
+```ts no_run
+const undoManager = new UndoManager(doc, {
+    maxUndoSteps: 100, // default 100
+    mergeInterval: 1000, // default 1000ms
+    excludeOriginPrefixes: ["sys:"], // default []
+    onPush: ...,
+    onPop: ...
+}));
+```
+
+## Limitations
+
+It can only track a single peer. When the peer ID of the document changes, it will
+clear the undo stack and the redo stack and track the new peer ID.
+
+## Restoring Selections
+
+When utilizing undo/redo functionalities, it is important for our application to
+restore the selection to its position prior to the operation that is being
+undone or redone. This task is particularly challenging in a collaborative
+setting where remote operations can alter the cursor's position (for instance,
+if the cursor needs to revert to the 5th position, but remote operations have
+added new characters before this position).
+
+<details>
+<summary>Challenges</summary>
+
+- **Local undo/redo**: Local undo and redo delete and recreate elements. If we
+  use CRDT-based stable positions, they might lock on to the deleted elements,
+  while the user's expectation is for the cursor to return to the newly created
+  elements after redo.
+- **Example**:
+  ```
+  A fox jumped
+  ```
+  - Select "fox" and delete it.
+  - Undo.
+  - After undo, the three characters "fox" should be recreated, and the cursor
+    should select these three characters. However, if we use stable positions,
+    it would lock onto the initially deleted characters, and after undo, the
+    absolute positions obtained would be `start = 2` and `end = 2`.
+
+</details>
+
+### Solution
+
+We support storing [`cursors`](/docs/tutorial/cursor) for each undo/redo action
+within the `UndoManager`. The `UndoManager` will adjust the stored cursors to
+reflect changes from remote edits or other undo/redo operations, ensuring they
+match the current state of the document.
+
+They need be handled by the `onPush` and `onPop` callbacks.
+
+On `onPush`, you can return a list of `Cursor`s that you want to store. On
+`onPop`, you can retrieve the stored cursors and use them to restore the
+selection.
+
+Typically, you may need to store selections in an undo/redo item in the
+following cases:
+
+- When a new local change is applied, we need to record a new undo item.
+  Therefore, we must store the selection **before** the operation to be undone.
+  - **Purpose**: Storing the selection **before** is crucial because we may lose
+    the selection after applying the operation. If the user selects text and
+    deletes it, after undo, the `onPop` can retrieve the state of the selected
+    deleted content.
+- **First undo operation**: Store the current document's selection for the
+  corresponding redo item.
+  - **Purpose**: After redo, it can return to the initial selection state.
+
+Internally, we also automatically handle the storage and reset of cursors in the
+undo/redo loop state.
+
+```ts
+const doc = new LoroDoc();
+let cursors: Cursor[] = [];
+let poppedCursors: Cursor[] = [];
+const undo = new UndoManager(doc, {
+  mergeInterval: 0,
+  onPop: (isUndo, value, counterRange) => {
+    poppedCursors = value.cursors;
+  },
+  onPush: () => {
+    return { value: null, cursors: cursors };
+  },
+});
+
+doc.getText("text").insert(0, "hello world");
+doc.commit();
+cursors = [
+  doc.getText("text").getCursor(0)!,
+  doc.getText("text").getCursor(5)!,
+];
+// delete "hello ", the cursors should be transformed
+doc.getText("text").delete(0, 6);
+doc.commit();
+expect(poppedCursors.length).toBe(0);
+undo.undo();
+expect(poppedCursors.length).toBe(2);
+expect(doc.toJSON()).toStrictEqual({
+  text: "hello world",
+});
+// expect the cursors to be transformed back
+expect(doc.getCursorPos(poppedCursors[0]).offset).toBe(0);
+expect(doc.getCursorPos(poppedCursors[1]).offset).toBe(5);
+```
+
+<details>
+<summary>Implementation</summary>
+
+[The implementation of undo/redo](https://github.com/loro-dev/loro/pull/361)
+follows a model similar to ProseMirror/Quill, which are based on OT (Operational
+Transformation) algorithms (so we also implement basic OT primitives
+internally).
+
+When implementing undo/redo operations, we need to ensure the following
+properties:
+
+- Do not undo remote inserts.
+- Redo after undo should return to the original state.
+- If there is no concurrent editing, undo should return to the previous
+  version's state.
+
+Therefore, we have also added some relevant checks in our internal fuzzing tests
+to ensure correctness.
+
+</details>
+
+## Demonstration
+
+import { ReactPlayer } from "components/video";
+import Caption from "components/caption";
+
+{" "}
+
+<ReactPlayer
+  url="/static/collab-undo.mov"
+  width={512}
+  style={{ maxWidth: "calc(100vw - 40px)" }}
+  height={388}
+  muted={true}
+  loop={true}
+  controls={true}
+  playing={true}
+/>
+
+<Caption>ProseMirror with Loro binding</Caption>

@@ -1,0 +1,20 @@
+.Card {
+  position: relative;
+  display: flex;
+  padding: 30px 40px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 40px;
+  border: 1px solid #98b0ff45;
+  background: rgba(21, 21, 21, 0.4);
+  border-radius: 50px;
+}
+
+/* For small screen */
+@media screen and (max-width: 600px) {
+  .Card {
+    padding: 20px 22px;
+    border-radius: 24px;
+  }
+}

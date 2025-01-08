@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "paths": {
+      "@components/*": ["./components/*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/utils/*": ["./lib/utils/*"],
+      "flexsearch": ["./node_modules/@types/flexsearch"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "custom-types.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "gen-rss.js"
+  ],
+  "exclude": ["node_modules", "deno_scripts"]
+}

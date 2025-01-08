@@ -1,0 +1,9 @@
+.Table {
+  margin-top: 1.5em;
+}
+
+.Table strong {
+  font-weight: 900;
+  background-color: rgba(213, 240, 8, 0.3);
+}
+

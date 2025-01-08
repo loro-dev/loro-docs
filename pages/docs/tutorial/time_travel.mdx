@@ -1,0 +1,38 @@
+---
+keywords: "crdt, time travel, history, checkout, version control"
+description: "time travel in Loro"
+---
+
+# How to Use Time Travel in Loro
+
+In Loro, you can call `doc.checkout(frontiers)` to jump to the version specified
+by the
+frontiers([Learn more about frontiers](/docs/advanced/version_deep_dive)).
+
+Note that using `doc.checkout(frontiers)` to jump to a specific version places
+the document in a detached state, preventing further edits. To learn more, see
+[_Attached/Detached Status_](/docs/advanced/doc_state_and_oplog#attacheddetached-status).
+To continue editing, reattach the document to the latest version using
+`doc.attach()`. This design is temporary and will be phased out once we have a
+more refined version control API in place.
+
+Below is an example demonstrating Time Travel functionality.
+
+<iframe
+  src="https://loro-react-flow-example.vercel.app/"
+  onClick={() => {
+    window.clarity?.("event", "play-time-travel");
+  }}
+  style={{
+    width: "100%",
+    height: 500,
+    border: 0,
+    borderRadius: 8,
+    marginTop: 16,
+    overflow: "hidden",
+    filter: "invert(1) hue-rotate(180deg)",
+  }}
+  title="zxch3n/loro-react-flow-example/main"
+  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>

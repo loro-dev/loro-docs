@@ -1,0 +1,13 @@
+.Caption {
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  background: var(
+    --blue---green,
+    linear-gradient(94deg, #98b0ff 0%, #42ffa4 93.93%)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

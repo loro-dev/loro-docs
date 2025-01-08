@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://loro.dev
+
+# Sitemaps
+Sitemap: https://loro.dev/sitemap.xml

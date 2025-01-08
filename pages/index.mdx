@@ -1,0 +1,87 @@
+---
+title: "Loro – Reimagine state management with CRDTs"
+keywords:
+  "loro, crdt, state management, local-first software, real-time collaboration,
+  rich text editor"
+description:
+  "Loro - Reimagine state management with CRDTs | Built for local-first
+  software."
+---
+
+import Support from "@components/landing/Support";
+import Features from "@components/landing/Features";
+import FollowOnGitHub from "@components/landing/FollowOnGitHub";
+import Hero from "@components/landing/Hero";
+import Background from "@components/landing/Background";
+import Footer from "@components/landing/Footer";
+import { Separator } from "@ariakit/react";
+import Demo from "@components/richtextDemo";
+
+<div className="relative landing-page-root dark bg-zinc-900">
+  <div style={{ maxWidth: 1300, margin: "0 auto" }}>
+    <Hero />
+    <div className="text-center text-white/95 text-base font-medium leading-normal mt-10">
+      ✨ Loro 1.0 is released! <br/>
+      Read the <a href="/blog/v1.0"><u>announcement</u></a> to learn more
+    </div>
+    <Separator
+      className="mt-4 md:mt-10 mx-5 md:mx-15 border-t border-separator"
+      orientation="horizontal"
+    />
+    <Features />
+    <section className="px-5 md:px-15 z-10 relative">
+      <h2 className="text-2xl not-italic font-semibold leading-[normal] bg-clip-text mb-4 bg-blue-green text-fill-transparent">
+        Rich Text Editor Demo
+      </h2>
+      <Demo />
+    </section>
+    <section className="px-5 md:px-15 mt-10 z-10 relative">
+      <h2 className="text-2xl not-italic font-semibold leading-[normal] bg-clip-text mb-4 bg-blue-green text-fill-transparent">
+        Effortless Document Synchronization, <br/>
+        Even in P2P Environments
+      </h2>
+      ```ts
+      import { LoroDoc, VersionVector } from "npm:loro-crdt@1.0.0-beta.5";
+      const docA = new LoroDoc();
+      const docB = new LoroDoc();
+      docA.setPeerId(0); // You don't need to set peer id manually
+      docA.setPeerId(1); // This example set peer id for deterministic result
+      docA.getText("text").insert(0, "Hello!");
+      docB.getText("text").insert(0, "Hi!");
+      const bytesA: Uint8Array = docA.export({ mode: "update" });
+      const bytesB: Uint8Array = docB.export({ mode: "update" });
+
+      // Exchange bytesA and bytesB via any methods
+      docB.import(bytesA);
+      docA.import(bytesB);
+
+      // The merge result is consistent
+      console.log(docA.getText("text").toString()); // Hello!Hi!
+      console.log(docB.getText("text").toString()); // Hello!Hi!
+      ```
+
+    <div className="mt-8 flex">
+      <a
+        href="/docs/tutorial/get_started"
+        className="px-4 py-2 text-base font-medium text-white bg-zinc-800 hover:bg-zinc-700 transition duration-300 ease-in-out rounded-md"
+      >
+        Get Started
+      </a>
+    </div>
+    </section>
+
+    <Support />
+    <div className="mb-20" />
+    <section className="mt-10 flex flex-col items-center justify-center space-x-2.5">
+      <div>
+        <FollowOnGitHub />
+      </div>
+    </section>
+
+  </div>
+  <Separator
+    className="mt-25 mx-5 md:mx-15 border-t border-separator"
+    orientation="horizontal"
+  />
+  <Footer />
+</div>
