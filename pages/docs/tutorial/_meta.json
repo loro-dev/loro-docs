@@ -10,6 +10,7 @@
   "version": "Version",
   "event": "Event Handling",
   "encoding": "Export Mode",
+  "persistence": "Persistence",
   "cursor": "Cursor",
   "time_travel": "Time Travel"
 }
