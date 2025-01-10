@@ -56,19 +56,10 @@ export default function AlgorithmSection(): JSX.Element {
       />
       <Card
         icon={LettersIcon}
-        caption="Rich Text with Peritext-like CRDT"
+        caption="Rich Text CRDT"
         text={
           <>
-            Drawing inspiration from{" "}
-            <a
-              href="https://www.inkandswitch.com/peritext/"
-              target="_blank"
-              rel="noreferrer"
-              className="underline"
-            >
-              Peritext
-            </a>
-            , Loro manages rich text CRDTs that excel at merging concurrent rich
+            Loro manages rich text CRDTs that excel at merging concurrent rich
             text style edits, maintaining the original intent of each user's
             input as much as possible. Please read our blog,{"  "}
             <a

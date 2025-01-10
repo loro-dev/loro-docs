@@ -87,20 +87,17 @@ CRDT libraries.
 | Features/Important design decisions                                         | Loro  | Diamond-types | Yjs        | Automerge   |
 | :-------------------------------------------------------------------------- | :---- | :------------ | :--------- | :---------- |
 | [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅    | ✅ Inventor   | ❌          | ❌          |
-| [Peritext](https://www.inkandswitch.com/peritext/) Rich Text CRDT           | ✅[1] | ❌            | ❌          | ✅ Inventor |
+| Rich Text CRDT                                                              | ✅    | ❌            | ❌          | ✅          |
 | [Movable Tree](https://ieeexplore.ieee.org/document/9563274)                | ✅    | ❌            | ❌          | ❌ Inventor |
 | [Movable List](https://loro.dev/docs/tutorial/list)                         | ✅    | ❌            | ❌          | ❌ Inventor |
-| Time Travel                                                                 | ✅    | ✅            | ✅[2]       | ✅          |
+| Time Travel                                                                 | ✅    | ✅            | ✅[1]       | ✅          |
 | [Fugue](https://arxiv.org/abs/2305.00583) / Maximal non-interleaving        | ✅    | ✅            | ❌          | ❌          |
 | JSON Types                                                                  | ✅    | ❓            | ✅          | ✅          |
 | Merging Elements in Memory by Run Length Encoding                           | ✅    | ✅            | ✅ Inventor | ❌          |
 | Byzantine-fault-tolerance                                                   | ❌    | ❌            | ❌          | ✅          |
 | Version Control                                                             | ✅    | ❌            | ❌          | ✅          |
 
-- [1] Loro uses [a Peritext-like algorithm](/blog/loro-richtext) to merge the
-  concurrent edits to rich text styles. It's different from the original design
-  but it passes all the criteria listed in the paper.
-- [2] Unlike others, Yjs requires users to store a version vector and a delete
+- [1] Unlike others, Yjs requires users to store a version vector and a delete
   set, enabling time travel back to a specific point.
 - [Fugue](https://arxiv.org/abs/2305.00583) is a text/list CRDTs that can
   minimize the chance of the interleaving anomalies.
