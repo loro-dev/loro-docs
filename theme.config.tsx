@@ -33,7 +33,7 @@ const config: DocsThemeConfig = {
   project: {
     link: "https://github.com/loro-dev/loro",
   },
-  docsRepositoryBase: "https://github.com/loro-dev/loro-docs",
+  docsRepositoryBase: "https://github.com/loro-dev/loro-docs/tree/main",
   navbar: {},
   footer: {
     text: "Loro 2024 ©",
