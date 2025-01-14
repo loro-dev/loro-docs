@@ -110,8 +110,8 @@ Ops missing from each other:
 
 ```tsx
 // doc.version() returns the version vector of the doc
-a.import(b.export({ mode: "update", from: a.version( })));
-b.import(a.export({ mode: "update", from: b.version( })));
+a.import(b.export({ mode: "update", from: a.version() }));
+b.import(a.export({ mode: "update", from: b.version() }));
 ```
 
 ## Directed Acyclic Graph (DAG) History
