@@ -134,7 +134,7 @@ ID, Lamport, Timestamp, etc. In most scenarios, Changes are also consecutive,
 and related metadata can be compressed to some extent. Therefore, we combine
 multiple consecutive Changes into a ChangeBlock, which is the minimum unit for
 encoding Op history. Detailed encoding content can be found in the
-[documentation](https://github.com/loro-dev/loro/blob/dev/crates/loro-internal/src/oplog/change_store/block_encode.rs).
+[documentation](https://github.com/loro-dev/loro/blob/main/crates/loro-internal/src/oplog/change_store/block_encode.rs).
 
 We use the first Change ID of the ChangeBlock as the query key, and the encoded
 ChangeBlock as the value. This allows for quick querying of specified ID Changes
@@ -155,7 +155,7 @@ encode mode.
 
 The oplog bytes, latest state bytes, and shallow state bytes are all exported
 using the
-[LSM encoding structure](https://github.com/loro-dev/loro/blob/dev/crates/kv-store/src/lib.rs).
+[LSM encoding structure](https://github.com/loro-dev/loro/blob/main/crates/kv-store/src/lib.rs).
 
 ## Snapshot Encoding Layout
 
