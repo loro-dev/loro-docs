@@ -203,6 +203,8 @@ expect(doc.toJSON()).toStrictEqual({
 
 ## Save and Load
 
+Loro is a pure library and does not handle network protocols or storage mechanisms. It is your responsibility to manage the storage and transmission of the binary data exported by Loro.
+
 To save the document, use `doc.export({mode: "snapshot"})` to get its binary
 form. To open it again, use `doc.import(data)` to load this binary data.
 
