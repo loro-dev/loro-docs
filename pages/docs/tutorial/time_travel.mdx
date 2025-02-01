@@ -27,7 +27,7 @@ over time.
 Before this example will work, it is important that the edits made to the document
 have had [timestamp storage](/docs/advanced/timestamp) enabled:
 
-```ts
+```ts no_run
 doc.setRecordTimestamp(true);
 ```
 
@@ -40,7 +40,8 @@ intuition.
 The first step is to load our document. Here we assume that you have a snapshot from your database
 or API.
 
-```ts
+```ts no_run
+
 // Get the snapshot for your doc from your database / API
 let snapshot = fetchSnapshot();
 
@@ -52,7 +53,7 @@ doc.import(snapshot);
 Next we must collect and sort the timestamps for every change in the document. We want uesrs to be
 able to drag a slider to select a timestamp out of this list.
 
-```ts
+```ts no_run
 // Collect all changes from the document
 const changes = doc.getAllChanges();
 
@@ -113,7 +114,7 @@ const getFrontiersForTimestamp = (
 Finally, all we can get the index from our slider, get the timestamp from our list, and then
 checkout the calculated frontiers.
 
-```ts
+```ts no_run
 let sliderIdx = 3;
 const timestamp = timestamps[sliderIdx - 1];
 const frontiers = getFrontiersForTimestamp(changes, timestamp);
