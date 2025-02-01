@@ -32,3 +32,5 @@ docB.import(docA.export({ mode: "snapshot" }));
 console.log(docA.toJSON()); // OUTPUT: { map: { a: "Hi" } }
 console.log(docB.toJSON()); // OUTPUT: { map: { a: "Hi" } }
 ```
+
+> **Note**: When calling `map.set(key, value)` on a LoroMap, if `map.get(key)` already returns `value`, the operation will be a no-op (no operation recorded).
