@@ -1,6 +1,7 @@
 {
   "get_started": "Getting Started",
   "loro_doc": "Loro Document",
+  "sync": "Sync",
   "text": "Text",
   "composition": "Composing CRDTs",
   "list": "List and Movable List",

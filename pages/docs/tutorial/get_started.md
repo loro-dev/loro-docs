@@ -304,7 +304,7 @@ listB.delete(1, 1);
 // `version` is the version vector of another document
 const missingOps = docB.export({
   mode: "update",
-  from: docA.version(),
+  from: docA.oplogVersion(),
 });
 docA.import(missingOps);
 

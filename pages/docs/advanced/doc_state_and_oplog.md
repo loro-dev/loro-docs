@@ -36,6 +36,41 @@ state, the version of DocState and the latest version recorded in OpLog may not
 always match. When they align, it is in an _attached_ state; otherwise, it's in
 a _detached_ state.
 
+```ts
+const doc = new LoroDoc();
+doc.setPeerId(1);
+doc.getText("text").insert(0, "Hello");
+const doc2 = doc.fork(); // create a fork of the doc
+console.log(doc.version().toJSON());
+// Map(1) { "1" => 5 }
+console.log(doc.oplogVersion().toJSON());
+// Map(1) { "1" => 5 }
+
+doc.checkout([{ peer: "1", counter: 1 }]);
+console.log(doc.version().toJSON());
+// Map(1) { "1" => 2 }
+console.log(doc.oplogVersion().toJSON());
+// Map(1) { "1" => 5 }
+
+doc2.setPeerId(2);
+doc2.getText("text").insert(5, "!");
+doc.import(doc2.export({ mode: "update" }));
+console.log(doc.version().toJSON());
+// Map(1) { "1" => 2 }
+console.log(doc.oplogVersion().toJSON());
+// Map(2) { "1" => 5, "2" => 1 }
+
+console.log(doc.isDetached()); // true
+doc.attach();
+console.log(doc.version().toJSON());
+// Map(2) { "1" => 5, "2" => 1 }
+console.log(doc.oplogVersion().toJSON());
+// Map(2) { "1" => 5, "2" => 1 }
+
+```
+
+![DocState and OpLog Detached Example](./images/version-4.png)
+
 The doc cannot be edited in the detached mode. Users must use `attach()` to
 return to the latest version to continue editing.
 
