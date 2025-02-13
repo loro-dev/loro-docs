@@ -41,33 +41,60 @@ expect(docA.toJSON()).toStrictEqual(docB.toJSON());
 
 Due to CRDT properties, document consistency is guaranteed when peers receive the same updates, regardless of order or duplicates.
 
-- First Sync: Initial synchronization between peers (done in the example above)
-- Real-time Sync (shown in the example below):
-  - Subscribe to local updates
-  - Broadcast updates directly to all the other peers
-  - No need for version comparison
-  - As long as updates reach all peers, consistency is maintained
+### Sync Strategies
 
-Example: 
+1. **First Sync** (Initial synchronization between peers):
+   - New peers can exchange their [Version Vectors](/docs/tutorial/version) to determine missing updates
+   - Use `doc.export({ mode: "update", from: versionVector })` to get updates since the peer's last known state.
+     You may as well send the whole history by `doc.export({ mode: "update" })` as shown in the example above.
+   - Example shows basic first sync scenario
 
-```ts 
-const docA = new LoroDoc();
-const docB = new LoroDoc();
-// Assume docA and docB finished the first sync
+2. **Realtime Sync** (Continuous updates):
+   - Subscribe to local updates
+   - Broadcast updates directly to all other peers
+   - No need for version comparison after initial sync
+   - As long as updates reach all peers, consistency is maintained
 
-docA.subscribeLocalUpdates((update) => {
-  // simulate sending update to docB
-  docB.import(update);
+### Example
+
+Here's how two peers can establish realtime sync when one comes online with offline changes:
+
+1. Both peers exchange their version information
+2. Each peer shares their missing updates:
+   - `doc2` gets updates it's missing from `doc1`
+   - `doc1` gets updates it's missing from `doc2`
+3. Both peers establish realtime sync to stay connected
+
+```ts
+const doc1 = new LoroDoc();
+doc1.getText("text").insert(0, "Hello");
+// Peer2 joins the network
+const doc2 = new LoroDoc();
+// ... doc2 may import its local snapshot
+
+// 1. Exchange version information
+const peer2Version = doc2.oplogVersion();
+const peer1Version = doc1.oplogVersion();
+
+// 2. Request missing updates from existing peers
+const missingOps = doc1.export({ 
+  mode: "update",
+  from: peer2Version 
+});
+doc2.import(missingOps);
+const missingOps2 = doc2.export({
+  mode: "update",
+  from: peer1Version,
+});
+doc1.import(missingOps2);
+
+// 3. Establish realtime sync
+doc2.subscribeLocalUpdates((update) => {
+  // websocket.send(update);
+});
+doc1.subscribeLocalUpdates((update) => {
+  // websocket.send(update);
 });
 
-docB.subscribeLocalUpdates((update) => {
-  // simulate sending update to docA
-  docA.import(update);
-});
-
-docA.getText("text").insert(0, "Hello");
-docA.commit();
-await Promise.resolve(); // await the event to be emitted
-console.log(docB.toJSON());
-// { text: "Hello" }
+// Now both peers are in sync and can collaborate
 ```
