@@ -179,3 +179,130 @@ import Caption from "components/caption";
 />
 
 <Caption>ProseMirror with Loro binding</Caption>
+
+## Understanding the Undo/Redo Stack
+
+The UndoManager maintains two stacks:
+
+1. **Undo Stack**: Contains operations that can be undone
+2. **Redo Stack**: Contains operations that were undone and can be redone
+
+### How the Callbacks Work
+
+The `onPush` and `onPop` callbacks are triggered when these stacks change:
+
+- **onPush(isUndo, range, event)**: Called when a new item is pushed to either stack
+  - `isUndo: boolean`: `true` for the undo stack, `false` for the redo stack
+  - `range: (number, number)`: The operations' counter range that associated with the undo/redo action
+  - Returns: An object that can include `value` (any data you want to store) and `cursors` (cursor positions)
+
+- **onPop(isUndo, value)**: Called when an item is popped from either stack
+  - `isUndo`: `true` for the undo stack, `false` for the redo stack
+  - `value`: The value you returned from `onPush` when this item was created
+
+### Understanding Action Merging
+
+The `mergeInterval` option in the UndoManager controls how closely spaced operations are grouped:
+
+```ts
+const undoManager = new UndoManager(doc, {
+  mergeInterval: 1000, // 1000ms = 1 second (default)
+});
+```
+
+**How mergeInterval works:**
+
+- Operations occurring within the specified time interval (in milliseconds) will be merged into a single undo action
+- Even though these operations are merged, `onPush` events will still be triggered for each individual operation
+- When undoing, all merged operations will be undone as a single unit
+- A lower value results in more granular undo steps; a higher value creates fewer, more comprehensive undo steps
+- Set to `0` to disable merging entirely (every operation becomes a separate undo step)
+
+### Stack Operations Flow
+
+1. When a local transaction is committed, a new undo item is pushed to the undo stack (triggers `onPush` with `isUndo=true`)
+2. When `.undo()` is called:
+   - An item is popped from the undo stack (triggers `onPop` with `isUndo=true`)
+   - A corresponding item is pushed to the redo stack (triggers `onPush` with `isUndo=false`)
+3. When `.redo()` is called:
+   - An item is popped from the redo stack (triggers `onPop` with `isUndo=false`)
+   - A corresponding item is pushed to the undo stack (triggers `onPush` with `isUndo=true`)
+
+### Example: Text Editing with Undo/Redo
+
+Consider a simple text editor that uses Loro for collaboration. Let's walk through what happens during typical editing operations:
+
+```ts
+// Create document and undo manager
+const doc = new LoroDoc();
+const textField = doc.getText("textField");
+
+// Set up undo manager with callbacks to track changes
+const undoManager = new UndoManager(doc, {
+  // Store cursor positions and any other state you need
+  onPush: (isUndo, range) => {
+    if (isUndo) {
+      console.log("Action recorded for undo");
+    } else {
+      console.log("Action recorded for redo");
+    }
+    // Return whatever data you want associated with this action
+    return {
+      value: { affectedRange: range },
+      cursors: [/* your cursor positions */]
+    };
+  },
+  
+  onPop: (isUndo, storedData) => {
+    // Access the data you stored during onPush
+    const { value, cursors } = storedData;
+    
+    if (isUndo) {
+      console.log("Retrieving data for undo");
+    } else {
+      console.log("Retrieving data for redo");
+    }
+    
+    // Use the stored cursors to restore selection
+    // applyStoredCursors(cursors);
+  },
+
+  mergeInterval: 0,
+});
+
+// User types "Hello"
+textField.insert(0, "Hello");
+doc.commit();
+// → onPush triggered (isUndo=true) - Adds to undo stack
+
+// User types " World"
+textField.insert(5, " World");
+doc.commit();
+// → onPush triggered (isUndo=true) - Adds to undo stack
+
+// User clicks Undo button
+undoManager.undo();
+// → onPop triggered (isUndo=true) - Removes " World" from document
+// → onPush triggered (isUndo=false) - Adds to redo stack
+
+// Document now contains only "Hello"
+
+// User clicks Redo button
+undoManager.redo();
+// → onPop triggered (isUndo=false) - Retrieves " World" operation
+// → onPush triggered (isUndo=true) - Adds back to undo stack
+
+// Document now contains "Hello World" again
+```
+
+When the user clicks Undo, two things happen:
+1. The last action is popped from the undo stack (removing " World")
+2. That action is pushed to the redo stack so it can be redone later
+
+This approach ensures that local changes can be undone without affecting other users' edits, making it ideal for collaborative editing.
+
+### Cursor Efficiency
+
+The built-in cursor solution is optimized for performance and handles collaborative scenarios efficiently, including situations where peers may 
+change the document concurrently during undo/redo operations. For complex editors like rich text editors, the cursor implementation provides the 
+best balance of performance and correctness.
