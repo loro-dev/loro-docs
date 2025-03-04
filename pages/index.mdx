@@ -16,6 +16,7 @@ import Background from "@components/landing/Background";
 import Footer from "@components/landing/Footer";
 import { Separator } from "@ariakit/react";
 import Demo from "@components/richtextDemo";
+import Testimonial from "@components/Testimonial";
 
 <div className="relative landing-page-root dark bg-zinc-900">
   <div style={{ maxWidth: 1300, margin: "0 auto" }}>
@@ -85,84 +86,43 @@ import Demo from "@components/richtextDemo";
       </div>
     </section>
 
-    <section className="px-5 md:px-15 mt-20 z-10 mb-20 relative">
-      <div className="flex flex-col md:flex-row gap-8 md:[&>*]:w-1/2">
-        <div className="p-6 bg-zinc-800 rounded-lg hover:bg-zinc-700/50 cursor-pointer transition-all duration-300 flex flex-col justify-between" 
-             style={{minHeight: '250px'}}
-             onClick={() => {
-               const el = document.getElementById('latch-quote');
-               const firstChild = el.children[0];
-               const secondChild = el.children[1];
-               const firstClass = firstChild.className;
-               firstChild.className = secondChild.className;
-               secondChild.className = firstClass;
-             }}>
-          <blockquote id="latch-quote" data-expanded="false" className="text-white/95 italic">
-            <div className="block">
-              "We use Loro as the document representation for our web-based computational notebook software... This library is a great step forward toward making 'multiplayer' apps the norm."
-            </div>
-            <div className="hidden">
-              "We use Loro as the document representation for our web-based computational notebook software, Latch Plots, via web-assembly. With a CRDT, we can support multiple simultaneous users without having to reinvent the wheel building custom error-prone state management systems. Multi-user interactions 'just work' in a lot of cases and, for ironing out the kinks in the rest, Loro provides state-of-the-art building blocks.<br/><br/>  
-              Compared to other CRDT implementations, Loro better matches user expectations and feels more production-ready—the extensive documentation and blogs go into the gory technical details. When the docs are not enough, the Loro team has been fantastic in direct communication—supporting us in designing the state data model and with general issues, and taking our needs and wants into account in planning the project roadmap. <br/><br/> 
-              This library is a great step forward toward making 'multiplayer' apps the norm, in a world where the best most users see is still the relatively primitive operational systems like in Google Docs."
-            </div>
-          </blockquote>
-          <div className="mt-4 font-medium text-white/95">
-            <div className="flex flex-row gap-4 items-center">
-              <img src="/images/max.jpg" alt="Max" className="w-16 h-16 rounded-full object-cover" />
-              <div>
-                <p>Max</p>
-                <p className="text-sm">Latch.bio</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="p-6 bg-zinc-800 rounded-lg hover:bg-zinc-700/50 transition-all duration-300 flex flex-col justify-between" 
-             style={{minHeight: '250px'}}>
-          <blockquote data-expanded="false" className="text-white/95 italic">
-            <div className="block">
-              "Powerful, performant, and well-designed. The best CRDT for anyone building serious collaborative software."
-            </div>
-          </blockquote>
-          <div className="mt-4 font-medium text-white/95">
-            <div className="flex flex-row gap-4 items-center">
-              <img src="/images/aj_nandi.jpeg" alt="AJ Nandi" className="w-16 h-16 rounded-full" />
-              <div>
-                <p>AJ Nandi</p>
-                <p className="text-sm">Subset.so</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="p-6 bg-zinc-800 rounded-lg hover:bg-zinc-700/50 cursor-pointer transition-all duration-300 flex flex-col justify-between" 
-             style={{minHeight: '250px'}}
-             onClick={() => {
-               const el = document.getElementById('stealth-quote');
-               const firstChild = el.children[0];
-               const secondChild = el.children[1];
-               const firstClass = firstChild.className;
-               firstChild.className = secondChild.className;
-               secondChild.className = firstClass;
-             }}>
-          <blockquote id="stealth-quote" data-expanded="false" className="text-white/95 italic">
-            <div className="block">
-              "After extensive research, we made a big early technology bet on Loro... 10/10 experience to date."
-            </div>
-            <div className="hidden">
-              "After extensive research, we made a big early technology bet on Loro, which we've found to have one of the most thoughtfully designed APIs that we've seen for the otherwise complex world of CRDT-related work. Our team has extensive experience in end-user computing product development, and we've found Loro to be strongly capable at solving many of the shortcomings experienced with other CRDT libraries. While the community is small, the manager of the repo has been remarkably responsive, often submitting same-day bug fixes/feature implementations to ensure that technology choice was not a bottleneck for whatever we decided to build at the product level. 10/10 experience to date."
-            </div>
-          </blockquote>
-          <div className="mt-4 font-medium text-white/95">
-            <div className="flex flex-row gap-4 items-center">
-              <img src="/images/oliver.jpg" alt="Oliver Beavers" className="w-16 h-16 rounded-full" />
-              <div>
-                <p>Oliver Beavers</p>
-                <p className="text-sm">Stealth Startup</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <section className="px-5 md:px-15 mt-20 z-[11] mb-20 relative">
+      <div className="grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 [&>*]:w-full">
+        <Testimonial 
+          id="latch-quote"
+          author="Max"
+          company="Latch.bio"
+          avatarSrc="/images/max.jpg"
+          shortQuote="We use Loro as the document representation for our web-based computational notebook software... This library is a great step forward toward making 'multiplayer' apps the norm."
+          fullQuote="We use Loro as the document representation for our web-based computational notebook software, Latch Plots, via web-assembly. With a CRDT, we can support multiple simultaneous users without having to reinvent the wheel building custom error-prone state management systems. Multi-user interactions 'just work' in a lot of cases and, for ironing out the kinks in the rest, Loro provides state-of-the-art building blocks.\n\nCompared to other CRDT implementations, Loro better matches user expectations and feels more production-ready—the extensive documentation and blogs go into the gory technical details. When the docs are not enough, the Loro team has been fantastic in direct communication—supporting us in designing the state data model and with general issues, and taking our needs and wants into account in planning the project roadmap. \n\n This library is a great step forward toward making 'multiplayer' apps the norm, in a world where the best most users see is still the relatively primitive operational systems like in Google Docs."
+          link="https://latch.bio"
+        />
+        <Testimonial 
+          id="cole-quote"
+          author="Cole Lawrence"
+          company="ColeLawrence.com"
+          avatarSrc="/images/cole.jpg"
+          shortQuote="... Loro has become my top choice due to its comprehensive API for managing versions and changesets, and its thoughtful (yet simple) TypeScript declarations."
+          fullQuote="I predominantly work on rich-text and collaborative editing contracts, deciding between adopting a CRDT implementation or rolling our own OT with LWW. Loro has become my top choice due to its comprehensive API for managing versions and changesets, and its thoughtful (yet simple) TypeScript declarations."
+          link="https://colelawrence.com"
+        />
+        <Testimonial
+          id="aj-quote"
+          author="AJ Nandi"
+          company="Subset.so"
+          avatarSrc="/images/aj_nandi.jpeg"
+          shortQuote="Powerful, performant, and well-designed. The best CRDT for anyone building serious collaborative software."
+          fullQuote="Powerful, performant, and well-designed. The best CRDT for anyone building serious collaborative software."
+          link="https://subset.so"
+        />
+        <Testimonial 
+          id="stealth-quote"
+          author="Oliver Beavers"
+          company="Stealth Startup"
+          avatarSrc="/images/oliver.jpg"
+          shortQuote="After extensive research, we made a big early technology bet on Loro... 10/10 experience to date."
+          fullQuote="After extensive research, we made a big early technology bet on Loro, which we've found to have one of the most thoughtfully designed APIs that we've seen for the otherwise complex world of CRDT-related work. Our team has extensive experience in end-user computing product development, and we've found Loro to be strongly capable at solving many of the shortcomings experienced with other CRDT libraries. While the community is small, the manager of the repo has been remarkably responsive, often submitting same-day bug fixes/feature implementations to ensure that technology choice was not a bottleneck for whatever we decided to build at the product level. 10/10 experience to date."
+        />
       </div>
     </section>
     <section className="px-5 md:px-15 z-10 relative">
