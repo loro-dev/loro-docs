@@ -139,13 +139,11 @@ import Testimonial from "@components/Testimonial";
         Even in P2P Environments
       </h2>
       ```ts
-      import { LoroDoc, VersionVector } from "npm:loro-crdt@1.0.0-beta.5";
+      import { LoroDoc } from "npm:loro-crdt";
       const docA = new LoroDoc();
       const docB = new LoroDoc();
-      docA.setPeerId(0); // You don't need to set peer id manually
-      docA.setPeerId(1); // This example set peer id for deterministic result
-      docA.getText("text").insert(0, "Hello!");
-      docB.getText("text").insert(0, "Hi!");
+      docA.getText("text").update("Hello!");
+      docB.getText("text").update("Hi!");
       const bytesA: Uint8Array = docA.export({ mode: "update" });
       const bytesB: Uint8Array = docB.export({ mode: "update" });
 
@@ -154,8 +152,9 @@ import Testimonial from "@components/Testimonial";
       docA.import(bytesB);
 
       // The merge result is consistent
-      console.log(docA.getText("text").toString()); // Hello!Hi!
-      console.log(docB.getText("text").toString()); // Hello!Hi!
+      // They should both be "Hello!Hi!" or "Hi!Hello!"
+      console.log(docA.getText("text").toString()); 
+      console.log(docB.getText("text").toString()); 
       ```
 
     <div className="mt-8 flex">
