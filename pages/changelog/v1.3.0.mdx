@@ -1,0 +1,25 @@
+---
+version: "v1.3.0"
+title: "release v1.3.0"
+date: 2025/01/09
+---
+
+## New
+
+- UndoManager's `onPush` now can access the change event.
+- add getShallowValue for each container.
+
+### LoroDoc
+
+- `toJsonWithReplacer(replacer: (k, v)=>Value)`: Convert the document to a JSON value with a custom replacer function.
+- `revertTo(frontiers: Frontiers)`: Revert the document to the given frontiers.
+- `findIdSpansBetween(from: Frontiers, to: Frontiers)`: Find the op id spans that between the `from` version and the `to` version.
+- `exportJsonInIdSpan(idSpan: IdSpan)`: Export the readable [`Change`]s in the given [`IdSpan`].
+
+## Fix
+
+- fix: prevent merging remote changes based on local `changeMergeInterval` config [#643](https://github.com/loro-dev/loro/pull/643)
+- fix: should commit before travel_change_ancestors [#599](https://github.com/loro-dev/loro/pull/599)
+- fix: panic when detach then attach [#592](https://github.com/loro-dev/loro/pull/592)
+- fix: move child in current parent [#589](https://github.com/loro-dev/loro/pull/589)
+- fix: panic when returned non-boolean value from text.iter(f) [#578](https://github.com/loro-dev/loro/pull/578)
