@@ -1,0 +1,32 @@
+---
+version: "v1.2.0"
+title: "release v1.2.0"
+date: 2024/12/10
+---
+
+## New
+
+- Add `isDeleted()` method to all container types (Text, Map, List, Tree, etc.)
+
+### LoroDoc
+
+- `changeCount()`: Get the number of changes in the oplog.
+- `opCount()`: Get the number of ops in the oplog.
+
+### VersionVector
+
+- `setEnd(id: ID)`: Set the exclusive ending point. target id will NOT be included by self.
+- `setLast(id: ID)`: Set the inclusive ending point. target id will be included.
+- `remove(peer: PeerID)`: Remove the specific peer id.
+- `length()`: Get the number of peers in the VersionVector.
+
+## Change
+
+- Return `ImportStatus` in the `importUpdateBatch` method.
+- Fractional index is enabled by default now.
+
+
+## Fix
+
+- fix: getOrCreateContainer should not throw if value is null [#576](https://github.com/loro-dev/loro/pull/576)
+- fix: dead loop when importing updates [#570](https://github.com/loro-dev/loro/pull/570)

@@ -1,0 +1,45 @@
+---
+version: "v1.1.0"
+title: "release v1.1.0"
+date: 2024/11/09
+---
+
+## New
+
+### LoroDoc
+
+- `forkAt(frontiers: Frontiers)`: Fork the document at the given frontiers.
+- `getChangedContainersIn(id: ID, len: number)`: Gets container IDs modified in the given ID range.
+- ``
+
+### LoroText
+
+- `getEditorOf(pos: number)`: Get the editor of the text at the given position.
+- `push(s: string)`: Push a string to the end of the text.
+
+
+### LoroMap
+
+- `getLastEditor(key: string)`: Get the peer id of the last editor on the given entry
+
+### LoroList
+
+- `getIdAt(pos: number)`: Get the ID of the list item at the given position.
+- `pushContainer(child: Container)`: Push a container to the end of the list.
+
+### LoroMovableList
+
+- `getCreatorAt(pos: number)`: Get the creator of the list item at the given position.
+- `getLastMoverAt(pos: number)`: Get the last mover of the list item at the given position.
+- `getLastEditorAt(pos: number)`: Get the last editor of the list item at the given position.
+- `pushContainer(child: Container)`: Push a container to the end of the list.
+
+### LoroTree
+
+- `toJSON()`: Get JSON format of the LoroTreeNode.
+
+## Fix
+
+- fix get correct encode blob info [#545](https://github.com/loro-dev/loro/pull/545)
+- fix: avoid creating non-root containers that doesn't exist by get_container api [#541](https://github.com/loro-dev/loro/pull/541)
+- fix: define the fork behavior when the doc is detached [#537](https://github.com/loro-dev/loro/pull/537)
