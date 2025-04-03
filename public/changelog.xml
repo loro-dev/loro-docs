@@ -4,9 +4,156 @@
         <title>Loro Changelog</title>
         <link>https://loro.dev</link>
         <description>changelog of loro crdt</description>
-        <lastBuildDate>Wed, 08 Jan 2025 15:37:10 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 03 Apr 2025 03:43:47 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[release v1.4.7]]></title>
+            <link>/changelog/v1.4.7</link>
+            <guid>/changelog/v1.4.7</guid>
+            <pubDate>Mon, 31 Mar 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>New</h2>
+<ul>
+<li>You can get the version of Loro by <code>LORO_VERSION</code></li>
+<li><code>setNextCommitOrigin(origin: string)</code>: Set the origin of the next commit.</li>
+<li><code>setNextCommitTimestamp(timestamp: number)</code>: Set the timestamp of the next commit.</li>
+<li><code>setNextCommitOptions(options: CommitOption)</code>: Set the options of the next commit.</li>
+<li><code>clearNextCommitOptions()</code>: Clear the options of the next commit.</li>
+<li><code>configDefaultTextStyle(style: TextStyle)</code>: Configures the default text style for the document.</li>
+<li><code>getUncommittedOpsAsJson()</code>: Get the pending operations from the current transaction in JSON format</li>
+</ul>
+<h2>Fix</h2>
+<ul>
+<li>fix: memory leak issue <a href="https://github.com/loro-dev/loro/pull/647">#647</a></li>
+<li>fix: mark err on detached LoroText <a href="https://github.com/loro-dev/loro/pull/659">#659</a></li>
+<li>fix: detached loro text issues <a href="https://github.com/loro-dev/loro/pull/665">#665</a></li>
+<li>fix: entity index when the tree is empty <a href="https://github.com/loro-dev/loro/pull/670">#670</a></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[release v1.4.0]]></title>
+            <link>/changelog/v1.4.0</link>
+            <guid>/changelog/v1.4.0</guid>
+            <pubDate>Wed, 12 Feb 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>New</h2>
+<ul>
+<li>add <code>unsubscribe()</code> for Subscription.</li>
+</ul>
+<h2>Fix</h2>
+<ul>
+<li>fix: getting values by path in LoroTree <a href="https://github.com/loro-dev/loro/pull/643">#643</a></li>
+<li>fix: should be able to call subscription after diffing [#637]</li>
+<li>fix: update long text may fail <a href="https://github.com/loro-dev/loro/pull/633">#633</a></li>
+<li>fix: map.keys() may return keys from deleted entries <a href="https://github.com/loro-dev/loro/pull/618">#618</a></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[release v1.3.0]]></title>
+            <link>/changelog/v1.3.0</link>
+            <guid>/changelog/v1.3.0</guid>
+            <pubDate>Wed, 08 Jan 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>New</h2>
+<ul>
+<li>UndoManager&#39;s <code>onPush</code> now can access the change event.</li>
+<li>add getShallowValue for each container.</li>
+</ul>
+<h3>LoroDoc</h3>
+<ul>
+<li><code>toJsonWithReplacer(replacer: (k, v)=&gt;Value)</code>: Convert the document to a JSON value with a custom replacer function.</li>
+<li><code>revertTo(frontiers: Frontiers)</code>: Revert the document to the given frontiers.</li>
+<li><code>findIdSpansBetween(from: Frontiers, to: Frontiers)</code>: Find the op id spans that between the <code>from</code> version and the <code>to</code> version.</li>
+<li><code>exportJsonInIdSpan(idSpan: IdSpan)</code>: Export the readable [<code>Change</code>]s in the given [<code>IdSpan</code>].</li>
+</ul>
+<h2>Fix</h2>
+<ul>
+<li>fix: prevent merging remote changes based on local <code>changeMergeInterval</code> config <a href="https://github.com/loro-dev/loro/pull/643">#643</a></li>
+<li>fix: should commit before travel_change_ancestors <a href="https://github.com/loro-dev/loro/pull/599">#599</a></li>
+<li>fix: panic when detach then attach <a href="https://github.com/loro-dev/loro/pull/592">#592</a></li>
+<li>fix: move child in current parent <a href="https://github.com/loro-dev/loro/pull/589">#589</a></li>
+<li>fix: panic when returned non-boolean value from text.iter(f) <a href="https://github.com/loro-dev/loro/pull/578">#578</a></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[release v1.2.0]]></title>
+            <link>/changelog/v1.2.0</link>
+            <guid>/changelog/v1.2.0</guid>
+            <pubDate>Mon, 09 Dec 2024 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>New</h2>
+<ul>
+<li>Add <code>isDeleted()</code> method to all container types (Text, Map, List, Tree, etc.)</li>
+</ul>
+<h3>LoroDoc</h3>
+<ul>
+<li><code>changeCount()</code>: Get the number of changes in the oplog.</li>
+<li><code>opCount()</code>: Get the number of ops in the oplog.</li>
+</ul>
+<h3>VersionVector</h3>
+<ul>
+<li><code>setEnd(id: ID)</code>: Set the exclusive ending point. target id will NOT be included by self.</li>
+<li><code>setLast(id: ID)</code>: Set the inclusive ending point. target id will be included.</li>
+<li><code>remove(peer: PeerID)</code>: Remove the specific peer id.</li>
+<li><code>length()</code>: Get the number of peers in the VersionVector.</li>
+</ul>
+<h2>Change</h2>
+<ul>
+<li>Return <code>ImportStatus</code> in the <code>importUpdateBatch</code> method.</li>
+<li>Fractional index is enabled by default now.</li>
+</ul>
+<h2>Fix</h2>
+<ul>
+<li>fix: getOrCreateContainer should not throw if value is null <a href="https://github.com/loro-dev/loro/pull/576">#576</a></li>
+<li>fix: dead loop when importing updates <a href="https://github.com/loro-dev/loro/pull/570">#570</a></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[release v1.1.0]]></title>
+            <link>/changelog/v1.1.0</link>
+            <guid>/changelog/v1.1.0</guid>
+            <pubDate>Fri, 08 Nov 2024 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>New</h2>
+<h3>LoroDoc</h3>
+<ul>
+<li><code>forkAt(frontiers: Frontiers)</code>: Fork the document at the given frontiers.</li>
+<li><code>getChangedContainersIn(id: ID, len: number)</code>: Gets container IDs modified in the given ID range.</li>
+<li>``</li>
+</ul>
+<h3>LoroText</h3>
+<ul>
+<li><code>getEditorOf(pos: number)</code>: Get the editor of the text at the given position.</li>
+<li><code>push(s: string)</code>: Push a string to the end of the text.</li>
+</ul>
+<h3>LoroMap</h3>
+<ul>
+<li><code>getLastEditor(key: string)</code>: Get the peer id of the last editor on the given entry</li>
+</ul>
+<h3>LoroList</h3>
+<ul>
+<li><code>getIdAt(pos: number)</code>: Get the ID of the list item at the given position.</li>
+<li><code>pushContainer(child: Container)</code>: Push a container to the end of the list.</li>
+</ul>
+<h3>LoroMovableList</h3>
+<ul>
+<li><code>getCreatorAt(pos: number)</code>: Get the creator of the list item at the given position.</li>
+<li><code>getLastMoverAt(pos: number)</code>: Get the last mover of the list item at the given position.</li>
+<li><code>getLastEditorAt(pos: number)</code>: Get the last editor of the list item at the given position.</li>
+<li><code>pushContainer(child: Container)</code>: Push a container to the end of the list.</li>
+</ul>
+<h3>LoroTree</h3>
+<ul>
+<li><code>toJSON()</code>: Get JSON format of the LoroTreeNode.</li>
+</ul>
+<h2>Fix</h2>
+<ul>
+<li>fix get correct encode blob info <a href="https://github.com/loro-dev/loro/pull/545">#545</a></li>
+<li>fix: avoid creating non-root containers that doesn&#39;t exist by get_container api <a href="https://github.com/loro-dev/loro/pull/541">#541</a></li>
+<li>fix: define the fork behavior when the doc is detached <a href="https://github.com/loro-dev/loro/pull/537">#537</a></li>
+</ul>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[release v1.0.0]]></title>
             <link>/changelog/v1.0.0-beta</link>
