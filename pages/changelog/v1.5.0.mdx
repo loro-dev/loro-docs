@@ -111,3 +111,5 @@ store.subscribe((e: EphemeralStoreEvent) => {
 
 - Fixed text styling at end "\n" character
 - Added JSON support for current transaction operations
+- For environments that support multi-threading such as Rust and Swift, LoroDoc can now be directly and safely 
+  shared and accessed in parallel across multiple threads without triggering the previous WouldBlock panic.
