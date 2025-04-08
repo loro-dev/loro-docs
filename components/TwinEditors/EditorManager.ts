@@ -1,10 +1,9 @@
 import { bytesToBase64DataUrl, dataUrlToBytes } from "@/lib/utils/data";
 import { showVersion } from "@/lib/utils/loro";
-import { Change, Loro, LoroEvent, OpId, setDebug } from "loro-crdt";
+import { Change, LoroDoc, LoroEventBatch, OpId, Subscription } from "loro-crdt";
 import Quill from "quill";
 import { QuillBinding } from "./QuillBinding";
 
-setDebug("*");
 type PeerProfile = { name: string; peerId: string };
 
 type Frontiers = OpId[];
@@ -39,14 +38,14 @@ const QUILL_TOOLBAR_MAP: WeakMap<HTMLElement, Quill> = new WeakMap();
 class EditorInstance {
   #index: number;
   #profile: PeerProfile; // Exportable (JSON)
-  #text: Loro; // Exportable (binary data)
+  #text: LoroDoc; // Exportable (binary data)
   #quill: Quill;
   #binding: QuillBinding;
   #connected: boolean = true; // Exportable (JSON)
   #manager: EditorManager;
 
   public async export(): Promise<EditorInstanceExportData> {
-    const rawData = this.#text.exportSnapshot();
+    const rawData = this.#text.export({mode: "snapshot"});
     return {
       profile: {
         name: this.#profile.name,
@@ -86,7 +85,7 @@ class EditorInstance {
     this.#index = index;
     this.#profile = profile;
     this.#manager = manager;
-    this.#text = new Loro();
+    this.#text = new LoroDoc();
     this.#text.configTextStyle({
       bold: { expand: "after" },
       italic: { expand: "after" },
@@ -114,12 +113,12 @@ class EditorInstance {
     this.#text.subscribe((e) => {
       // Synchronize the change to the sum text.
       const sumVersion = this.#manager.sumText.version();
-      const updateData = this.#text.exportFrom(sumVersion);
+      const updateData = this.#text.export({mode: "update", from: sumVersion});
       this.#manager.sumText.import(updateData);
       // If this is a local change (i.e., not a change synchronized from
       // other peers), we synchronize to other connected peers if we're
       // connected.
-      if (e.local) {
+      if (e.by === "local") {
         this.synchronize();
       }
     });
@@ -133,7 +132,7 @@ class EditorInstance {
     return this.#profile.name;
   }
 
-  public get text(): Loro {
+  public get text(): LoroDoc {
     return this.#text;
   }
 
@@ -166,8 +165,8 @@ class EditorInstance {
       await Promise.resolve();
       for (const that of this.#otherPeers()) {
         if (!that.connected) return;
-        this.#text.import(that.#text.exportFrom(this.#text.version()));
-        that.#text.import(this.#text.exportFrom(that.#text.version()));
+        this.#text.import(that.#text.export({mode: "update", from: this.#text.version()}));
+        that.#text.import(this.#text.export({mode: "update", from: that.#text.version()}));
       }
     }
   }
@@ -220,10 +219,10 @@ export async function decodeExport(
 }
 
 export class EditorManager {
-  #sumText: Loro;
+  #sumText: LoroDoc;
   #numberOfOperations: number = 0;
   #peers: EditorInstance[];
-  #subscriptions: Map<number, number[]> = new Map();
+  #subscriptions: Map<number, Subscription[]> = new Map();
 
   static import(
     data: EditorManagerImportData,
@@ -253,9 +252,9 @@ export class EditorManager {
     ) {
       throw new RangeError("insufficient HTML elements for creating editors");
     }
-    this.#sumText = new Loro();
+    this.#sumText = new LoroDoc();
     this.#sumText.subscribe((e) => {
-      if (!e.fromCheckout) {
+      if (e.by === "local") {
         this.#numberOfOperations += 1;
       }
     });
@@ -277,7 +276,7 @@ export class EditorManager {
     };
   }
 
-  public get sumText(): Loro {
+  public get sumText(): LoroDoc {
     return this.#sumText;
   }
 
@@ -314,7 +313,7 @@ export class EditorManager {
   }
 
   public subscribeAll(
-    listener: (instance: EditorInstance, e: LoroEvent) => void
+    listener: (instance: EditorInstance, e: LoroEventBatch) => void
   ): number {
     this.#subscriptions.set(
       this.#subscriptions.size,
@@ -329,7 +328,7 @@ export class EditorManager {
     if (!this.#subscriptions.has(subscription)) return;
     this.#subscriptions
       .get(subscription)
-      ?.forEach((n, index) => this.#peers[index].text.unsubscribe(n));
+      ?.forEach((unsubscribe, index) => unsubscribe());
     this.#subscriptions.set(subscription, []);
   }
 
