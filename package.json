@@ -3,12 +3,13 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "next dev",
-    "build": "node gen-rss.js && next build",
+    "build": "pnpm run extract-llms && node gen-rss.js && next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "test": "deno run -A ./deno_scripts/run_code_blocks.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "extract-llms": "deno run -A ./deno_scripts/extract-llms.ts",
     "changelog": "node gen-rss.js"
   },
   "repository": {
