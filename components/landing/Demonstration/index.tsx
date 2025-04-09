@@ -116,7 +116,7 @@ export default function DemoSection() {
     const n = manager.sumText.subscribe((): void => {
       updateTimelineHistory(manager.sumText.getAllChanges());
     });
-    return manager.sumText.unsubscribe.bind(manager.sumText, n);
+    return n;
   }, [resetCounter, updateTimelineHistory]);
 
   useEffect(() => {

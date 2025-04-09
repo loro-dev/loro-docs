@@ -1,9 +1,9 @@
-import { Delta, Loro, LoroText, setDebug } from "loro-crdt";
+import { Delta, LoroDoc, LoroText, PeerID } from "loro-crdt";
 import Quill, { DeltaOperation, Sources } from "quill";
 import isEqual from "is-equal";
 import QuillDelta from "quill-delta";
 
-type Frontiers = { peer: string; counter: number }[];
+type Frontiers = { peer: PeerID; counter: number }[];
 
 function showFrontiers(frontiers: Frontiers): string {
   return frontiers.map((x) => `${x.peer}@${x.counter}`).join(";");
@@ -11,52 +11,55 @@ function showFrontiers(frontiers: Frontiers): string {
 
 export class QuillBinding {
   private richtext: LoroText;
-  constructor(public doc: Loro, public quill: Quill) {
+  constructor(public doc: LoroDoc, public quill: Quill) {
     this.quill = quill;
-    this.richtext = doc.getText("text");
-    this.richtext.subscribe(doc, (event) => {
-      Promise.resolve().then(() => {
-        if ((!event.local || event.fromCheckout) && event.diff.type == "text" && event.origin !== "ignore") {
-          const eventDelta = event.diff.diff;
-          const delta: Delta<string>[] = [];
-          let index = 0;
-          for (let i = 0; i < eventDelta.length; i++) {
-            const d = eventDelta[i];
-            const length = d.delete || d.retain || d.insert!.length;
-            // skip the last newline that quill automatically appends
-            if (
-              d.insert &&
-              d.insert === "\n" &&
-              index === quill.getLength() - 1 &&
-              i === eventDelta.length - 1 &&
-              d.attributes != null &&
-              Object.keys(d.attributes).length > 0
-            ) {
-              delta.push({
-                retain: 1,
-                attributes: d.attributes,
-              });
+    const richtext = doc.getText("text");
+    this.richtext = richtext;
+    richtext.subscribe(async (event) => {
+      if (event.by !== "local" && event.origin !== "ignore") {
+        for (const e of event.events) {
+          if (e.diff.type === "text") {
+            const eventDelta = e.diff.diff;
+            const delta: Delta<string>[] = [];
+            let index = 0;
+            for (let i = 0; i < eventDelta.length; i++) {
+              const d = eventDelta[i];
+              const length = d.delete || d.retain || d.insert!.length;
+              // skip the last newline that quill automatically appends
+              if (
+                d.insert &&
+                d.insert === "\n" &&
+                index === quill.getLength() - 1 &&
+                i === eventDelta.length - 1 &&
+                d.attributes != null &&
+                Object.keys(d.attributes).length > 0
+              ) {
+                delta.push({
+                  retain: 1,
+                  attributes: d.attributes,
+                });
+                index += length;
+                continue;
+              }
+
+              delta.push(d);
               index += length;
-              continue;
             }
 
-            delta.push(d);
-            index += length;
-          }
-
-          quill.updateContents(new QuillDelta(delta), "this" as any);
-          const a = this.richtext.toDelta();
-          const b = this.quill.getContents().ops;
-          if (!assertEqual(a, b as any, true)) {
-            console.log(this.doc.peerId, "COMPARE AFTER CRDT_EVENT", event.diff);
-            this.resetQuillContent(a)
+            quill.updateContents(new QuillDelta(delta), "this" as any);
+            const a = doc.getText("text").toDelta();
+            const b = this.quill.getContents().ops;
+            if (!assertEqual(a, b as any, true)) {
+              console.log(this.doc.peerId, "COMPARE AFTER CRDT_EVENT", e.diff);
+              this.resetQuillContent(a)
+            }
           }
         }
-      });
+      }
     });
     quill.setContents(
       new QuillDelta(
-        this.richtext.toDelta().map((x) => ({
+        richtext.toDelta().map((x) => ({
           insert: x.insert,
           attributions: x.attributes,
         }))
@@ -116,7 +119,7 @@ export class QuillBinding {
       if (origin !== ("this" as any)) {
         if (this.richtext.toString().slice(-1) !== '\n') {
           this.richtext.applyDelta([{ retain: this.richtext.length }, { insert: "\n" }]);
-          this.doc.commit("ignore");
+          this.doc.commit({ origin: "ignore" });
         }
         this.applyDelta(ops as DeltaOperation[]);
         const a = this.richtext.toDelta();
