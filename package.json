@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm run extract-llms && node gen-rss.js && next build",
+    "build": "node gen-rss.js && next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "test": "deno run -A ./deno_scripts/run_code_blocks.ts",
