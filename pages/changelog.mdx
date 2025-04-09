@@ -34,6 +34,7 @@ return pages.map((page) => {
 const Mdx = dynamic(import(`pages/changelog/${page.name}.mdx`), {ssr: false})
 return (
 <ChangelogComponent
+key={page.frontMatter.title}
 date={page.frontMatter?.date}
 mdx={<Mdx />}
 title={page.frontMatter.title}
