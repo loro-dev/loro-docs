@@ -7,7 +7,7 @@ export function recordLocalOps(
 ): boolean {
   let changed = false;
   for (let i = loroList.length; i < elements.length; i++) {
-    loroList.insertContainer(i, "Map");
+    loroList.insertContainer(i, new LoroMap());
     changed = true;
   }
 

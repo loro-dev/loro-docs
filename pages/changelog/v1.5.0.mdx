@@ -25,7 +25,7 @@ expect(doc.getChangeAt({ peer: "0", counter: 0 }).message).toBe("test");
 
 Advanced Example - Creating a Merkle DAG:
 
-```ts
+```ts no_run
 const doc = new LoroDoc();
 doc.setPeerId(0);
 doc.subscribePreCommit((e) => {
@@ -73,7 +73,7 @@ EphemeralStore is a better alternative to Awareness for ephemeral states:
 
 Awareness is commonly used as a state-based CRDT for handling ephemeral states in real-time collaboration scenarios, such as cursor positions and application component highlights. As application complexity grows, Awareness may be set in multiple places, from cursor positions to user presence. However, the current version of Awareness doesn't support partial state updates, which means even minor mouse movements require synchronizing the entire Awareness state.
 
-```ts
+```ts no_run
 awareness.setLocalState({
   ...awareness.getLocalState(),
   x: 167,
@@ -91,20 +91,26 @@ import {
 
 const store = new EphemeralStore();
 // Set ephemeral data
-store.set("loro-prosemirror", {
-    anchor: ...,
-    focus: ...,
+store.set("user-alice", {
+    anchor: 10,
+    focus: 20,
     user: "Alice"
 });
-store.set("online-users", ["Alice", "Bob"]);
 
-expect(storeB.get("online-users")).toEqual(["Alice", "Bob"]);
 // Encode only the data for `loro-prosemirror`
-const encoded = store.encode("loro-prosemirror")
-
-store.subscribe((e: EphemeralStoreEvent) => {
+const encoded = store.encode("user-alice")
+const newStore = new EphemeralStore();
+newStore.subscribe((e: EphemeralStoreEvent) => {
     // Listen to changes from `local`, `remote`, or `timeout` events
 });
+
+newStore.apply(encoded);
+console.log(newStore.get("user-alice"))
+// {
+//     anchor: 10,
+//     focus: 20,
+//     user: "Alice"
+// }
 ```
 
 ## Fix

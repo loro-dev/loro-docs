@@ -9,6 +9,7 @@
     "test": "deno run -A ./deno_scripts/run_code_blocks.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "extract-llms": "deno run -A ./deno_scripts/extract-llms.ts",
     "changelog": "node gen-rss.js"
   },
   "repository": {
@@ -38,7 +39,7 @@
     "highlight.js": "^11.9.0",
     "is-equal": "^1.7.0",
     "jotai": "^2.6.0",
-    "loro-crdt": "^0.10.0",
+    "loro-crdt": "^1.5.2",
     "lucide-react": "^0.294.0",
     "next": "^13.3.4",
     "next-seo": "^5.15.0",

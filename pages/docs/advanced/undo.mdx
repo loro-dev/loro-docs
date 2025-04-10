@@ -204,7 +204,7 @@ The `onPush` and `onPop` callbacks are triggered when these stacks change:
 
 The `mergeInterval` option in the UndoManager controls how closely spaced operations are grouped:
 
-```ts
+```ts no_run
 const undoManager = new UndoManager(doc, {
   mergeInterval: 1000, // 1000ms = 1 second (default)
 });

@@ -2,7 +2,7 @@ import { walk } from "jsr:@std/fs";
 import { CodeBlock, extractCodeBlocks } from "./extract_code_blocks.ts";
 import { resolve } from "https://deno.land/std@0.139.0/path/mod.ts";
 
-const LORO_VERSION = "1.2.5";
+const LORO_VERSION = "1.5.2";
 
 async function* scanMarkdownFiles(dir: string): AsyncGenerator<CodeBlock[]> {
   // Walking through the directory to find markdown files
@@ -71,7 +71,7 @@ for await (const blocks of scanMarkdownFiles(targetDir)) {
     }
     await Deno.stdout.write(
       new TextEncoder().encode(
-          `\r🧪 ${testCases} tests, ✅ ${passed} passed, ❌ ${failed} failed`,
+        `\r🧪 ${testCases} tests, ✅ ${passed} passed, ❌ ${failed} failed`,
       ),
     );
   }));
