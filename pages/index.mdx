@@ -35,52 +35,92 @@ import Testimonial from "@components/Testimonial";
       <h2 className="text-4xl text-center not-italic font-semibold leading-[normal] bg-clip-text mb-16 bg-blue-green text-fill-transparent">
         Who's Using Loro
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 items-center">
-        <div className="flex items-center justify-center p-4 rounded-lg hover:bg-zinc-800 transition-all duration-300 text-zinc-200">
-          <a 
-            href="https://latch.bio" 
-            target="_blank" 
+      <div className="mt-10 mb-8 grid grid-cols-2 md:grid-cols-3 gap-y-10 sm:gap-y-12 gap-x-4 sm:gap-x-6 max-w-4xl mx-auto px-4">
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://latch.bio"
+            target="_blank"
             rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
           >
-            <img src="/images/latchbio.svg" alt="Latch.bio" className="h-12 brightness-[0.9] contrast-[1.1]"  />
+            <img
+              src="/images/latchbio.svg"
+              alt="Latch.bio"
+              className="w-full brightness-[0.9] contrast-[1.1]"
+            />
           </a>
         </div>
-        <div className="flex items-center justify-center p-4 rounded-lg hover:bg-zinc-800 transition-all duration-300">
-          <a 
-            href="https://dora.run" 
-            target="_blank" 
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://dora.run"
+            target="_blank"
             rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
           >
-            <img src="/images/dora.png" alt="Dora.run" className="w-auto h-12 invert hue-rotate-180 brightness-[1.5] grayscale-[50%] scale-90 object-contain" />
+            <img
+              src="/images/dora.png"
+              alt="Dora.run"
+              className="w-3/4 invert hue-rotate-180 brightness-[1.5] grayscale-[50%]"
+            />
           </a>
         </div>
-        <div className="flex items-center justify-center p-4 rounded-lg hover:bg-zinc-800 transition-all duration-300">
-          <a 
-            href="https://subset.so" 
-            target="_blank" 
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://subset.so"
+            target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 brightness-[0.8]"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
           >
-            <img src="/images/subset.png" alt="Subset" className="h-12 object-contain" />
+            <img
+              src="/images/subset.png"
+              alt="Subset"
+              className="w-full brightness-[0.8]"
+            />
           </a>
         </div>
-        <div className="flex items-center justify-center p-4 rounded-lg hover:bg-zinc-800 transition-all duration-300">
-          <a 
-            href="https://ax-semantics.com" 
-            target="_blank" 
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://roomy.chat/"
+            target="_blank"
             rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
           >
-            <img src="/images/ax-semantics.svg" alt="ax-semantics" className="w-auto h-12 brightness-[0.8] scale-[0.8]"/>
+            <div className="flex items-center">
+              <img
+                src="/images/roomy.png"
+                alt="Roomy"
+                className="h-6 sm:h-7 md:h-8 grayscale-[40%] brightness-[1.1] mr-1 sm:mr-2"
+              />
+              <span className="text-zinc-300 text-lg sm:text-lg md:text-xl">Roomy</span>
+            </div>
           </a>
         </div>
-        <div className="flex items-center justify-center p-4 rounded-lg hover:bg-zinc-800 transition-all duration-300">
-          <a 
-            href="https://nemastudio.app/" 
-            target="_blank" 
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://nemastudio.app/"
+            target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 brightness-[0.8]"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
           >
-            <img src="/images/nema.svg" alt="Nema" className="h-12 invert grayscale-[80%] scale-[0.8]" />
+            <img
+              src="/images/nema.svg"
+              alt="Nema"
+              className="w-3/4 invert grayscale-[80%]"
+            />
+          </a>
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          <a
+            href="https://ax-semantics.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity w-28 sm:w-32 md:w-36 flex items-center justify-center"
+          >
+            <img
+              src="/images/ax-semantics.svg"
+              alt="ax-semantics"
+              className="w-full brightness-[0.8]"
+            />
           </a>
         </div>
       </div>
