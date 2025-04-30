@@ -14,6 +14,8 @@ You can use Loro in your application by using:
 - You can also find a list of examples in
   [Loro examples in Deno](https://github.com/loro-dev/loro-examples-deno).
 
+You can use [Loro Inspector](/docs/advanced/inspector) to debug and visualize the state and history of Loro documents.
+
 The following guide will use `loro-crdt` js package as the example.
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/loro-basic-test?file=test%2Floro-sync.test.ts)

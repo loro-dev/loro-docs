@@ -7,5 +7,6 @@
   "version_deep_dive": "Loro's Versioning Deep Dive: DAG, Frontiers, and Version Vectors",
   "event_graph_walker": "Event Graph Walker",
   "undo": "Undo/Redo",
-  "import_batch": "Batch Import"
+  "import_batch": "Batch Import",
+  "inspector": "Loro Inspector"
 }
