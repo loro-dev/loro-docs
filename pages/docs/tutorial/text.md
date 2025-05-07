@@ -18,6 +18,87 @@ documents containing several million characters.
 > To learn how rich text CRDT in Loro works under the hood, please refer to our
 > blog: [Introduction to Loro's Rich Text CRDT](/blog/loro-richtext).
 
+## Editor Bindings
+
+Loro provides official bindings for popular editors to make it easier to integrate Loro's CRDT capabilities:
+
+### ProseMirror Binding
+
+The [loro-prosemirror](https://github.com/loro-dev/loro-prosemirror) package provides seamless integration between Loro and ProseMirror, a powerful rich text editor framework. It includes:
+
+- Document state synchronization with rich text support
+- Cursor awareness and synchronization
+- Undo/Redo support in collaborative editing
+
+The ProseMirror binding can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
+
+```ts
+import {
+  CursorAwareness,
+  LoroCursorPlugin,
+  LoroSyncPlugin,
+  LoroUndoPlugin,
+  undo,
+  redo,
+} from "loro-prosemirror";
+import { LoroDoc } from "loro-crdt";
+import { EditorView } from "prosemirror-view";
+import { EditorState } from "prosemirror-state";
+
+const doc = new LoroDoc();
+const awareness = new CursorAwareness(doc.peerIdStr);
+const plugins = [
+  ...pmPlugins,
+  LoroSyncPlugin({ doc }),
+  LoroUndoPlugin({ doc }),
+  keymap({
+    "Mod-z": undo,
+    "Mod-y": redo,
+    "Mod-Shift-z": redo,
+  }),
+  LoroCursorPlugin(awareness, {}),
+];
+const editor = new EditorView(editorDom, {
+  state: EditorState.create({ doc, plugins }),
+});
+```
+
+### CodeMirror Binding
+
+The [loro-codemirror](https://github.com/loro-dev/loro-codemirror) package provides integration between Loro and CodeMirror 6, a versatile code editor. It supports:
+
+- Document state synchronization
+- Cursor awareness
+- Undo/Redo functionality
+
+```ts
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+import { LoroExtensions } from "loro-codemirror";
+import { Awareness, LoroDoc, UndoManager } from "loro-crdt";
+
+const doc = new LoroDoc();
+const awareness = new Awareness(doc.peerIdStr);
+const undoManager = new UndoManager(doc, {});
+
+new EditorView({
+    state: EditorState.create({
+        extensions: [
+            // ... other extensions
+            LoroExtensions(
+                doc,
+                {
+                    awareness: awareness,
+                    user: { name: "Bob", colorClassName: "user1" },
+                },
+                undoManager,
+            ),
+        ],
+    }),
+    parent: document.querySelector("#editor")!,
+});
+```
+
 ## LoroText vs String
 
 It's important to understand that LoroText is very different from using a regular string type. So the following code has different merge results:
