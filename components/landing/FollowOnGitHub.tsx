@@ -18,7 +18,7 @@ export default function FollowOnGitHub(
       rel="noopener noreferrer"
       aria-label="Follow us on GitHub"
     >
-      <div className="w-6 h-6 md:w-9.5 md:h-9.5 flex items-center justify-center">
+      <div className="w-6 h-6 md:w-9.5 md:h-9.5 flex items-center justify-center mr-1">
         <GitHubIcon />
       </div>
       <div className={classes.AdvertisingText}>Follow us on GitHub</div>
