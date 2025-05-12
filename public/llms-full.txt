@@ -4,7 +4,7 @@
 
 ---
 version: "v1.0.0"
-title: "release v1.0.0"
+title: "Release Loro v1.0.0"
 date: 2024/10/21
 # breakingChange: false
 # category: ["Encoding", "Tree"]
@@ -93,7 +93,7 @@ The following are the specific API changes:
 
 ---
 version: "v1.3.0"
-title: "release v1.3.0"
+title: "Release Loro v1.3.0"
 date: 2025/01/09
 ---
 
@@ -117,11 +117,12 @@ date: 2025/01/09
 - fix: move child in current parent [#589](https://github.com/loro-dev/loro/pull/589)
 - fix: panic when returned non-boolean value from text.iter(f) [#578](https://github.com/loro-dev/loro/pull/578)
 
+
 # FILE: pages/changelog/v1.1.0.mdx
 
 ---
 version: "v1.1.0"
-title: "release v1.1.0"
+title: "Release Loro v1.1.0"
 date: 2024/11/09
 ---
 
@@ -166,11 +167,38 @@ date: 2024/11/09
 - fix: define the fork behavior when the doc is detached [#537](https://github.com/loro-dev/loro/pull/537)
 
 
+# FILE: pages/changelog/inspector-v0.1.0.mdx
+
+---
+version: "v0.1.0"
+title: "Release Loro Inspector v0.1.0"
+date: 2025/04/30
+---
+
+Try it here: [Loro Inspector](https://inspector.loro.dev/)
+
+Now you can directly browse the current state and complete edit history of your Loro 
+documents in the browser. You can also use this tool to time travel to any version 
+in the history of your Loro document.
+
+import { ReactPlayer } from "components/video";
+
+<ReactPlayer
+  url="/static/loro-inspector.mp4"
+  style={{maxWidth: "calc(100vw - 40px)", "margin": "2em auto"}}
+  width={"100%"}
+  height={"auto"}
+  muted={true}
+  loop={true}
+  controls={true}
+/>
+
+
 # FILE: pages/changelog/v1.5.0.mdx
 
 ---
 version: "v1.5.0"
-title: "release v1.5.0"
+title: "Release Loro v1.5.0"
 date: 2025/04/04
 ---
 
@@ -295,7 +323,7 @@ console.log(newStore.get("user-alice"))
 
 ---
 version: "v1.4.7"
-title: "release v1.4.7"
+title: "Release Loro v1.4.7"
 date: 2025/04/01
 ---
 
@@ -316,11 +344,12 @@ date: 2025/04/01
 - fix: detached loro text issues [#665](https://github.com/loro-dev/loro/pull/665)
 - fix: entity index when the tree is empty [#670](https://github.com/loro-dev/loro/pull/670)
 
+
 # FILE: pages/changelog/v1.2.0.mdx
 
 ---
 version: "v1.2.0"
-title: "release v1.2.0"
+title: "Release Loro v1.2.0"
 date: 2024/12/10
 ---
 
@@ -351,11 +380,12 @@ date: 2024/12/10
 - fix: getOrCreateContainer should not throw if value is null [#576](https://github.com/loro-dev/loro/pull/576)
 - fix: dead loop when importing updates [#570](https://github.com/loro-dev/loro/pull/570)
 
+
 # FILE: pages/changelog/v1.4.0.mdx
 
 ---
 version: "v1.4.0"
-title: "release v1.4.0"
+title: "Release Loro v1.4.0"
 date: 2025/02/13
 ---
 
@@ -369,6 +399,7 @@ date: 2025/02/13
 - fix: should be able to call subscription after diffing [#637]
 - fix: update long text may fail [#633](https://github.com/loro-dev/loro/pull/633)
 - fix: map.keys() may return keys from deleted entries [#618](https://github.com/loro-dev/loro/pull/618)
+
 
 # FILE: pages/docs/examples.mdx
 
@@ -415,6 +446,25 @@ import { ReactPlayer } from "components/video";
   allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
   sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
 ></iframe>
+
+
+# FILE: pages/docs/advanced/inspector.mdx
+
+# Loro Inspector
+
+[Loro Inspector](https://inspector.loro.dev/) is an open-source web tool that helps developers debug and visualize Loro documents. It provides a user-friendly interface to inspect the state and history of Loro documents.
+
+import { ReactPlayer } from "components/video";
+
+<ReactPlayer
+  url="/static/loro-inspector.mp4"
+  style={{maxWidth: "calc(100vw - 40px)", "margin": "2em auto"}}
+  width={"100%"}
+  height={"auto"}
+  muted={true}
+  loop={true}
+  controls={true}
+/>
 
 
 # FILE: pages/docs/advanced/doc_state_and_oplog.md
@@ -1542,6 +1592,87 @@ documents containing several million characters.
 > To learn how rich text CRDT in Loro works under the hood, please refer to our
 > blog: [Introduction to Loro's Rich Text CRDT](/blog/loro-richtext).
 
+## Editor Bindings
+
+Loro provides official bindings for popular editors to make it easier to integrate Loro's CRDT capabilities:
+
+### ProseMirror Binding
+
+The [loro-prosemirror](https://github.com/loro-dev/loro-prosemirror) package provides seamless integration between Loro and ProseMirror, a powerful rich text editor framework. It includes:
+
+- Document state synchronization with rich text support
+- Cursor awareness and synchronization
+- Undo/Redo support in collaborative editing
+
+The ProseMirror binding can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
+
+```ts
+import {
+  CursorAwareness,
+  LoroCursorPlugin,
+  LoroSyncPlugin,
+  LoroUndoPlugin,
+  undo,
+  redo,
+} from "loro-prosemirror";
+import { LoroDoc } from "loro-crdt";
+import { EditorView } from "prosemirror-view";
+import { EditorState } from "prosemirror-state";
+
+const doc = new LoroDoc();
+const awareness = new CursorAwareness(doc.peerIdStr);
+const plugins = [
+  ...pmPlugins,
+  LoroSyncPlugin({ doc }),
+  LoroUndoPlugin({ doc }),
+  keymap({
+    "Mod-z": undo,
+    "Mod-y": redo,
+    "Mod-Shift-z": redo,
+  }),
+  LoroCursorPlugin(awareness, {}),
+];
+const editor = new EditorView(editorDom, {
+  state: EditorState.create({ doc, plugins }),
+});
+```
+
+### CodeMirror Binding
+
+The [loro-codemirror](https://github.com/loro-dev/loro-codemirror) package provides integration between Loro and CodeMirror 6, a versatile code editor. It supports:
+
+- Document state synchronization
+- Cursor awareness
+- Undo/Redo functionality
+
+```ts
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+import { LoroExtensions } from "loro-codemirror";
+import { Awareness, LoroDoc, UndoManager } from "loro-crdt";
+
+const doc = new LoroDoc();
+const awareness = new Awareness(doc.peerIdStr);
+const undoManager = new UndoManager(doc, {});
+
+new EditorView({
+    state: EditorState.create({
+        extensions: [
+            // ... other extensions
+            LoroExtensions(
+                doc,
+                {
+                    awareness: awareness,
+                    user: { name: "Bob", colorClassName: "user1" },
+                },
+                undoManager,
+            ),
+        ],
+    }),
+    parent: document.querySelector("#editor")!,
+});
+```
+
 ## LoroText vs String
 
 It's important to understand that LoroText is very different from using a regular string type. So the following code has different merge results:
@@ -2640,6 +2771,8 @@ You can use Loro in your application by using:
 - [`loro-py`](https://github.com/loro-dev/loro-py) Python package
 - You can also find a list of examples in
   [Loro examples in Deno](https://github.com/loro-dev/loro-examples-deno).
+
+You can use [Loro Inspector](/docs/advanced/inspector) to debug and visualize the state and history of Loro documents.
 
 The following guide will use `loro-crdt` js package as the example.
 
