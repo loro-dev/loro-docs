@@ -1,6 +1,6 @@
 ---
 keywords: "ephemeral, awareness, presence, collaborative"
-description: ""
+description: "How to use Loro's ephemeral store feature to implement user awareness and online status management in real-time collaboration."
 ---
 
 # Ephemeral Store
