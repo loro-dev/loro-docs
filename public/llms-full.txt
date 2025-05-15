@@ -412,40 +412,44 @@ description: "The examples of basic usage in Loro"
 
 You can find the examples of basic usage in [Loro examples in Deno](https://github.com/loro-dev/loro-examples-deno);
 
-### Excalidraw
+### loro-prosemirror
 
-- Realtime collaboration with Loro
-- Time travel
+GitHub: [loro-dev/loro-prosemirror](https://github.com/loro-dev/loro-prosemirror)
 
-Code: https://github.com/loro-dev/loro-excalidraw
+It provides seamless integration between Loro and ProseMirror, a powerful rich text editor framework. It includes:
+
+- Document state synchronization with rich text support
+- Cursor awareness and synchronization
+- Undo/Redo support in collaborative editing
+
+It can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
+
+### loro-codemirror
+
+GitHub: [loro-dev/loro-codemirror](https://github.com/loro-dev/loro-codemirror)
+
+This package provides integration between Loro and CodeMirror 6, a versatile code editor. It supports:
+
+- Document state synchronization
+- Cursor awareness synchronization
+- Undo/Redo functionality
+
+### loro-inspector
+
+GitHub: [loro-dev/loro-inspector](https://github.com/loro-dev/loro-inspector)
 
 import { ReactPlayer } from "components/video";
 
 <ReactPlayer
-  url="/demo-excalidraw.mp4"
+  url="/static/loro-inspector.mp4"
+  style={{maxWidth: "calc(100vw - 40px)", "margin": "2em auto"}}
+  width={"100%"}
+  height={"auto"}
   muted={true}
   loop={true}
   controls={true}
-  playing={true}
 />
 
-### Time travel
-
-<iframe
-  src="https://loro-react-flow-example.vercel.app/"
-  style={{
-    width: "100%",
-    height: 500,
-    border: 0,
-    borderRadius: 8,
-    marginTop: 16,
-    overflow: "hidden",
-    filter: "invert(1) hue-rotate(180deg)",
-  }}
-  title="zxch3n/loro-react-flow-example/main"
-  allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-  sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-></iframe>
 
 
 # FILE: pages/docs/advanced/inspector.mdx
@@ -1901,6 +1905,88 @@ example works:
   expect(text2.toDelta()).toStrictEqual(text1.toDelta());
 })();
 ```
+
+
+# FILE: pages/docs/tutorial/tips.md
+
+# Tips and Tricks
+
+
+##### `LoroDoc` will be initialized with a new random PeerID each time
+
+<details>
+<summary>What if I need to set the initial state?</summary>
+
+If your document requires an initial state, you should not edit the document to achieve this state right 
+after creating it with new LoroDoc(). This approach can cause problems - each time someone opens the document, 
+new operations with different PeerIDs would be added just to set up the initial state.
+
+The better approach is to initialize your document by loading the same Snapshot. This ensures all users start 
+from an identical baseline without generating unnecessary operations.
+</details>
+
+---
+
+##### Be careful when using `doc.setPeerId(newId)`
+
+When using `setPeerId`, you must avoid having two parallel peers use the same PeerId. This can cause serious consistency problems in your application.
+
+<details>
+<summary>Why</summary>
+
+It's because Loro determines whether an operation has already been included by checking its operation ID. Since operation IDs are composed of `PeerId + Counter`, duplicate PeerIds can easily lead to duplicate operation IDs. During synchronization, Loro might incorrectly assume certain operations have already been processed, resulting in document inconsistency across peers.
+</details>
+
+<details>
+<summary>How to reuse PeerIds safely</summary>
+
+Be careful when reusing PeerIds (this optimization is often unnecessary). You should not assign a fixed PeerId to a user, as one user might use multiple devices. Similarly, you shouldn't assign a fixed PeerId to a device, because even on a single browser, multiple tabs might open the same document simultaneously.
+
+If you must reuse PeerIds, you need to carefully manage your local PeerId cache with proper locking mechanisms. This would allow only one tab to "take" a specific PeerId, while other tabs use random IDs. The PeerId should be returned to the cache when no longer in use.
+</details>
+
+---
+
+##### Root containers don't need operations to be initialized
+
+Root Containers are created implicitly in Loro. This means that when you call `doc.getText("text")`, no new operations appear in the LoroDoc history, and there are no operations that need to be synchronized with other peers.
+
+This behavior contrasts with non-root containers. For example, when you execute `doc.getMap("meta").setContainer("text", new LoroText())`, it generates an operation to insert the LoroText container into the map. 
+
+---
+
+##### When initializing child containers of LoroMap in parallel, overwrites can occur instead of automatic merging.
+
+<details>
+<summary>Why this happens</summary>
+
+This happens because parallel creation of child containers results in different container IDs, preventing automatic merging of their contents. When a container holds substantial data or serves as the primary storage for document content, overwriting it can lead to unintended hiding or loss of critical information.
+
+```typescript
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+
+// Parallel initialization of child containers
+const docB = doc.fork();
+const textA = doc.getMap("map").setContainer("text", new LoroText());
+textA.insert(0, "A");
+const textB = docB.getMap("map").setContainer("text", new LoroText());
+textB.insert(0, "B");
+
+doc.import(docB.export({ mode: "update" }));
+// Result: Either { "meta": { "text": "A" } } or { "meta": { "text": "B" } }
+```
+</details>
+
+<details>
+<summary>Best practices for container initialization</summary>
+
+1. When using map containers:
+   - If possible, initialize all child containers during the map container's initialization
+   - Avoid concurrent creation of child containers with the same key in the map container to prevent overwrites
+2. If it's impossible to initialize all child containers when the map container is initialized, prefer initializing them at the root level rather than as nested containers.
+    - You can use `doc.getMap("user." + userId)` instead of `doc.getMap("user").getOrCreateContainer(userId, new LoroMap())` to avoid this problem.
+</details>
 
 
 # FILE: pages/docs/tutorial/map.md
