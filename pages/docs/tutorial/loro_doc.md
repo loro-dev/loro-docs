@@ -248,6 +248,68 @@ const sinceFrontiers = doc.shallowSinceFrontiers();
 
 Note: A shallow document only contains history after a certain version point. Operations before the shallow start point are not included, but the document remains fully functional for collaboration.
 
+### Redacting Sensitive Content
+
+Loro allows you to redact specific segments of document history while preserving the rest. This is particularly useful when:
+
+1. A user accidentally pastes sensitive information (like passwords or API keys) into the document
+2. You need to remove just the sensitive part of the history while keeping older and newer edits intact
+3. You want to share document history with sensitive segments sanitized
+
+Here's how to use the redaction functionality:
+
+```typescript
+const doc = new LoroDoc();
+doc.setPeerId("1");
+
+// Create some content to be redacted
+const text = doc.getText("text");
+text.insert(0, "Sensitive information");
+doc.commit();
+
+const map = doc.getMap("map");
+map.set("password", "secret123");
+map.set("public", "public information");
+doc.commit();
+
+// Export JSON updates
+const jsonUpdates = doc.exportJsonUpdates();
+
+// Define version range to redact (redact the text content)
+const versionRange = {
+  "1": [0, 21]  // Redact the "Sensitive information"
+};
+
+// Apply redaction
+const redactedJson = redactJsonUpdates(jsonUpdates, versionRange);
+
+// Create a new document with redacted content
+const redactedDoc = new LoroDoc();
+redactedDoc.importJsonUpdates(redactedJson);
+
+// The text content is now redacted with replacement characters
+console.log(redactedDoc.getText("text").toString());
+// Outputs: "���������������������"
+
+// Map operations after the redacted range remain intact
+console.log(redactedDoc.getMap("map").get("password")); // "secret123"
+console.log(redactedDoc.getMap("map").get("public"));   // "public information"
+```
+
+Redaction applies these rules to preserve document structure while removing sensitive content:
+- Preserves delete and move operations
+- Replaces text insertion content with Unicode replacement characters '�'
+- Substitutes list and map insert values with null
+- Maintains structure of nested containers
+- Replaces text mark values with null
+- Preserves map keys and text annotation keys
+
+Note that redaction doesn't remove the operations completely - it just replaces the sensitive content with placeholders. If you need to completely remove portions of history, see the section on shallow snapshots in the [Tips](./tips.md) section.
+
+#### Important: Synchronization Considerations
+
+Both redaction and shallow snapshots maintain future synchronization consistency, but your application is responsible for ensuring all peers get the sanitized version. Otherwise, old instances of the document with sensitive information will still exist on other peers.
+
 ## Event Subscription
 
 Subscribe to changes in the document:

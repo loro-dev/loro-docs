@@ -76,3 +76,146 @@ doc.import(docB.export({ mode: "update" }));
 2. If it's impossible to initialize all child containers when the map container is initialized, prefer initializing them at the root level rather than as nested containers.
     - You can use `doc.getMap("user." + userId)` instead of `doc.getMap("user").getOrCreateContainer(userId, new LoroMap())` to avoid this problem.
 </details>
+
+---
+
+##### Use redaction to safely share document history
+
+There are times when users might accidentally paste sensitive information (like API keys, passwords, or personal data) into a collaborative document. When this happens, you need a way to remove just that sensitive content from the document history without compromising the rest of the document's integrity.
+
+<details>
+<summary>How to safely redact sensitive content</summary>
+
+Loro provides a `redactJsonUpdates` function that allows you to selectively redact operations within specific version ranges.
+
+For example, if a user accidentally pastes a password or API key into a document:
+
+```typescript
+const doc = new LoroDoc();
+doc.setPeerId("1");
+
+// Create some content to be redacted
+const text = doc.getText("text");
+text.insert(0, "Sensitive information");
+doc.commit();
+
+const map = doc.getMap("map");
+map.set("password", "secret123");
+map.set("public", "public information");
+doc.commit();
+
+// Export JSON updates
+const jsonUpdates = doc.exportJsonUpdates();
+
+// Define version range to redact (redact the text content)
+const versionRange = {
+  "1": [0, 21]  // Redact the "Sensitive information"
+};
+
+// Apply redaction
+const redactedJson = redactJsonUpdates(jsonUpdates, versionRange);
+
+// Create a new document with redacted content
+const redactedDoc = new LoroDoc();
+redactedDoc.importJsonUpdates(redactedJson);
+
+// The text content is now redacted with replacement characters
+console.log(redactedDoc.getText("text").toString()); 
+// Outputs: "���������������������"
+
+// You can also redact specific map entries
+const versionRange2 = {
+  "1": [21, 22]  // Redact the "secret123" password
+};
+
+const redactedJson2 = redactJsonUpdates(jsonUpdates, versionRange2);
+const redactedDoc2 = new LoroDoc();
+redactedDoc2.importJsonUpdates(redactedJson2);
+
+console.log(redactedDoc2.getMap("map").get("password")); // null
+console.log(redactedDoc2.getMap("map").get("public"));   // "public information"
+```
+
+This approach is safer than manually editing document content because:
+
+1. It maintains document structure and CRDT consistency
+2. It keeps key metadata like operation IDs and dependencies intact
+3. It allows concurrent editing to continue working after redaction
+4. It selectively redacts only specific operations, not the entire document
+
+The redaction process follows these rules:
+- Preserves delete, tree move, and list move operations
+- Replaces text insertion content with Unicode replacement characters '�' 
+- Substitutes list and map insert values with null
+- Maintains structure of child containers
+- Replaces text mark values with null
+- Preserves map keys and text annotation keys
+
+**Important**: Your application needs to ensure that all peers receive the redacted version, otherwise the original document with sensitive information will still exist on other peers.
+
+</details>
+
+---
+
+##### Use shallow snapshots to completely remove old history
+
+When you need to completely remove ALL history older than a certain version point, shallow snapshots provide the solution.
+
+<details>
+<summary>How to remove old history with shallow snapshots</summary>
+
+Shallow snapshots create a new document that preserves the current state but completely eliminates all history before a specified point, similar to Git's shallow clone functionality.
+
+```typescript
+const doc = new LoroDoc();
+doc.setPeerId("1");
+
+// Old history - will be completely removed
+const text = doc.getText("text");
+text.insert(0, "This document has a long history with many edits");
+doc.commit();
+text.insert(0, "Including some potentially sensitive information. ");
+doc.commit();
+
+// More recent history - will be preserved
+text.delete(11, 55); // Remove the middle part
+text.insert(11, "with sanitized history");
+doc.commit();
+
+// Create a sanitized version that removes ALL history before current point
+const sanitizedSnapshot = doc.export({ 
+  mode: "shallow-snapshot", 
+  frontiers: doc.oplogFrontiers() 
+});
+
+// Create a new document from the sanitized snapshot
+const sanitizedDoc = new LoroDoc();
+sanitizedDoc.import(sanitizedSnapshot);
+
+// The document has the final state
+console.log(sanitizedDoc.getText("text").toString());
+// Outputs: "Including with sanitized history"
+
+// But ALL history before the snapshot point is completely removed
+console.log(sanitizedDoc.isShallow()); // true
+console.log(sanitizedDoc.shallowSinceFrontiers()); // Shows the starting point
+```
+
+This approach is useful for:
+
+1. Completely removing all old history that might contain various sensitive information
+2. Significantly reducing document size by eliminating unnecessary history
+3. Creating clean document instances after certain milestones
+4. Ensuring old operations cannot be recovered or examined
+
+Compared to redaction:
+- Shallow snapshots completely remove all operations before a version point
+- Redaction selectively replaces just specific content with placeholders
+
+**Important**: While both methods maintain future synchronization consistency, your application must distribute the sanitized document to all peers. Otherwise, the original document with sensitive information will still exist on other clients.
+
+**When to use each approach**:
+- Use **redaction** when you need to sanitize specific operations (like an accidental password paste) while preserving older history
+- Use **shallow snapshots** when you want to completely eliminate all history before a certain point
+
+</details>
