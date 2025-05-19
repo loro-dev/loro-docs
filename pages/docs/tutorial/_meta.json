@@ -14,5 +14,6 @@
   "persistence": "Persistence",
   "cursor": "Cursor",
   "time_travel": "Time Travel",
+  "ephemeral": "Ephemeral Store",
   "tips": "Tips and Tricks"
 }
