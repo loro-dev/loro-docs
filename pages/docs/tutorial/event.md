@@ -120,6 +120,100 @@ There are several ways to trigger a commit:
    console.log(doc1.version().toJSON()); // Map(2) { "1" => 5 }
    ```
 
+## Subscribing to Specific Commit Events
+
+Loro provides specialized subscription methods for scenarios where you need to react to specific moments in the commit lifecycle.
+
+### `doc.subscribePreCommit(callback)`
+
+- **Purpose**: This event is triggered *before* a transaction is committed. It provides an opportunity to perform validation or make last-minute changes to the operations within the current transaction before they are finalized. This can be crucial for ensuring data integrity or implementing custom pre-commit hooks.
+- **Parameters**:
+    - `callback: (event: PreCommitEvent) => void`: A function that will be called before a commit. The `event` object passed to the callback might contain information about the pending transaction, though the exact structure of `PreCommitEvent` should be checked in the API documentation for details.
+- **Return Value**: A subscription ID that can be used to unsubscribe later using `doc.unsubscribe(subscriptionId)`.
+- **Example**:
+
+```javascript
+const doc = new LoroDoc();
+const text = doc.getText("content");
+
+const subId = doc.subscribePreCommit(() => {
+  console.log("A transaction is about to be committed.");
+  const currentText = text.toString();
+  if (currentText.includes("forbidden")) {
+    // Example: Prevent commit if certain content is present
+    // Note: Actual prevention/modification logic might be complex
+    // and depend on how Loro handles changes within the callback.
+    // For now, we'll just log.
+    console.warn("Commit contains forbidden content!");
+    // Potentially, you might modify 'text' here if allowed by Loro's transaction model,
+    // or throw an error to signal issues, though error handling specifics
+    // would depend on Loro's design.
+  }
+});
+
+text.insert(0, "Initial content. ");
+doc.commit(); // Triggers the preCommit callback
+
+text.insert(text.length, "Adding some forbidden words.");
+doc.commit(); // Triggers the preCommit callback, logs warning
+
+// To stop listening
+doc.unsubscribe(subId);
+```
+
+### `doc.subscribeFirstCommitFromPeer(callback)`
+
+- **Purpose**: This event is triggered only when the *first* commit from a new remote peer is received and applied to the document. This is particularly useful for initializing peer-specific state or UI elements when a new collaborator joins or their initial changes are integrated. It helps in distinguishing the very first contribution of a peer from their subsequent updates.
+- **Parameters**:
+    - `callback: (event: FirstCommitFromPeerEvent) => void`: A function that will be called when the first commit from a new peer is processed. The `event` object would typically include the `peerId` of the new collaborator. Check the API documentation for the exact structure of `FirstCommitFromPeerEvent`.
+- **Return Value**: A subscription ID that can be used to unsubscribe later using `doc.unsubscribe(subscriptionId)`.
+- **Example**:
+
+```javascript
+const doc = new LoroDoc();
+doc.setPeerId("localUser"); // Set our own peer ID
+
+const peerStates = new Map();
+
+const subId = doc.subscribeFirstCommitFromPeer((event) => {
+  // Assuming event.peerId contains the ID of the new peer
+  const newPeerId = event.peerId; // Replace with actual event property
+  if (!peerStates.has(newPeerId)) {
+    console.log(`First commit received from peer: ${newPeerId}. Initializing state.`);
+    peerStates.set(newPeerId, { joinedAt: new Date(), messageCount: 1 });
+    // Initialize UI elements or other state for this new peer
+  } else {
+    // This part should ideally not be reached if it's truly "first commit"
+    // but included for robustness or if event semantics are slightly different.
+    peerStates.get(newPeerId).messageCount++;
+  }
+});
+
+// Simulate receiving changes from a remote peer
+const docRemote = new LoroDoc();
+docRemote.setPeerId("remotePeer1");
+docRemote.getText("shared").insert(0, "Hello from remotePeer1");
+const updates1 = docRemote.exportFrom(doc.version()); // Export changes
+
+// Import the first commit from "remotePeer1"
+doc.import(updates1); // Triggers subscribeFirstCommitFromPeer callback for "remotePeer1"
+
+// Subsequent commits from the same peer should not trigger it again
+docRemote.getText("shared").insert(19, " again!");
+const updates2 = docRemote.exportFrom(doc.version());
+doc.import(updates2); // Does NOT trigger the callback for "remotePeer1" again
+
+// Simulate a second peer
+const docRemote2 = new LoroDoc();
+docRemote2.setPeerId("remotePeer2");
+docRemote2.getText("shared").insert(0, "Greetings from remotePeer2");
+const updates3 = docRemote2.exportFrom(doc.version());
+doc.import(updates3); // Triggers subscribeFirstCommitFromPeer callback for "remotePeer2"
+
+// To stop listening
+doc.unsubscribe(subId);
+```
+
 ## Transactions in Loro
 
 It's important to note that Loro's concept of a transaction differs from
