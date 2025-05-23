@@ -219,3 +219,40 @@ Compared to redaction:
 - Use **shallow snapshots** when you want to completely eliminate all history before a certain point
 
 </details>
+
+---
+
+##### You can store mappings between LoroDoc's peerIds and user IDs in the document itself
+
+Use `doc.subscribeFirstCommitFromPeer(listener)` to associate peer information with user identities when a peer first interacts with the document.
+
+<details>
+<summary>How to track peer-to-user mappings</summary>
+
+This functionality is essential for building user-centric features in collaborative applications. You often need bidirectional mapping between user IDs and peer IDs:
+
+- **Finding all edits by a user**: When you need to retrieve all document edits made by a specific user ID, you must first find all peer IDs associated with that user
+- **Showing edit attribution**: When displaying which user edited a piece of text, you need to map from the peer ID (stored in the operation) back to the user ID for display
+
+This hook provides an ideal point to associate peer information (such as author identity) with the document. The listener is triggered on the first commit from each peer, allowing you to store user metadata within the document itself.
+
+```typescript
+const doc = new LoroDoc();
+doc.setPeerId(0);
+doc.subscribeFirstCommitFromPeer((e) => {
+  doc.getMap("users").set(e.peer, "user-" + e.peer);
+});
+doc.getList("list").insert(0, 100);
+doc.commit();
+expect(doc.getMap("users").get("0")).toBe("user-0");
+```
+
+This approach allows you to:
+
+1. Automatically track which peers have contributed to the document
+2. Store user metadata (names, emails, etc.) alongside the document
+3. Build features like author attribution, presence indicators, or edit history
+
+The mapping is stored within the document, so it automatically synchronizes across all peers and persists with the document's state.
+
+</details>
