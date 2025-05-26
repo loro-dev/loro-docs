@@ -149,6 +149,7 @@ interface TestimonialProps {
     fullQuote: string;
     link?: string;
     avatarAlt?: string;
+    tweetLink?: string;
 }
 
 export default function Testimonial({
@@ -160,6 +161,7 @@ export default function Testimonial({
     fullQuote,
     link,
     avatarAlt,
+    tweetLink,
 }: TestimonialProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -291,14 +293,28 @@ export default function Testimonial({
                 <div className="mt-4 font-medium text-white/95">
                     <div className="flex flex-row gap-4 items-center">
                         <img src={avatarSrc} alt={avatarAlt || author} className="w-16 h-16 rounded-full object-cover" />
-                        <div>
-                            <p>{author}</p>
-                            <p className="text-sm">
+                        <div className="flex-1">
+                            <div>{author}</div>
+                            <div className="text-sm">
                                 {link ? (
                                     <a href={link} target="_blank" rel="noopener noreferrer">{company}</a>
                                 ) : (<>{company}</>)}
-                            </p>
+                            </div>
                         </div>
+                        {tweetLink && (
+                            <a
+                                href={tweetLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 transition-colors p-2 hover:bg-zinc-700/50 rounded-full"
+                                aria-label="View original tweet"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>
@@ -334,10 +350,24 @@ export default function Testimonial({
 
                                 <div className="flex items-center mt-10 pt-6 border-t border-zinc-700">
                                     <img src={avatarSrc} alt={avatarAlt || author} className="w-14 h-14 rounded-full object-cover mr-5 ring-2 ring-blue-500/30" />
-                                    <div>
-                                        <p className="font-semibold text-white text-lg">{author}</p>
-                                        <p className="text-gray-400">{link ? (<a href={link} target="_blank" rel="noopener noreferrer">{company}</a>) : (<>{company}</>)}</p>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-white text-lg">{author}</div>
+                                        <div className="text-gray-400">{link ? (<a href={link} target="_blank" rel="noopener noreferrer">{company}</a>) : (<>{company}</>)}</div>
                                     </div>
+                                    {tweetLink && (
+                                        <a
+                                            href={tweetLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:text-blue-300 transition-colors p-2 hover:bg-zinc-700/50 rounded-full ml-4"
+                                            aria-label="View original tweet"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                            </svg>
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                         </div>
