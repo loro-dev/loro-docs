@@ -256,3 +256,12 @@ This approach allows you to:
 The mapping is stored within the document, so it automatically synchronizes across all peers and persists with the document's state.
 
 </details>
+
+---
+
+##### You can use https://loro.dev/llms-full.txt to prompt your AI
+
+When working with AI assistants or language models on Loro-related tasks, you can use these URLs to provide comprehensive context about Loro's capabilities and API:
+
+- `https://loro.dev/llms-full.txt` - All the documentation in one file
+- `https://loro.dev/llms.txt` - An overview of Loro website

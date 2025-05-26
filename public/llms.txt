@@ -19,6 +19,7 @@ Loro provides a robust framework for building collaborative applications with fe
 - [Tree](https://loro.dev/docs/tutorial/tree): Hierarchical data structures with Loro's movable tree CRDT
 - [Time Travel](https://loro.dev/docs/tutorial/time_travel): Implementing version control and history navigation
 - [Sync](https://loro.dev/docs/tutorial/sync): Guide to synchronizing data between instances
+- [Tips](https://loro.dev/docs/tutorial/tips): Tips and tricks for using Loro
 
 ## Advanced Topics
 
