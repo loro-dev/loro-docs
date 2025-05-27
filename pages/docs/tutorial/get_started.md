@@ -11,6 +11,7 @@ You can use Loro in your application by using:
 - [`loro`](https://crates.io/crates/loro) Rust crate
 - [`loro-swift`](https://github.com/loro-dev/loro-swift) Swift package
 - [`loro-py`](https://github.com/loro-dev/loro-py) Python package
+- [`loro-cs`](https://github.com/sensslen/loro-cs) Community-maintained C# package
 - You can also find a list of examples in
   [Loro examples in Deno](https://github.com/loro-dev/loro-examples-deno).
 
