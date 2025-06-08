@@ -44,6 +44,47 @@ export default defineConfig({
 });
 ```
 
+<details>
+<summary>⚠️ DOMContentLoaded Timing Issue with Vite</summary>
+
+When using Loro with Vite, be aware of module loading timing issues with DOM events:
+
+**Problem:** The following code will cause nothing to load on the screen:
+
+```ts
+import { LoroDoc } from 'loro-crdt';
+
+document.addEventListener("DOMContentLoaded", () => {
+  const doc = new LoroDoc();
+  // Your code here...
+});
+```
+
+**Reason:** This occurs because Vite loads ES modules asynchronously, and the WASM module initialization within `loro-crdt` also happens asynchronously. When you import at the top level but execute code inside `DOMContentLoaded`, the WASM module may not be fully initialized when the event fires, causing the application to fail silently.
+
+**Solutions:**
+
+1. **Remove the event listener** (recommended for most cases):
+   ```ts
+   import { LoroDoc } from 'loro-crdt';
+   
+   const doc = new LoroDoc();
+   // Your code here...
+   ```
+
+2. **Use dynamic import inside the event listener**:
+   ```ts
+   document.addEventListener("DOMContentLoaded", async () => {
+     const { LoroDoc } = await import('loro-crdt');
+     const doc = new LoroDoc();
+     // Your code here...
+   });
+   ```
+
+The dynamic import ensures the module and its WASM dependencies are fully loaded before use.
+
+</details>
+
 If you're using `Next.js`, you should add the following to your next.config.js:
 
 ```js no-run
