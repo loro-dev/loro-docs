@@ -75,8 +75,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0(@types/react@https://registry.npmmirror.com/@types/react/-/react-18.0.26.tgz)(react@18.2.0)
       loro-crdt:
-        specifier: ^1.5.2
-        version: 1.5.2
+        specifier: ^1.5.10
+        version: 1.5.10
       lucide-react:
         specifier: ^0.294.0
         version: 0.294.0(react@18.2.0)
@@ -5171,8 +5171,8 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
-  loro-crdt@1.5.2:
-    resolution: {integrity: sha512-MvSY5sf8+86d7NL8cesXvIgQc4XZmGyDhAySrcSDCz5ahyvedaICDWXZ7tMCB33TQtp+wqnuausPalFfP8G/eA==}
+  loro-crdt@1.5.10:
+    resolution: {integrity: sha512-dBAw3Hh9EJLaS5MqyNMoZRq7r01UxLWUdm3go2v2EtYIrH658IG0vcktHuZqeEwyTMvE5eUtyHhLx3lgUyDFfw==}
 
   lower-case@2.0.2:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
@@ -13593,7 +13593,7 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  loro-crdt@1.5.2: {}
+  loro-crdt@1.5.10: {}
 
   lower-case@2.0.2:
     dependencies:
