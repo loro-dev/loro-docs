@@ -1,7 +1,7 @@
 import { getPagesUnderRoute } from "nextra/context";
 import Link from "next/link";
 import { useState, useEffect } from 'react'
-import { ChangelogComponent } from "@components/changelog"
+import { ChangelogComponent } from "../components/changelog"
 export function ChangelogHeader() {
   return (
     <div className="max-w-screen-lg mx-auto pt-4 pb-8 mb-8 border-b border-gray-400 border-opacity-20 text-center">
@@ -31,7 +31,7 @@ export function ChangelogIndex() {
   });
 
   return pages.map((page) => {
-    const Mdx = dynamic(import(`pages/changelog/${page.name}.mdx`), { ssr: false })
+    const Mdx = dynamic(() => import(`./${page.name}.mdx`), { ssr: false })
     return (
       <ChangelogComponent
         key={page.frontMatter.title}

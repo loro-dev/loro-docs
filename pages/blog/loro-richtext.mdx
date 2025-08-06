@@ -12,7 +12,7 @@ image: https://i.ibb.co/rsX5vR6/cover-long.png
 
 # Introduction to Loro's Rich Text CRDT
 
-import Authors, { Author } from "components/authors";
+import Authors, { Author } from "../../components/authors";
 
 <Authors date="2024-01-22">
   <Author name="Zixuan Chen" link="https://twitter.com/zxch3n" />
@@ -20,7 +20,7 @@ import Authors, { Author } from "components/authors";
 
 ![](./loro-richtext/cover_long.png)
 
-import Caption from "components/caption";
+import Caption from "../../components/caption";
 import Demo from "@components/richtextDemo";
 
 This article presents the rich text CRDT algorithm implemented in Loro,
@@ -97,7 +97,7 @@ It has the distributed nature of CRDT that enables P2P collaboration and data
 ownership. Moreover, it achieves minimal overhead in scenarios devoid of
 concurrent edits, similar to OT.
 
-import { ReactPlayer } from "components/video";
+import { ReactPlayer } from "../../components/video";
 
 <ReactPlayer
   url="/static/REG.mp4"

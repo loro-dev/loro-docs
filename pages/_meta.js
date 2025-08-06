@@ -1,0 +1,27 @@
+export default {
+  index: {
+    title: "Loro",
+    type: "page",
+    display: "hidden",
+    theme: {
+      layout: "raw",
+      footer: false
+    }
+  },
+  docs: {
+    title: "Docs",
+    type: "page"
+  },
+  blog: {
+    title: "Blog",
+    type: "page"
+  },
+  changelog: {
+    title: "Changelog",
+    type: "page"
+  },
+  about: {
+    title: "About",
+    type: "page"
+  }
+}

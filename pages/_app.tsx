@@ -12,6 +12,7 @@ import "@fontsource/poppins/800.css";
 import "../styles/quill.core.css";
 import "../styles/quill.loro.css";
 import "../style.css";
+import 'nextra-theme-docs/style.css'
 
 export default function Nextra({
   Component,
