@@ -1,8 +1,8 @@
-import React from 'react'
-import { useRouter } from 'next/router'
-import { useConfig } from 'nextra-theme-docs'
-import Image from 'next/image'
-import Footer from './components/landing/Footer'
+import React from "react";
+import { useRouter } from "next/router";
+import { useConfig } from "nextra-theme-docs";
+import Image from "next/image";
+import Footer from "./components/landing/Footer";
 
 export default {
   logo: (
@@ -27,23 +27,22 @@ export default {
     </span>
   ),
   project: {
-    link: 'https://github.com/loro-dev/loro',
+    link: "https://github.com/loro-dev/loro",
   },
   chat: {
-    link: 'https://discord.gg/tUsBSVfqzf',
+    link: "https://discord.gg/tUsBSVfqzf",
   },
-  docsRepositoryBase: 'https://github.com/loro-dev/loro-docs/tree/main',
+  docsRepositoryBase: "https://github.com/loro-dev/loro-docs/tree/main",
   footer: {
-    text: 'Loro 2024 ©',
+    text: "Loro 2024 ©",
     component: Footer,
   },
   head: () => {
-    const { asPath } = useRouter()
-    const config = useConfig()
-    const { title, description, image } = config.frontMatter
-    const pageTitle = title ? `${title} – Loro` : 'Loro'
-    const DEFAULT_IMAGE = "https://i.ibb.co/T1x1bSf/IMG-8191.jpg"
-    
+    const config = useConfig();
+    const { title, description, image } = config.frontMatter;
+    const pageTitle = title ? `${title} – Loro` : "Loro";
+    const DEFAULT_IMAGE = "https://i.ibb.co/T1x1bSf/IMG-8191.jpg";
+
     return (
       <>
         <script
@@ -66,20 +65,20 @@ export default {
         <meta property="og:image" content={image || DEFAULT_IMAGE} />
         <meta name="apple-mobile-web-app-title" content="Loro" />
       </>
-    )
+    );
   },
   useNextSeoProps() {
-    const { asPath } = useRouter()
+    const { asPath } = useRouter();
     return {
-      titleTemplate: asPath === '/' ? undefined : '%s – Loro',
-    }
+      titleTemplate: asPath === "/" ? undefined : "%s – Loro",
+    };
   },
-   sidebar: {
+  sidebar: {
     defaultMenuCollapseLevel: 1,
     autoCollapse: true,
   },
   darkMode: true,
   nextThemes: {
-    defaultTheme: 'dark',
+    defaultTheme: "dark",
   },
-}
+};

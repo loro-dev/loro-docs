@@ -42,7 +42,7 @@ import Testimonial from "@components/Testimonial";
 
     <section className="px-5 md:px-15 mt-20 z-[11] mb-20 relative">
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 [&>*]:w-full">
-        <Testimonial 
+        <Testimonial
           id="latch-quote"
           author="Max"
           company="Latch.bio"
@@ -51,17 +51,17 @@ import Testimonial from "@components/Testimonial";
           fullQuote="We use Loro as the document representation for our web-based computational notebook software, Latch Plots, via web-assembly. With a CRDT, we can support multiple simultaneous users without having to reinvent the wheel building custom error-prone state management systems. Multi-user interactions 'just work' in a lot of cases and, for ironing out the kinks in the rest, Loro provides state-of-the-art building blocks.\n\nCompared to other CRDT implementations, Loro better matches user expectations and feels more production-ready—the extensive documentation and blogs go into the gory technical details. When the docs are not enough, the Loro team has been fantastic in direct communication—supporting us in designing the state data model and with general issues, and taking our needs and wants into account in planning the project roadmap. \n\n This library is a great step forward toward making 'multiplayer' apps the norm, in a world where the best most users see is still the relatively primitive operational systems like in Google Docs."
           link="https://latch.bio"
         />
-        <Testimonial 
+        <Testimonial
           id="marimo-quote"
           author="Myles"
           company="Marimo.io"
           avatarSrc="/images/myles.jpg"
-          shortQuote="if you are looking for a real-time collaboration library (based on CRDTs), I highly recommend @loro_dev. it's performant, type-safe, and actively maintained\n and I've tried them all" 
-          fullQuote="if you are looking for a real-time collaboration library (based on CRDTs), I highly recommend @loro_dev. it's performant, type-safe, and actively maintained\n and I've tried them all" 
+          shortQuote="if you are looking for a real-time collaboration library (based on CRDTs), I highly recommend @loro_dev. it's performant, type-safe, and actively maintained\n and I've tried them all"
+          fullQuote="if you are looking for a real-time collaboration library (based on CRDTs), I highly recommend @loro_dev. it's performant, type-safe, and actively maintained\n and I've tried them all"
           link="https://marimo.io"
           tweetLink="https://x.com/themylesfiles/status/1925221425838797226"
         />
-        <Testimonial 
+        <Testimonial
           id="cole-quote"
           author="Cole Lawrence"
           company="ColeLawrence.com"
@@ -79,7 +79,7 @@ import Testimonial from "@components/Testimonial";
           fullQuote="Powerful, performant, and well-designed. The best CRDT for anyone building serious collaborative software."
           link="https://subset.so"
         />
-        <Testimonial 
+        <Testimonial
           id="stealth-quote"
           author="Oliver Beavers"
           company="Stealth Startup"
@@ -87,7 +87,7 @@ import Testimonial from "@components/Testimonial";
           shortQuote="After extensive research, we made a big early technology bet on Loro... 10/10 experience to date."
           fullQuote="After extensive research, we made a big early technology bet on Loro, which we've found to have one of the most thoughtfully designed APIs that we've seen for the otherwise complex world of CRDT-related work. Our team has extensive experience in end-user computing product development, and we've found Loro to be strongly capable at solving many of the shortcomings experienced with other CRDT libraries. While the community is small, the manager of the repo has been remarkably responsive, often submitting same-day bug fixes/feature implementations to ensure that technology choice was not a bottleneck for whatever we decided to build at the product level. 10/10 experience to date."
         />
-        <Testimonial 
+        <Testimonial
           id="zicklag-quote"
           author="Zicklag"
           company="roomy.chat"
@@ -111,39 +111,41 @@ import Testimonial from "@components/Testimonial";
         Effortless Document Synchronization, <br/>
         Even in P2P Environments
       </h2>
-      ```ts
-      import { LoroDoc } from "npm:loro-crdt";
-      const docA = new LoroDoc();
-      const docB = new LoroDoc();
-      docA.getText("text").update("Hello!");
-      docB.getText("text").update("Hi!");
-      const bytesA: Uint8Array = docA.export({ mode: "update" });
-      const bytesB: Uint8Array = docB.export({ mode: "update" });
+      <div className="nextra-code relative mt-6 first:mt-0 max-w-[100%] w-fit px-6 py-6 nextra-focus _overflow-x-auto _subpixel-antialiased _text-[.9em] _bg-white dark:_bg-black _py-4 _ring-1 _ring-inset _ring-gray-300 dark:_ring-neutral-700 contrast-more:_ring-gray-900 contrast-more:dark:_ring-gray-50 contrast-more:_contrast-150 _rounded-md">
+        ```ts
+        import { LoroDoc } from "npm:loro-crdt";
+        const docA = new LoroDoc();
+        const docB = new LoroDoc();
+        docA.getText("text").update("Hello!");
+        docB.getText("text").update("Hi!");
+        const bytesA: Uint8Array = docA.export({ mode: "update" });
+        const bytesB: Uint8Array = docB.export({ mode: "update" });
 
-      // Exchange bytesA and bytesB via any methods
-      docB.import(bytesA);
-      docA.import(bytesB);
+        // Exchange bytesA and bytesB via any methods
+        docB.import(bytesA);
+        docA.import(bytesB);
 
-      // The merge result is consistent
-      // They should both be "Hello!Hi!" or "Hi!Hello!"
-      console.log(docA.getText("text").toString()); 
-      console.log(docB.getText("text").toString()); 
-      ```
-
-    <div className="mt-8 flex">
-      <div className="relative group">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-green-400 rounded-lg blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
-        <a
-          href="/docs/tutorial/get_started"
-          className="relative px-6 py-3 text-lg font-medium text-white bg-zinc-900 rounded-md flex items-center gap-2"
-        >
-          Get Started
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </a>
+        // The merge result is consistent
+        // They should both be "Hello!Hi!" or "Hi!Hello!"
+        console.log(docA.getText("text").toString());
+        console.log(docB.getText("text").toString());
+        ```
       </div>
-    </div>
+
+      <div className="mt-8 flex">
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-green-400 rounded-lg blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+          <a
+            href="/docs/tutorial/get_started"
+            className="relative px-6 py-3 text-lg font-medium text-white bg-zinc-900 rounded-md flex items-center gap-2"
+          >
+            Get Started
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </a>
+        </div>
+      </div>
     </section>
 
     <Support />
