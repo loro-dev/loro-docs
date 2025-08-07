@@ -13,7 +13,7 @@ export async function bytesToBase64DataUrl(
       },
       onerror: () => reject(reader.error),
     });
-    reader.readAsDataURL(new File([bytes], "", { type }));
+    reader.readAsDataURL(new File([bytes as any], "", { type }));
   });
 }
 

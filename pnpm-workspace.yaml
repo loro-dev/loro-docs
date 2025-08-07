@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@swc/core'
+  - core-js-pure
+  - es5-ext
+  - sharp

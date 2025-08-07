@@ -1,10 +1,14 @@
-const withNextra = require("nextra")({
+import nextra from "nextra";
+
+const withNextra = nextra({
   theme: "nextra-theme-docs",
-  themeConfig: "./theme.config.tsx",
+  themeConfig: "./theme.config.jsx",
+  defaultShowCopyCode: true,
+  staticImage: true,
+  readingTime: true,
 });
 
-module.exports = {
-  ...withNextra({
+export default withNextra({
     webpack(config, { isServer, dev }) {
       // Use the client static directory in the server bundle and prod mode
       // Fixes `Error occurred prerendering page "/"`
@@ -41,7 +45,6 @@ module.exports = {
       fileLoaderRule.exclude = /\.svg$/i;
       return config;
     },
-  }),
   async redirects() {
     return [
       {
@@ -61,4 +64,4 @@ module.exports = {
       },
     ]
   },
-}
+})
