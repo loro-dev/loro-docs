@@ -4,16 +4,9 @@
         <title>Loro Changelog</title>
         <link>https://loro.dev</link>
         <description>changelog of loro crdt</description>
-        <lastBuildDate>Wed, 06 Aug 2025 16:44:08 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 07 Aug 2025 06:09:49 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
-        <item>
-            <link>/changelog/_meta.js</link>
-            <guid>/changelog/_meta.js</guid>
-            <pubDate>Invalid Date</pubDate>
-            <content:encoded><![CDATA[<p>export default {}</p>
-]]></content:encoded>
-        </item>
         <item>
             <title><![CDATA[Release Loro Inspector v0.1.0]]></title>
             <link>/changelog/inspector-v0.1.0</link>

@@ -12,12 +12,12 @@ async function generate() {
     feedLinks: "https://loro.dev/changelog.xml",
   });
 
-  const posts = await fs.readdir(path.join(__dirname, "pages", "changelog"));
+  const posts = await fs.readdir(path.join(__dirname, "content", "changelog"));
   const items = await Promise.all(
     posts.map(async (name) => {
-      if (name.endsWith(".json")) return null;
+      if (name.endsWith(".json") || name.endsWith(".js")) return null;
       const content = await fs.readFile(
-        path.join(__dirname, "pages", "changelog", name)
+        path.join(__dirname, "content", "changelog", name)
       );
 
       const frontmatter = matter(content);

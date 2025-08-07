@@ -1,12 +1,6 @@
 import nextra from "nextra";
 
-const withNextra = nextra({
-  theme: "nextra-theme-docs",
-  themeConfig: "./theme.config.jsx",
-  defaultShowCopyCode: true,
-  staticImage: true,
-  readingTime: true,
-});
+const withNextra = nextra({});
 
 export default withNextra({
     webpack(config, { isServer, dev }) {
@@ -19,30 +13,24 @@ export default withNextra({
 
       // Since Webpack 5 doesn't enable WebAssembly by default, we should do it manually
       config.experiments = { ...config.experiments, asyncWebAssembly: true };
+      
       // =========================================================================
-      // Grab the existing rule that handles SVG imports
-      const fileLoaderRule = config.module.rules.find((rule) =>
-        rule.test?.test?.(".svg")
-      );
-
-      config.module.rules.push(
-        // Reapply the existing rule, but only for svg imports ending in ?url
-        {
-          ...fileLoaderRule,
-          test: /\.svg$/i,
-          resourceQuery: /url/, // *.svg?url
-        },
-        // Convert all other *.svg imports to React components
-        {
-          test: /\.svg$/i,
-          issuer: /\.[jt]sx?$/,
-          resourceQuery: { not: /url/ }, // exclude if *.svg?url
-          use: ["@svgr/webpack"],
+      // SVG handling - first remove any existing SVG rules
+      config.module.rules = config.module.rules.map(rule => {
+        if (rule.test && rule.test.toString().includes('svg')) {
+          return {
+            ...rule,
+            exclude: /\.svg$/,
+          };
         }
-      );
+        return rule;
+      });
 
-      // Modify the file loader rule to ignore *.svg, since we have it handled now.
-      fileLoaderRule.exclude = /\.svg$/i;
+      // Then add our own SVG handling
+      config.module.rules.push({
+        test: /\.svg$/,
+        use: ["@svgr/webpack"],
+      });
       return config;
     },
   async redirects() {

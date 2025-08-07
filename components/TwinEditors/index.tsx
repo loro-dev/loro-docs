@@ -1,3 +1,5 @@
+"use client";
+
 import { Separator } from "@ariakit/react";
 import { ForwardedRef, forwardRef, useEffect, useRef } from "react";
 import ConnectionToggle from "./ConnectionToggle";

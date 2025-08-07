@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 
 // Define CSS animations with styled component approach
