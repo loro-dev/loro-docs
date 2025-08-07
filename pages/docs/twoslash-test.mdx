@@ -1,0 +1,69 @@
+# Twoslash Test
+
+This page demonstrates TypeScript twoslash functionality in code blocks.
+
+## Basic Type Hints
+
+Hover over variables to see their types:
+
+```ts twoslash
+interface Todo {
+  title: string
+  completed: boolean
+}
+
+const todo: Todo = {
+  title: 'Learn Loro',
+  completed: false
+}
+// ^?
+
+const upperTitle = todo.title.toUpperCase()
+//    ^?
+```
+
+## Error Display
+
+Twoslash can show TypeScript errors:
+
+```ts twoslash
+// @errors: 2540
+interface ReadonlyTodo {
+  readonly title: string
+  readonly completed: boolean
+}
+
+const todo: ReadonlyTodo = {
+  title: 'Delete inactive users',
+  completed: false
+}
+
+todo.title = 'Hello' // This will show an error
+```
+
+## Completions
+
+See available methods and properties:
+
+```ts twoslash
+const text = "Hello, Loro!"
+text.
+//   ^|
+```
+
+## Working with Loro Types
+
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt"
+
+const doc = new LoroDoc()
+//    ^?
+
+const map = doc.getMap("myMap")
+//    ^?
+
+map.set("key", "value")
+
+const value = map.get("key")
+//    ^?
+```
