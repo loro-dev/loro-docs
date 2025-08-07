@@ -4,5 +4,6 @@ export default {
   concepts: "Concepts",
   advanced: "Advanced Topics",
   performance: "Performance",
-  examples: "Examples"
+  examples: "Examples",
+  llm: "LLM Resources"
 }

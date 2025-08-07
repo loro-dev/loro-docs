@@ -6,7 +6,8 @@ export default {
     theme: {
       layout: "raw",
       footer: false
-    }
+    },
+    collapsible: true
   },
   docs: {
     title: "Docs",

@@ -74,6 +74,10 @@ export default {
       titleTemplate: asPath === '/' ? undefined : '%s – Loro',
     }
   },
+   sidebar: {
+    defaultMenuCollapseLevel: 1,
+    autoCollapse: true,
+  },
   darkMode: true,
   nextThemes: {
     defaultTheme: 'dark',
