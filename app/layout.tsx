@@ -1,7 +1,4 @@
-import { Footer, Layout, Navbar } from 'nextra-theme-docs'
-import { Banner, Head } from 'nextra/components'
-import Image from 'next/image'
-import FooterComponent from '../components/landing/Footer'
+import type { ReactNode } from 'react'
 import 'nextra-theme-docs/style-prefixed.css'
 import '../style.css'
 
@@ -13,11 +10,11 @@ export const metadata = {
 export default function RootLayout({
   children
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
-    <html lang="en" dir="ltr">
-      <Head faviconGlyph="📝">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <head>
         <script
           async
           src="https://us.umami.is/script.js"
@@ -37,39 +34,10 @@ export default function RootLayout({
         <meta property="og:title" content="Loro" />
         <meta property="og:image" content="https://i.ibb.co/T1x1bSf/IMG-8191.jpg" />
         <meta name="apple-mobile-web-app-title" content="Loro" />
-      </Head>
-      <body>
-        <Layout
-          pageMap={[]}
-          navbar={
-            <Navbar
-              logo={
-                <span
-                  className="flex"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    verticalAlign: "middle",
-                  }}
-                >
-                  <Image
-                    src="/LORO_PURE.svg"
-                    alt="Logo"
-                    width={24}
-                    height={24}
-                    style={{ margin: "0 6px", display: "inline-block" }}
-                  />
-                  Loro
-                </span>
-              }
-            />
-          }
-          footer={<FooterComponent />}
-        >
-          {children}
-        </Layout>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body suppressHydrationWarning>
+        {children}
       </body>
     </html>
   )
