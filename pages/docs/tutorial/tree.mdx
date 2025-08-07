@@ -17,10 +17,10 @@ Loro associates a [Map](https://www.loro.dev/docs/tutorial/map) with each tree n
 
 You can get the associated map by `.data` of the `LoroTreeNode` so you can invoke `set` or `setContainer` on the map to add some data or sub-containers to the tree node. For example:
 
-```ts
-import { Loro, LoroTree, LoroTreeNode, LoroMap, LoroList } from "loro-crdt";
-
-let doc = new Loro();
+```ts twoslash
+import { LoroDoc, LoroTree, LoroTreeNode, LoroMap, LoroList } from "loro-crdt";
+// ---cut---
+let doc = new LoroDoc();
 let tree: LoroTree = doc.getTree("tree");
 let node: LoroTreeNode = tree.createNode();
 node.data.set("key", "value");
@@ -41,7 +41,9 @@ You should call `enable_fractional_index(jitter: number)` to enable `Fractional 
 
 There are three types of events in the tree structure: `Create`, `Move`, and `Delete`, as follows:
 
-```typescript
+```ts no_run twoslash
+import { TreeID } from "loro-crdt";
+// ---cut---
 export type TreeDiffItem =
   | {
       target: TreeID;
@@ -81,7 +83,9 @@ There are multiple ways to retrieve all nodes from a `LoroTree`:
 2. `roots()`: Retrieves all root nodes from the current `LoroTree`, with the root nodes being ordered. Subsequently, the `children()` method of `LoroTreeNode` can be used to perform a hierarchical traversal.
 3. `toArray()`: Retrieves all node information in a hierarchical traversal order, where each node's data structure is as follows:
 
-   ```ts no_run
+   ```ts no_run twoslash
+   import { TreeID, LoroMap } from "loro-crdt";
+   // ---cut---
    {
      id: TreeID;
      parent: TreeID | undefined;
@@ -97,10 +101,10 @@ There are multiple ways to retrieve all nodes from a `LoroTree`:
 
 ### Example
 
-```ts
-import { Loro, LoroTree, LoroTreeNode, LoroMap } from "loro-crdt";
-
-let doc = new Loro();
+```ts no_run twoslash
+import { LoroDoc, LoroTree, LoroTreeNode, LoroMap } from "loro-crdt";
+// ---cut---
+let doc = new LoroDoc();
 let tree: LoroTree = doc.getTree("tree");
 let root: LoroTreeNode = tree.createNode();
 // By default, append to the end of the parent node's children list

@@ -11,31 +11,24 @@ In real-time collaborative scenarios, Presence information is just as important 
 
 Since Ephemeral information is primarily used for real-time collaboration, we've chosen a simple yet effective approach. The Ephemeral Store is a timestamp-based, last-write-wins key-value store. Each entry maintains its own timestamp of the last update, enabling the system to send only the updated entry content rather than the complete current state.
 
-
 ## Example
 
 ```ts
-import {
-    EphemeralStore,
-    EphemeralListener,
-    EphemeralStoreEvent,
-} from "loro-crdt";
-
 const store = new EphemeralStore();
 // Set ephemeral data
 store.set("loro-prosemirror", {
-    anchor: ...,
-    focus: ...,
-    user: "Alice"
+  anchor: { pos: 0 },
+  focus: { pos: 5 },
+  user: "Alice",
 });
 store.set("online-users", ["Alice", "Bob"]);
 
-expect(storeB.get("online-users")).toEqual(["Alice", "Bob"]);
+expect(store.get("online-users")).toEqual(["Alice", "Bob"]);
 // Encode only the data for `loro-prosemirror`
-const encoded = store.encode("loro-prosemirror")
+const encoded = store.encode("loro-prosemirror");
 
 store.subscribe((e: EphemeralStoreEvent) => {
-    // Listen to changes from `local`, `remote`, or `timeout` events
+  // Listen to changes from `local`, `remote`, or `timeout` events
 });
 ```
 
@@ -70,6 +63,7 @@ store.subscribe((e: EphemeralStoreEvent) => {
 
 - `subscribe((event: EphemeralStoreEvent)=>void)`:
   Registers a listener function that will be called whenever the ephemeral store is updated, either from local changes, remote changes, or timeout events.
+
   ```ts
   interface EphemeralStoreEvent {
     // The source of the event: local changes, imported from remote, or timeout expiration
@@ -85,13 +79,14 @@ store.subscribe((e: EphemeralStoreEvent) => {
 
 - `subscribeLocalUpdates((bytes: Uint8Array) => void)`:
   Registers a listener that will be called only for local updates to the ephemeral store.
-  ```ts
-    // you need maintain the Subscription to avoid gc
-    const _sub1 = ephemeral1.subscribeLocalUpdates((update) => {
-        ephemeral2.apply(update);
-    });
 
-    const _sub2 = ephemeral2.subscribeLocalUpdates((update) => {
-        ephemeral1.apply(update);
-    });
+  ```ts
+  // you need maintain the Subscription to avoid gc
+  const _sub1 = ephemeral1.subscribeLocalUpdates((update) => {
+    ephemeral2.apply(update);
+  });
+
+  const _sub2 = ephemeral2.subscribeLocalUpdates((update) => {
+    ephemeral1.apply(update);
+  });
   ```

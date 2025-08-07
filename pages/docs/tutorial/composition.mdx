@@ -11,7 +11,10 @@ It's important to note that documents in Loro must adhere to a tree structure. T
 
 By leveraging these fundamental CRDTs, you can effectively model the states and the updates of documents that conform to the JSON schema.
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 const map = doc.getMap("map");
 let callTimes = 0;
