@@ -36,7 +36,9 @@ state, the version of DocState and the latest version recorded in OpLog may not
 always match. When they align, it is in an _attached_ state; otherwise, it's in
 a _detached_ state.
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId(1);
 doc.getText("text").insert(0, "Hello");

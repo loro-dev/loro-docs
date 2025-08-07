@@ -13,9 +13,9 @@ speed up initial loading speed for a collaborative session.
 
 Here's an example usage:
 
-```jsx
-import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.2";
-
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 for (let i = 0; i < 10_000; i++) {
     doc.getText("text").insert(0, "Hello, world!");

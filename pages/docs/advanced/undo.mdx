@@ -32,14 +32,21 @@ To create an `UndoManager`, you can specify:
 - The merge range for undo operations.
 - The stack depth.
 
-```ts no_run
+```ts twoslash
+import { UndoManager, LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 const undoManager = new UndoManager(doc, {
     maxUndoSteps: 100, // default 100
     mergeInterval: 1000, // default 1000ms
     excludeOriginPrefixes: ["sys:"], // default []
-    onPush: ...,
-    onPop: ...
-}));
+    onPush: (isUndo, range, event) => {
+        return { value: null, cursors: [] };
+    },
+    onPop: (isUndo, value, counterRange) => {
+        return;
+    },
+});
 ```
 
 ## Limitations
@@ -105,7 +112,10 @@ following cases:
 Internally, we also automatically handle the storage and reset of cursors in the
 undo/redo loop state.
 
-```ts
+```ts twoslash
+import { LoroDoc, UndoManager, Cursor } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 let cursors: Cursor[] = [];
 let poppedCursors: Cursor[] = [];
@@ -204,7 +214,10 @@ The `onPush` and `onPop` callbacks are triggered when these stacks change:
 
 The `mergeInterval` option in the UndoManager controls how closely spaced operations are grouped:
 
-```ts no_run
+```ts twoslash no_run 
+import { UndoManager, LoroDoc } from "loro-crdt";
+// ---cut---
+declare const doc: LoroDoc;
 const undoManager = new UndoManager(doc, {
   mergeInterval: 1000, // 1000ms = 1 second (default)
 });
@@ -232,7 +245,9 @@ const undoManager = new UndoManager(doc, {
 
 Consider a simple text editor that uses Loro for collaboration. Let's walk through what happens during typical editing operations:
 
-```ts
+```ts twoslash no_run 
+import { LoroDoc, UndoManager } from "loro-crdt";
+// ---cut---
 // Create document and undo manager
 const doc = new LoroDoc();
 const textField = doc.getText("textField");

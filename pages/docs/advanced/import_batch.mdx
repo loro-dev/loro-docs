@@ -4,9 +4,9 @@
 
 When importing multiple updates into a document, using `doc.importBatch(updates)` is significantly faster than importing updates individually. This performance difference stems from how data merging is handled in each approach.
 
-```ts
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
-
+// ---cut---
 const doc = new LoroDoc();
 doc.getText("text").update("Hello");
 const update1 = doc.export({ mode: "update" });

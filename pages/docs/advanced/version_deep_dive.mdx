@@ -13,7 +13,10 @@ representation is different.
 In Loro, you can express a document's version through a
 [Version Vector](https://en.wikipedia.org/wiki/Version_vector) or Frontiers.
 
-```rust
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 doc.version();        // State Version vector
 doc.oplogVersion();   // OpLog Version vector
 doc.frontiers();      // State Frontiers
@@ -43,7 +46,7 @@ consists of PeerId and Counter.
 > (e.g., the type of peer), but this does not affect the understanding of the
 > content.
 
-```tsx
+```ts
 interface OpId {
   // Simplified here
   // PeerId is actually close to uuid type, Loro uses u64
@@ -60,7 +63,7 @@ and Counter is a number that starts from 0 and increments on that device.
 A Version Vector is a vector that describes how many Operations starting from 0
 need to be included for each Peer.
 
-```tsx
+```ts
 // In TypeScript
 type VersionVector = { [peerId in number]: number };
 ```
@@ -108,7 +111,11 @@ two documents to be synchronized). For example, currently in Loro, you can use
 the following method to synchronize two documents, where they only import the
 Ops missing from each other:
 
-```tsx
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const a = new LoroDoc();
+const b = new LoroDoc();
+// ---cut---
 // doc.version() returns the version vector of the doc
 a.import(b.export({ mode: "update", from: a.version() }));
 b.import(a.export({ mode: "update", from: b.version() }));
@@ -156,7 +163,9 @@ Based on DAG information, we have a more compact way to describe versions: given
 one or multiple OpIds, include all with a Causal Order less than or equal to
 them. We call this method Frontiers.
 
-```tsx
+```ts twoslash
+import { OpId } from "loro-crdt";
+// ---cut---
 type Frontiers = OpId[];
 ```
 
@@ -198,7 +207,10 @@ combined with Loro's time machine capability, you can easily return to any
 document version corresponding to a specific operation. Here is a complete
 example:
 
-```tsx
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId(0n);
 const text = doc.getText("text");
@@ -210,7 +222,7 @@ expect(doc.toJSON()).toStrictEqual({
   text: "Hi",
 });
 
-doc.checkout([{ peer: 0n, counter: 0 }]);
+doc.checkout([{ peer: "0", counter: 0 }]);
 expect(doc.toJSON()).toStrictEqual({
   text: "H",
 });
@@ -219,7 +231,12 @@ expect(doc.toJSON()).toStrictEqual({
 You can convert between Version Vectors and Frontiers in Loro if the specified
 version is included in the document's history:
 
-```tsx
-const vv = doc.vvToFrontiers(f);
-const frontiers = doc.frontiersToVV(vv);
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const f = doc.frontiers();
+const vv = doc.frontiersToVV(f);
+// vv equals to doc.version()
+const frontiers = doc.vvToFrontiers(vv);
 ```
