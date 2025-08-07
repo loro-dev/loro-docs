@@ -1,17 +1,17 @@
 # Tips and Tricks
 
-
 ##### `LoroDoc` will be initialized with a new random PeerID each time
 
 <details>
 <summary>What if I need to set the initial state?</summary>
 
-If your document requires an initial state, you should not edit the document to achieve this state right 
-after creating it with new LoroDoc(). This approach can cause problems - each time someone opens the document, 
+If your document requires an initial state, you should not edit the document to achieve this state right
+after creating it with new LoroDoc(). This approach can cause problems - each time someone opens the document,
 new operations with different PeerIDs would be added just to set up the initial state.
 
-The better approach is to initialize your document by loading the same Snapshot. This ensures all users start 
+The better approach is to initialize your document by loading the same Snapshot. This ensures all users start
 from an identical baseline without generating unnecessary operations.
+
 </details>
 
 ---
@@ -24,6 +24,7 @@ When using `setPeerId`, you must avoid having two parallel peers use the same Pe
 <summary>Why</summary>
 
 It's because Loro determines whether an operation has already been included by checking its operation ID. Since operation IDs are composed of `PeerId + Counter`, duplicate PeerIds can easily lead to duplicate operation IDs. During synchronization, Loro might incorrectly assume certain operations have already been processed, resulting in document inconsistency across peers.
+
 </details>
 
 <details>
@@ -32,6 +33,7 @@ It's because Loro determines whether an operation has already been included by c
 Be careful when reusing PeerIds (this optimization is often unnecessary). You should not assign a fixed PeerId to a user, as one user might use multiple devices. Similarly, you shouldn't assign a fixed PeerId to a device, because even on a single browser, multiple tabs might open the same document simultaneously.
 
 If you must reuse PeerIds, you need to carefully manage your local PeerId cache with proper locking mechanisms. This would allow only one tab to "take" a specific PeerId, while other tabs use random IDs. The PeerId should be returned to the cache when no longer in use.
+
 </details>
 
 ---
@@ -40,7 +42,7 @@ If you must reuse PeerIds, you need to carefully manage your local PeerId cache 
 
 Root Containers are created implicitly in Loro. This means that when you call `doc.getText("text")`, no new operations appear in the LoroDoc history, and there are no operations that need to be synchronized with other peers.
 
-This behavior contrasts with non-root containers. For example, when you execute `doc.getMap("meta").setContainer("text", new LoroText())`, it generates an operation to insert the LoroText container into the map. 
+This behavior contrasts with non-root containers. For example, when you execute `doc.getMap("meta").setContainer("text", new LoroText())`, it generates an operation to insert the LoroText container into the map.
 
 ---
 
@@ -51,7 +53,9 @@ This behavior contrasts with non-root containers. For example, when you execute 
 
 This happens because parallel creation of child containers results in different container IDs, preventing automatic merging of their contents. When a container holds substantial data or serves as the primary storage for document content, overwriting it can lead to unintended hiding or loss of critical information.
 
-```typescript
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const map = doc.getMap("map");
 
@@ -65,6 +69,7 @@ textB.insert(0, "B");
 doc.import(docB.export({ mode: "update" }));
 // Result: Either { "meta": { "text": "A" } } or { "meta": { "text": "B" } }
 ```
+
 </details>
 
 <details>
@@ -90,7 +95,9 @@ Loro provides a `redactJsonUpdates` function that allows you to selectively reda
 
 For example, if a user accidentally pastes a password or API key into a document:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc, redactJsonUpdates } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("1");
 
@@ -109,7 +116,7 @@ const jsonUpdates = doc.exportJsonUpdates();
 
 // Define version range to redact (redact the text content)
 const versionRange = {
-  "1": [0, 21]  // Redact the "Sensitive information"
+  "1": [0, 21], // Redact the "Sensitive information"
 };
 
 // Apply redaction
@@ -120,12 +127,12 @@ const redactedDoc = new LoroDoc();
 redactedDoc.importJsonUpdates(redactedJson);
 
 // The text content is now redacted with replacement characters
-console.log(redactedDoc.getText("text").toString()); 
+console.log(redactedDoc.getText("text").toString());
 // Outputs: "���������������������"
 
 // You can also redact specific map entries
 const versionRange2 = {
-  "1": [21, 22]  // Redact the "secret123" password
+  "1": [21, 22], // Redact the "secret123" password
 };
 
 const redactedJson2 = redactJsonUpdates(jsonUpdates, versionRange2);
@@ -133,7 +140,7 @@ const redactedDoc2 = new LoroDoc();
 redactedDoc2.importJsonUpdates(redactedJson2);
 
 console.log(redactedDoc2.getMap("map").get("password")); // null
-console.log(redactedDoc2.getMap("map").get("public"));   // "public information"
+console.log(redactedDoc2.getMap("map").get("public")); // "public information"
 ```
 
 This approach is safer than manually editing document content because:
@@ -144,8 +151,9 @@ This approach is safer than manually editing document content because:
 4. It selectively redacts only specific operations, not the entire document
 
 The redaction process follows these rules:
+
 - Preserves delete, tree move, and list move operations
-- Replaces text insertion content with Unicode replacement characters '�' 
+- Replaces text insertion content with Unicode replacement characters '�'
 - Substitutes list and map insert values with null
 - Maintains structure of child containers
 - Replaces text mark values with null
@@ -166,7 +174,9 @@ When you need to completely remove ALL history older than a certain version poin
 
 Shallow snapshots create a new document that preserves the current state but completely eliminates all history before a specified point, similar to Git's shallow clone functionality.
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("1");
 
@@ -183,9 +193,9 @@ text.insert(11, "with sanitized history");
 doc.commit();
 
 // Create a sanitized version that removes ALL history before current point
-const sanitizedSnapshot = doc.export({ 
-  mode: "shallow-snapshot", 
-  frontiers: doc.oplogFrontiers() 
+const sanitizedSnapshot = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.oplogFrontiers(),
 });
 
 // Create a new document from the sanitized snapshot
@@ -209,12 +219,14 @@ This approach is useful for:
 4. Ensuring old operations cannot be recovered or examined
 
 Compared to redaction:
+
 - Shallow snapshots completely remove all operations before a version point
 - Redaction selectively replaces just specific content with placeholders
 
 **Important**: While both methods maintain future synchronization consistency, your application must distribute the sanitized document to all peers. Otherwise, the original document with sensitive information will still exist on other clients.
 
 **When to use each approach**:
+
 - Use **redaction** when you need to sanitize specific operations (like an accidental password paste) while preserving older history
 - Use **shallow snapshots** when you want to completely eliminate all history before a certain point
 
@@ -236,7 +248,10 @@ This functionality is essential for building user-centric features in collaborat
 
 This hook provides an ideal point to associate peer information (such as author identity) with the document. The listener is triggered on the first commit from each peer, allowing you to store user metadata within the document itself.
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId(0);
 doc.subscribeFirstCommitFromPeer((e) => {

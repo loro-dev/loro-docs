@@ -9,7 +9,10 @@ Loro's Counter will add up all the applied values, and supports integers and flo
 
 Here is how to use it:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
 counter.increment(1);

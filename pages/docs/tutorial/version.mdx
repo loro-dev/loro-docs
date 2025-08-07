@@ -4,10 +4,13 @@ In centralized environments, we can use linear version numbers to represent a ve
 
 In Loro, you can express a document's version through a [Version Vector](https://en.wikipedia.org/wiki/Version_vector) or Frontiers.
 
-```rust
-doc.version();        // State Version vector
-doc.oplogVersion();   // OpLog Version vector
-doc.frontiers();      // State Frontiers
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.version(); // State Version vector
+doc.oplogVersion(); // OpLog Version vector
+doc.frontiers(); // State Frontiers
 doc.oplogFrontiers(); // OpLog Frontiers
 ```
 

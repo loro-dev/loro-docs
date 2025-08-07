@@ -21,7 +21,10 @@ Note: In JavaScript, the offset returned when querying a Stable Position is base
 
 ## Example
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const loro = new LoroDoc();
 const list = loro.getList("list");
 list.insert(0, "a");

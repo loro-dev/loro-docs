@@ -31,7 +31,10 @@ to implement the move operation.
 
 ### List
 
-```ts
+```ts twoslash
+import { LoroDoc, Loro } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("1");
 const listA = docA.getList("list");
@@ -69,7 +72,10 @@ expect(docB.toJSON()).toStrictEqual({ list: [0, 1, 8, 9] });
 
 ### MovableList
 
-```ts
+```ts twoslash
+import { LoroDoc, Loro } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("1");
 const listA = docA.getMovableList("list");
@@ -136,7 +142,7 @@ remains stationary.
 If you use a List to represent paragraphs in an article, you can use a Cursor to
 stably represent the selection range on the paragraph.
 
-```ts
+```ts twoslash
 import {
   Cursor,
   LoroDoc,
@@ -144,7 +150,7 @@ import {
   LoroMovableList,
   LoroText,
 } from "loro-crdt";
-
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("1");
 const list = doc.getList("list");

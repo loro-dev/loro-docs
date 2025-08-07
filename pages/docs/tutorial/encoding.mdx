@@ -22,26 +22,26 @@ Loro introduces three encoding modes to meet the needs for different use cases:
 Different encoding formats are provided through the unified `doc.export(mode)`,
 and all binary encoding formats can be imported via `doc.import(bytes)`.
 
-```ts
+```ts no_run
 export type ExportMode =
   | {
-    mode: "update";
-    from?: VersionVector;
-  }
+      mode: "update";
+      from?: VersionVector;
+    }
   | {
-    mode: "updates-in-range";
-    spans: {
-      id: ID;
-      len: number;
-    }[];
-  }
+      mode: "updates-in-range";
+      spans: {
+        id: ID;
+        len: number;
+      }[];
+    }
   | {
-    mode: "snapshot";
-  }
+      mode: "snapshot";
+    }
   | {
-    mode: "shallow-snapshot";
-    frontiers: Frontiers;
-  };
+      mode: "shallow-snapshot";
+      frontiers: Frontiers;
+    };
 ```
 
 ## Updates Encoding
@@ -53,7 +53,9 @@ There are two modes for updates encoding. `update` 和 `updates-in-range`.
 - `updates-in-range` mode will encode all ops within the specified version
   range.
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
 doc2.setPeerId(2);
@@ -72,7 +74,9 @@ incremental changes rather than the entire document state.
 
 ## Snapshot Encoding
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
 
@@ -96,7 +100,9 @@ Loro 1.0 provides a shallow snapshot encoding mode. You can specify the starting
 historical version to be retained, and Loro will truncate all the history before
 this version.
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
 doc2.setPeerId(2);

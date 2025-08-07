@@ -55,9 +55,9 @@ By default, each commit-generated `Change` will merge with the previous local
 
 ## Example
 
-```ts
-import { Change, LoroDoc } from "npm:loro-crdt@1.0.0-beta.5";
-
+```ts twoslash
+import { Change, LoroDoc } from "loro-crdt";
+// ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("0");
 const textA = docA.getText("text");

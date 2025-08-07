@@ -9,7 +9,9 @@ Loro's Map uses LWW (Last-Write-Wins) semantics. When concurrent edits conflict,
 
 Here is how to use it:
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("0");
 const docB = new LoroDoc();

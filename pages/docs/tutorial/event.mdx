@@ -16,16 +16,17 @@ with changes in the document state.
 2. **Transaction Commit**: When a transaction is committed, all pending
    operations collectively emit their corresponding events. This transaction
    commit occurs in two scenarios:
-
    - When `LoroDoc.commit()` is explicitly called
    - Automatically before an import or export operation
 
    Note that events are emitted asynchronously after a microtask. If you need to handle events immediately after a commit, you should await a microtask:
 
-```javascript
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.subscribe((event) => {
-   console.log("Event:", event);
+  console.log("Event:", event);
 });
 
 const text = doc.getText("text");
@@ -40,25 +41,30 @@ await Promise.resolve();
    method, respective events are emitted. This allows the local document to
    react to changes made by other peers.
 
-```javascript no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+declare const remoteChanges: Uint8Array;
+// ---cut---
 const doc = new LoroDoc();
 doc.subscribe((event) => {
-   console.log("Event:", event);
+  console.log("Event:", event);
 });
 
 doc.import(remoteChanges); // This will trigger events after a microtask
-await Promise.resolve();   // Wait for events to be emitted
+await Promise.resolve(); // Wait for events to be emitted
 ```
 
 4. **Version Checkout**: When you switch document state to a different version
    using `doc.checkout(frontiers)`, Loro emits an event to reflect this change.
    Like other events, these are also emitted after a microtask.
 
-```javascript
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const frontiers = doc.frontiers();
-doc.checkout(frontiers);   // This will trigger events after a microtask
-await Promise.resolve();   // Wait for events to be emitted
+doc.checkout(frontiers); // This will trigger events after a microtask
+await Promise.resolve(); // Wait for events to be emitted
 ```
 
 ## Transaction Behavior
@@ -80,10 +86,10 @@ events together as a cohesive unit. This is useful in several scenarios:
    - Enabling better event filtering and processing based on the origin
 
 <aside>
-Operations within a transaction are not immediately committed to the internal
-oplog. They are only committed when the transaction itself is committed.
-However, in order to make it easier to use and compare versions, uncommitted
-operations will also directly update the version.
+  Operations within a transaction are not immediately committed to the internal
+  oplog. They are only committed when the transaction itself is committed.
+  However, in order to make it easier to use and compare versions, uncommitted
+  operations will also directly update the version.
 </aside>
 
 ## Triggering a Commit
@@ -93,7 +99,9 @@ There are several ways to trigger a commit:
 1. **Explicit Commit**: Directly calling the `commit()` method on the Loro
    document.
 
-   ```javascript
+   ```ts twoslash
+   import { LoroDoc } from "loro-crdt";
+   // ---cut---
    const doc = new LoroDoc();
    const text = doc.getText("myText");
    text.insert(0, "Hello, Loro!");
@@ -103,7 +111,9 @@ There are several ways to trigger a commit:
 2. **Before Import/Export**: A commit is automatically triggered before
    executing an import operation.
 
-   ```javascript
+   ```ts twoslash
+   import { LoroDoc } from "loro-crdt";
+   // ---cut---
    const doc1 = new LoroDoc();
    doc1.setPeerId(1);
    const doc2 = new LoroDoc();

@@ -32,7 +32,7 @@ The [loro-prosemirror](https://github.com/loro-dev/loro-prosemirror) package pro
 
 The ProseMirror binding can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
 
-```ts
+```ts no_run twoslash
 import {
   CursorAwareness,
   LoroCursorPlugin,
@@ -44,7 +44,10 @@ import {
 import { LoroDoc } from "loro-crdt";
 import { EditorView } from "prosemirror-view";
 import { EditorState } from "prosemirror-state";
-
+import { keymap } from "prosemirror-keymap";
+declare const pmPlugins: any[];
+declare const editorDom: HTMLElement;
+// ---cut---
 const doc = new LoroDoc();
 const awareness = new CursorAwareness(doc.peerIdStr);
 const plugins = [
@@ -71,31 +74,31 @@ The [loro-codemirror](https://github.com/loro-dev/loro-codemirror) package provi
 - Cursor awareness
 - Undo/Redo functionality
 
-```ts
+```ts no_run twoslash
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { LoroExtensions } from "loro-codemirror";
 import { Awareness, LoroDoc, UndoManager } from "loro-crdt";
-
+// ---cut---
 const doc = new LoroDoc();
 const awareness = new Awareness(doc.peerIdStr);
 const undoManager = new UndoManager(doc, {});
 
 new EditorView({
-    state: EditorState.create({
-        extensions: [
-            // ... other extensions
-            LoroExtensions(
-                doc,
-                {
-                    awareness: awareness,
-                    user: { name: "Bob", colorClassName: "user1" },
-                },
-                undoManager,
-            ),
-        ],
-    }),
-    parent: document.querySelector("#editor")!,
+  state: EditorState.create({
+    extensions: [
+      // ... other extensions
+      LoroExtensions(
+        doc,
+        {
+          awareness: awareness,
+          user: { name: "Bob", colorClassName: "user1" },
+        },
+        undoManager,
+      ),
+    ],
+  }),
+  parent: document.querySelector("#editor")!,
 });
 ```
 
@@ -105,7 +108,9 @@ It's important to understand that LoroText is very different from using a regula
 
 Using `LoroText`:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("0");
 doc.getText("text").insert(0, "Hello");
@@ -118,7 +123,9 @@ console.log(doc.getText("text").toString()); // "HelloWorld"
 
 Using `String`:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("0");
 doc.getMap("map").set("text", "Hello");
@@ -134,6 +141,7 @@ console.log(doc.getMap("map").get("text")); // "World"
 Unlike LoroMap which uses Last-Write-Wins (LWW) semantics, LoroText is designed to preserve edits. Here's how they differ:
 
 When user A and user B make concurrent edits to the same text:
+
 - LoroText will merge both users' edits in sequence, preserving both changes
 - LoroMap will use LWW semantics, keeping only one user's changes
 
@@ -163,7 +171,10 @@ There are four kinds of expansion behaviors:
 
 ### Example
 
-```ts
+```ts twoslash
+import { LoroDoc, Delta } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 doc.configTextStyle({
   bold: { expand: "after" },
@@ -267,7 +278,10 @@ It's useful when you build the binding between Loro and rich text editors like
 Quill, which might assume there is always a newline at the end of the text
 implicitly.
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 doc.configTextStyle({ bold: { expand: "after" } });
@@ -288,7 +302,10 @@ The text event is in `Delta<string>[]` format. It can be used to bind the rich
 text editor. It has the same type as the arg of `applyDelta`, so the following
 example works:
 
-```ts
+```ts no_run twoslash
+import { LoroDoc, TextDiff } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 (async () => {
   const doc1 = new LoroDoc();
   doc1.configTextStyle({

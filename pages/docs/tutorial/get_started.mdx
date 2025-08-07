@@ -52,7 +52,7 @@ When using Loro with Vite, be aware of module loading timing issues with DOM eve
 **Problem:** The following code will cause nothing to load on the screen:
 
 ```ts
-import { LoroDoc } from 'loro-crdt';
+import { LoroDoc } from "loro-crdt";
 
 document.addEventListener("DOMContentLoaded", () => {
   const doc = new LoroDoc();
@@ -65,17 +65,18 @@ document.addEventListener("DOMContentLoaded", () => {
 **Solutions:**
 
 1. **Remove the event listener** (recommended for most cases):
-   ```ts
-   import { LoroDoc } from 'loro-crdt';
-   
+
+   ```ts twoslash
+   import { LoroDoc } from "loro-crdt";
+
    const doc = new LoroDoc();
    // Your code here...
    ```
 
 2. **Use dynamic import inside the event listener**:
-   ```ts
+   ```ts twoslash
    document.addEventListener("DOMContentLoaded", async () => {
-     const { LoroDoc } = await import('loro-crdt');
+     const { LoroDoc } = await import("loro-crdt");
      const doc = new LoroDoc();
      // Your code here...
    });
@@ -135,7 +136,8 @@ network. Loro simplifies this process for you.
 
 After you model your app state by Loro, syncing is simple:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
 const docA = new LoroDoc();
 const docB = new LoroDoc();
 
@@ -155,7 +157,9 @@ docA.import(bytesB);
 
 Saving your app state is also straightforward:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
 const bytes = doc.export({ mode: "snapshot" });
@@ -164,7 +168,10 @@ const bytes = doc.export({ mode: "snapshot" });
 
 Loading your app state:
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const bytes = new Uint8Array();
+// ---cut---
 const newDoc = new LoroDoc();
 newDoc.import(bytes);
 ```
@@ -172,7 +179,11 @@ newDoc.import(bytes);
 Loro also makes it easy for you to time travel the history and add version
 control to your app. [Learn more about time travel](/docs/tutorial/time_travel).
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const version = doc.frontiers();
+// ---cut---
 doc.checkout(version); // Checkout the doc to the given version
 ```
 
@@ -181,7 +192,10 @@ JSON, you probably can sync your app with Loro. Because we need to adhere to the
 JSON schema, using a number as a key in a Map is not permitted, and cyclic links
 should be avoided.
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 doc.toJSON(); // Get the JSON representation of the doc
 ```
 
@@ -190,7 +204,9 @@ doc.toJSON(); // Get the JSON representation of the doc
 LoroDoc is the entry point for using Loro. You must create a Doc to use Map,
 List, Text, and other types and to complete data synchronization.
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text: LoroText = doc.getText("text");
 text.insert(0, "Hello world!");
@@ -204,7 +220,10 @@ as `Container`s.
 
 Here are their basic operations:
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 const list: LoroList = doc.getList("list");
 list.insert(0, "A");
@@ -252,12 +271,15 @@ Loro is a pure library and does not handle network protocols or storage mechanis
 To save the document, use `doc.export({mode: "snapshot"})` to get its binary
 form. To open it again, use `doc.import(data)` to load this binary data.
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
 const data = doc.export({ mode: "snapshot" });
 
-const newDoc = new Loro();
+const newDoc = new LoroDoc();
 newDoc.import(data);
 expect(newDoc.toJSON()).toStrictEqual({
   text: "Hello world!",
@@ -268,7 +290,10 @@ Exporting the entire document on each keypress is inefficient. Instead, use
 `doc.export({mode: "update", from: VersionVector})` to obtain binary data for
 operations since the last export.
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
 const data = doc.export({ mode: "snapshot" });
@@ -328,7 +353,10 @@ exchanges.
 
 Below is an example of synchronization between two documents:
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 const docA = new LoroDoc();
 const docB = new LoroDoc();
 const listA: LoroList = docA.getList("list");
@@ -377,7 +405,10 @@ committed when:
 
 Below is an example of rich text event:
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
+const expect: any = () => {};
+// ---cut---
 // The code is from https://github.com/loro-dev/loro-examples-deno
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -405,7 +436,32 @@ expect(ran).toBeTruthy();
 
 The types of events are defined as follows:
 
-```ts
+```ts twoslash
+import { Path, Diff, Frontiers, ContainerID } from "loro-crdt";
+
+export interface LoroEventBatch {
+  /**
+   * How the event is triggered.
+   *
+   * - `local`: The event is triggered by a local transaction.
+   * - `import`: The event is triggered by an import operation.
+   * - `checkout`: The event is triggered by a checkout operation.
+   */
+  by: "local" | "import" | "checkout";
+  origin?: string;
+  /**
+   * The container ID of the current event receiver.
+   * It's undefined if the subscriber is on the root document.
+   */
+  currentTarget?: ContainerID;
+  events: LoroEvent[];
+  from: Frontiers;
+  to: Frontiers;
+}
+
+/**
+ * The concrete event of Loro.
+ */
 export interface LoroEvent {
   /**
    * The container ID of the event's target.
@@ -417,77 +473,4 @@ export interface LoroEvent {
    */
   path: Path;
 }
-
-export type Path = (number | string | TreeID)[];
-
-export type Diff = ListDiff | TextDiff | MapDiff | TreeDiff | CounterDiff;
-
-export type ListDiff = {
-  type: "list";
-  diff: Delta<Value[]>[];
-};
-
-export type TextDiff = {
-  type: "text";
-  diff: Delta<string>[];
-};
-
-export type MapDiff = {
-  type: "map";
-  updated: Record<string, Value | undefined>;
-};
-
-export type TreeDiffItem =
-  | {
-    target: TreeID;
-    action: "create";
-    parent: TreeID | undefined;
-    index: number;
-    fractionalIndex: string;
-  }
-  | {
-    target: TreeID;
-    action: "delete";
-    oldParent: TreeID | undefined;
-    oldIndex: number;
-  }
-  | {
-    target: TreeID;
-    action: "move";
-    parent: TreeID | undefined;
-    index: number;
-    fractionalIndex: string;
-    oldParent: TreeID | undefined;
-    oldIndex: number;
-  };
-
-export type TreeDiff = {
-  type: "tree";
-  diff: TreeDiffItem[];
-};
-
-export type CounterDiff = {
-  type: "counter";
-  increment: number;
-};
-
-export type Delta<T> =
-  | {
-    insert: T;
-    attributes?: { [key in string]: {} };
-    retain?: undefined;
-    delete?: undefined;
-  }
-  | {
-    delete: number;
-    attributes?: undefined;
-    retain?: undefined;
-    insert?: undefined;
-  }
-  | {
-    retain: number;
-    attributes?: { [key in string]: {} };
-    delete?: undefined;
-    insert?: undefined;
-  };
 ```

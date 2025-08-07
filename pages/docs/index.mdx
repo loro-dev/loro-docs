@@ -6,7 +6,7 @@ network. Loro simplifies this process for you.
 
 We want to provide better DevTools to make building
 [local-first apps](https://www.inkandswitch.com/local-first/) easy and
-enjoyable. 
+enjoyable.
 
 Loro uses [Conflict-free Replicated Data Types (CRDTs)](/docs/concepts/crdt) to
 resolve parallel edits. By utilizing Loro's data types, your applications can be
@@ -14,7 +14,8 @@ made collaborative and keep the editing history with low overhead.
 
 After you model your app state by Loro, syncing is simple:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
 const docA = new LoroDoc();
 const docB = new LoroDoc();
 docA.getText("text").insert(0, "Hello world!");
@@ -33,7 +34,9 @@ docA.import(bytesB);
 
 Saving your app state is also straightforward:
 
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
 const bytes = doc.export({ mode: "snapshot" });
@@ -42,7 +45,10 @@ const bytes = doc.export({ mode: "snapshot" });
 
 Loading your app state:
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const bytes = new Uint8Array([1, 2, 3]);
+// ---cut---
 const newDoc = new LoroDoc();
 newDoc.import(bytes);
 ```
@@ -50,7 +56,11 @@ newDoc.import(bytes);
 Loro also makes it easy for you to time travel the history and add version
 control to your app. [Learn more about time travel](/docs/tutorial/time_travel).
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const version = doc.frontiers();
+// ---cut---
 doc.checkout(version); // Checkout the doc to the given version
 ```
 
@@ -59,7 +69,10 @@ JSON, you probably can sync your app with Loro. Because we need to adhere to the
 JSON schema, using a number as a key in a Map is not permitted, and cyclic links
 should be avoided.
 
-```ts no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 doc.toJSON(); // Get the JSON representation of the doc
 ```
 
@@ -84,18 +97,18 @@ import { Cards } from "nextra/components";
 The table below summarizes Loro's features, which may not be present in other
 CRDT libraries.
 
-| Features/Important design decisions                                         | Loro  | Diamond-types | Yjs        | Automerge   |
-| :-------------------------------------------------------------------------- | :---- | :------------ | :--------- | :---------- |
-| [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅    | ✅ Inventor   | ❌          | ❌          |
-| Rich Text CRDT                                                              | ✅    | ❌            | ❌          | ✅          |
-| [Movable Tree](https://ieeexplore.ieee.org/document/9563274)                | ✅    | ❌            | ❌          | ❌ Inventor |
-| [Movable List](https://loro.dev/docs/tutorial/list)                         | ✅    | ❌            | ❌          | ❌ Inventor |
-| Time Travel                                                                 | ✅    | ✅            | ✅[1]       | ✅          |
-| [Fugue](https://arxiv.org/abs/2305.00583) / Maximal non-interleaving        | ✅    | ✅            | ❌          | ❌          |
-| JSON Types                                                                  | ✅    | ❓            | ✅          | ✅          |
-| Merging Elements in Memory by Run Length Encoding                           | ✅    | ✅            | ✅ Inventor | ❌          |
-| Byzantine-fault-tolerance                                                   | ❌    | ❌            | ❌          | ✅          |
-| Version Control                                                             | ✅    | ❌            | ❌          | ✅          |
+| Features/Important design decisions                                         | Loro | Diamond-types | Yjs         | Automerge   |
+| :-------------------------------------------------------------------------- | :--- | :------------ | :---------- | :---------- |
+| [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅   | ✅ Inventor   | ❌          | ❌          |
+| Rich Text CRDT                                                              | ✅   | ❌            | ❌          | ✅          |
+| [Movable Tree](https://ieeexplore.ieee.org/document/9563274)                | ✅   | ❌            | ❌          | ❌ Inventor |
+| [Movable List](https://loro.dev/docs/tutorial/list)                         | ✅   | ❌            | ❌          | ❌ Inventor |
+| Time Travel                                                                 | ✅   | ✅            | ✅[1]       | ✅          |
+| [Fugue](https://arxiv.org/abs/2305.00583) / Maximal non-interleaving        | ✅   | ✅            | ❌          | ❌          |
+| JSON Types                                                                  | ✅   | ❓            | ✅          | ✅          |
+| Merging Elements in Memory by Run Length Encoding                           | ✅   | ✅            | ✅ Inventor | ❌          |
+| Byzantine-fault-tolerance                                                   | ❌   | ❌            | ❌          | ✅          |
+| Version Control                                                             | ✅   | ❌            | ❌          | ✅          |
 
 - [1] Unlike others, Yjs requires users to store a version vector and a delete
   set, enabling time travel back to a specific point.
