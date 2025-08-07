@@ -6,7 +6,7 @@
     "build": "node gen-rss.js && next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "test": "deno run -A ./deno_scripts/run_code_blocks.ts",
+    "test": "cd deno_scripts && deno run -A ./run_code_blocks.ts ..",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "extract-llms": "deno run -A ./deno_scripts/extract-llms.ts",

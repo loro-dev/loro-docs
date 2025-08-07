@@ -475,7 +475,7 @@ The problem of overlapping styles is related to how we represent them.
 We represent the rich text using
 [Quill's Delta](https://quilljs.com/docs/delta/) format.
 
-```ts
+```ts no_run
 [
   { insert: "Gandalf", attributes: { bold: true } },
   { insert: " the " },
@@ -536,7 +536,7 @@ it doesn't require handling special cases. It effectively addresses scenarios
 where multiple comments overlap and is also user-friendly for application
 coding.
 
-```ts
+```ts no-run
 [
   { insert: "The ", attributes: { "comment:alice": "Hi" } },
   {

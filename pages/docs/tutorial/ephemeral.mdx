@@ -13,7 +13,10 @@ Since Ephemeral information is primarily used for real-time collaboration, we've
 
 ## Example
 
-```ts
+```ts twoslash
+import { EphemeralStore, EphemeralStoreEvent } from "loro-crdt";
+import { expect } from "expect";
+
 const store = new EphemeralStore();
 // Set ephemeral data
 store.set("loro-prosemirror", {

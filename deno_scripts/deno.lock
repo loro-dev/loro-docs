@@ -1,11 +1,13 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@std/fs@*": "1.0.4",
     "jsr:@std/path@^1.0.6": "1.0.6",
     "npm:expect@*": "29.7.0",
+    "npm:expect@29.7.0": "29.7.0",
     "npm:loro-crdt@0.15.1": "0.15.1",
-    "npm:loro-crdt@1.0.0-beta.5": "1.0.0-beta.5"
+    "npm:loro-crdt@1.0.0-beta.5": "1.0.0-beta.5",
+    "npm:loro-crdt@1.5.10": "1.5.10"
   },
   "jsr": {
     "@std/fs@1.0.4": {
@@ -251,6 +253,9 @@
       "dependencies": [
         "loro-wasm@1.0.0-beta.5"
       ]
+    },
+    "loro-crdt@1.5.10": {
+      "integrity": "sha512-dBAw3Hh9EJLaS5MqyNMoZRq7r01UxLWUdm3go2v2EtYIrH658IG0vcktHuZqeEwyTMvE5eUtyHhLx3lgUyDFfw=="
     },
     "loro-wasm@0.15.1": {
       "integrity": "sha512-1ZRJgD3WJzFDBEHnMMiciaszt1iuM7BwJECggjNqCH1wBhGJ6gNk777b1pLQvuqHP1rU8LDcKeWaYwnavep17g=="

@@ -51,7 +51,7 @@ When using Loro with Vite, be aware of module loading timing issues with DOM eve
 
 **Problem:** The following code will cause nothing to load on the screen:
 
-```ts
+```ts no_run
 import { LoroDoc } from "loro-crdt";
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -2,7 +2,7 @@ import { walk } from "jsr:@std/fs";
 import { CodeBlock, extractCodeBlocks } from "./extract_code_blocks.ts";
 import { resolve } from "https://deno.land/std@0.139.0/path/mod.ts";
 
-const LORO_VERSION = "1.5.2";
+const LORO_VERSION = "1.5.10";
 
 async function* scanMarkdownFiles(dir: string): AsyncGenerator<CodeBlock[]> {
   // Walking through the directory to find markdown files
@@ -34,7 +34,7 @@ function replaceImportVersion(input: string, targetVersion: string): string {
 const targetDir = Deno.args[0] || "."; // Use the first argument as the directory path or default to the current directory
 
 const IMPORTS =
-  `import { Loro, LoroDoc, LoroMap, LoroText, LoroList, Delta, UndoManager } from "npm:loro-crdt@${LORO_VERSION}";
+  `import { Loro, LoroDoc, LoroMap, LoroText, LoroList, Delta, UndoManager, EphemeralStore } from "npm:loro-crdt@${LORO_VERSION}";
 import { expect } from "npm:expect@29.7.0";
 `;
 
