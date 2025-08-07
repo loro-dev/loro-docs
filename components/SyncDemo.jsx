@@ -1,3 +1,5 @@
+import { CodeBlock } from "@components/CodeBlock";
+
 export function SyncDemo() {
   const codeExample = `import { LoroDoc } from "npm:loro-crdt";
 const docA = new LoroDoc();
@@ -22,9 +24,7 @@ console.log(docB.getText("text").toString());`;
         Effortless Document Synchronization, <br/>
         Even in P2P Environments
       </h2>
-      <pre className="language-ts">
-        <code>{codeExample}</code>
-      </pre>
+      <CodeBlock>{codeExample}</CodeBlock>
     </section>
   );
 }
