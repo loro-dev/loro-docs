@@ -6,8 +6,8 @@ const docA = new LoroDoc();
 const docB = new LoroDoc();
 docA.getText("text").update("Hello!");
 docB.getText("text").update("Hi!");
-const bytesA = docA.export({ mode: "update" });
-const bytesB = docB.export({ mode: "update" });
+const bytesA: Uint8Array = docA.export({ mode: "update" });
+const bytesB: Uint8Array = docB.export({ mode: "update" });
 
 // Exchange bytesA and bytesB via any methods
 docB.import(bytesA);
@@ -24,7 +24,9 @@ console.log(docB.getText("text").toString());`;
         Effortless Document Synchronization, <br/>
         Even in P2P Environments
       </h2>
-      <CodeBlock>{codeExample}</CodeBlock>
+      <CodeBlock language="ts">
+        {codeExample}
+      </CodeBlock>
     </section>
   );
 }
