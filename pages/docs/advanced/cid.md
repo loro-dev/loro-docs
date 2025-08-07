@@ -48,6 +48,7 @@ When initializing child containers in parallel, overwrites can occur instead of
 automatic merging. For example:
 
 ```typescript
+const a: string = "hello";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
 

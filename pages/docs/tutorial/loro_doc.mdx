@@ -11,9 +11,16 @@ LoroDoc is the main entry point for almost all Loro functionality. It serves as 
 
 First, let's create a new LoroDoc instance:
 
-```typescript
-import { LoroDoc } from "loro-crdt";
-
+```ts twoslash
+import {
+  LoroDoc,
+  LoroText,
+  LoroList,
+  LoroMap,
+  LoroTree,
+  LoroMovableList,
+} from "loro-crdt";
+// ---cut---
 // Create a new document with a random peer ID
 const doc = new LoroDoc();
 
@@ -46,7 +53,9 @@ To model a document with the following format:
 }
 ```
 
-```ts
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const meta = doc.getMap("meta");
 meta.set("title", "Document Title");
@@ -72,7 +81,9 @@ Let's look at how to use each type:
 
 ### Text Container
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello");
@@ -82,14 +93,16 @@ console.log(text.toString()); // "Hello World!"
 // Rich text support
 doc.configTextStyle({
   bold: { expand: "after" },
-  link: { expand: "none" }
+  link: { expand: "none" },
 });
 text.mark({ start: 0, end: 5 }, "bold", true);
 ```
 
 ### List Container
 
-```typescript
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const list = doc.getList("list");
 list.insert(0, "first");
@@ -103,7 +116,9 @@ nestedText.insert(0, "nested text");
 
 ### Map Container
 
-```typescript
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const map = doc.getMap("map");
 map.set("name", "John");
@@ -117,7 +132,9 @@ userText.insert(0, "Software Engineer");
 
 ### Tree Container
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
 const root = tree.createNode();
@@ -132,7 +149,9 @@ child2.data.set("name", "Child 2");
 
 ### MovableList Container
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("tasks");
 movableList.insert(0, "Task 1");
@@ -144,7 +163,10 @@ movableList.move(0, 1); // Move Task 1 after Task 2
 
 LoroDoc can be used for real-time collaboration. Here's how to sync changes between peers:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+declare const otherDoc: LoroDoc;
+// ---cut---
 // First peer
 const doc1 = new LoroDoc();
 doc1.setPeerId("1");
@@ -176,13 +198,13 @@ doc2.commit();
 
 Loro provides built-in undo/redo functionality:
 
-```typescript
+```ts twoslash
 import { UndoManager, LoroDoc } from "loro-crdt";
-
+// ---cut---
 const doc = new LoroDoc();
 const undoManager = new UndoManager(doc, {
   maxUndoSteps: 100,
-  mergeInterval: 1000
+  mergeInterval: 1000,
 });
 
 const text = doc.getText("text");
@@ -205,7 +227,9 @@ if (undoManager.canRedo()) {
 
 You can save and load the document state:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Export the document
 const snapshot = doc.export({ mode: "snapshot" });
@@ -228,13 +252,15 @@ Shallow import/export is a feature that allows you to create and share document 
 
 Here's how to use shallow export:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
-// Export a shallow snapshot that only include the history since `doc.oplogFrontiers()` 
+// Export a shallow snapshot that only include the history since `doc.oplogFrontiers()`
 // It works like `git clone --depth=1`, where the exported data only contain the most recent ops.
-const shallowSnapshot = doc.export({ 
-  mode: "shallow-snapshot", 
-  frontiers: doc.oplogFrontiers() 
+const shallowSnapshot = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.oplogFrontiers(),
 });
 
 // Check if a document is shallow
@@ -258,7 +284,9 @@ Loro allows you to redact specific segments of document history while preserving
 
 Here's how to use the redaction functionality:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc, redactJsonUpdates } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("1");
 
@@ -277,7 +305,7 @@ const jsonUpdates = doc.exportJsonUpdates();
 
 // Define version range to redact (redact the text content)
 const versionRange = {
-  "1": [0, 21]  // Redact the "Sensitive information"
+  "1": [0, 21], // Redact the "Sensitive information"
 };
 
 // Apply redaction
@@ -293,10 +321,11 @@ console.log(redactedDoc.getText("text").toString());
 
 // Map operations after the redacted range remain intact
 console.log(redactedDoc.getMap("map").get("password")); // "secret123"
-console.log(redactedDoc.getMap("map").get("public"));   // "public information"
+console.log(redactedDoc.getMap("map").get("public")); // "public information"
 ```
 
 Redaction applies these rules to preserve document structure while removing sensitive content:
+
 - Preserves delete and move operations
 - Replaces text insertion content with Unicode replacement characters '�'
 - Substitutes list and map insert values with null
@@ -314,7 +343,9 @@ Both redaction and shallow snapshots maintain future synchronization consistency
 
 Subscribe to changes in the document:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.subscribe((event) => {
   console.log("Document changed:", event);
@@ -332,7 +363,10 @@ text.subscribe((event) => {
 Events in LoroDoc are emitted only after a transaction is committed, and importantly, the events are emitted after a microtask. This means you need to await a microtask if you want to handle the events immediately after a commit.
 
 1. Explicitly calling `doc.commit()`:
-```typescript
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 
@@ -349,24 +383,33 @@ await Promise.resolve(); // Now the event has been emitted
 ```
 
 2. Implicitly through certain operations:
-```typescript no_run
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+declare const someData: Uint8Array;
+declare const someVersion: any;
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 
 // These operations trigger implicit commits:
 doc.export({ mode: "snapshot" }); // Implicit commit
-doc.import(someData);            // Implicit commit
-doc.checkout(someVersion);       // Implicit commit
+doc.import(someData); // Implicit commit
+doc.checkout(someVersion); // Implicit commit
 ```
 
 You can also specify additional information when committing:
-```typescript no_run
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
 doc.commit({
-  origin: "user-edit",      // Mark the event source
-  message: "Add greeting",  // Like a git commit message
-  timestamp: Date.now()     // Custom timestamp
+  origin: "user-edit", // Mark the event source
+  message: "Add greeting", // Like a git commit message
+  timestamp: Date.now(), // Custom timestamp
 });
-await Promise.resolve();    // Wait for event if needed
+await Promise.resolve(); // Wait for event if needed
 ```
 
 Note: Multiple operations before a `commit` are batched into a single event. This helps reduce event overhead and provides atomic changes. The event will still be emitted after a microtask, regardless of whether the commit was explicit or implicit.
@@ -380,7 +423,10 @@ LoroDoc provides powerful version control features that allow you to track and m
 Loro uses two ways to represent versions:
 
 1. **Version Vector**: A map from peer ID to counter
-```typescript
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Get current version vector
 const vv = doc.version();
@@ -390,7 +436,10 @@ const oplogVv = doc.oplogVersion();
 ```
 
 2. **Frontiers**: A list of operation IDs that represent the latest operations from each peer. This is compacter than version vector. In most of the cases, it only has 1 element.
-```typescript
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("0");
 doc.getMap("map").set("text", "Hello");
@@ -405,7 +454,9 @@ const oplogFrontiers = doc.oplogFrontiers(); // { "0": 0 }
 
 You can navigate through document history using checkout:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Save current version
 const frontiers = doc.frontiers();
@@ -424,6 +475,7 @@ doc.attach();
 ```
 
 Note: After checkout, the document enters "detached" mode. In this mode:
+
 - The document is not editable by default
 - Import operations are recorded but not applied to the document state
 - You need to call `attach()` or `checkoutToLatest()` to go back to the latest version and make it editable again
@@ -432,7 +484,9 @@ Note: After checkout, the document enters "detached" mode. In this mode:
 
 The document enters "detached" mode after a `checkout` operation or when explicitly calling `doc.detach()`. In detached mode, the document state is not synchronized with the latest version in the OpLog.
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Check if document is in detached mode
 console.log(doc.isDetached()); // false
@@ -448,7 +502,9 @@ console.log(doc.isDetached()); // false
 
 By default, editing is disabled in detached mode. However, you can enable it:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Enable editing in detached mode
 doc.setDetachedEditing(true);
@@ -458,11 +514,12 @@ console.log(doc.isDetachedEditingEnabled()); // true
 #### Key Behaviors in Detached Mode
 
 1. **Import Operations**
-
    - Operations imported via `doc.import()` are recorded in the OpLog
    - These operations are not applied to the document state until checkout
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const oldDoc = new LoroDoc();
 oldDoc.getMap("map").set("name", "John");
 const updates = oldDoc.export({ mode: "update" });
@@ -475,7 +532,10 @@ doc.checkoutToLatest(); // Now updates are applied
 2. **Version Management**
    - Each checkout uses a different PeerID to prevent conflicts
    - The document maintains two version states:
-```typescript
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Current state version
 const stateVersion = doc.version();
@@ -486,7 +546,9 @@ const latestVersion = doc.oplogVersion();
 3. **Forking**
    - You can create a new document at a specific version:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("0");
 doc.getText("text").insert(0, "Hello");
@@ -501,7 +563,10 @@ console.log(forkedAtVersion.getText("text").toString()); // "He"
 
 1. **Time Travel and History Review**
 
-```typescript no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+declare const text: any;
+// ---cut---
 const doc = new LoroDoc();
 // Save current version
 const frontiers = doc.frontiers();
@@ -518,7 +583,9 @@ doc.checkoutToLatest();
 
 2. **Branching**
 
-```typescript no_run
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Enable detached editing
 doc.setDetachedEditing(true);
@@ -537,7 +604,10 @@ branchText.insert(0, "Branch changes");
 
 Subscribe to local changes for syncing between peers:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+declare const otherDoc: LoroDoc;
+// ---cut---
 const doc = new LoroDoc();
 // Subscribe to local updates
 const unsubscribe = doc.subscribeLocalUpdates((updates) => {
@@ -553,12 +623,14 @@ unsubscribe();
 
 Subscribe to all document changes. The event may be triggered by local operations, importing updates, or switching to another version.
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc, LoroEventBatch } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.subscribe((event: LoroEventBatch) => {
   console.log("Event triggered by:", event.by); // "local" | "import" | "checkout"
   console.log("Event origin:", event.origin);
-  
+
   for (const e of event.events) {
     console.log("Target container:", e.target);
     console.log("Path:", e.path);
@@ -571,7 +643,9 @@ doc.subscribe((event: LoroEventBatch) => {
 
 Subscribe to changes in specific containers:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc, LoroEventBatch } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.subscribe((event: LoroEventBatch) => {
@@ -592,7 +666,9 @@ list.subscribe((event: LoroEventBatch) => {
 
 Loro provides stable cursor position tracking that remains valid across concurrent edits:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "123");
@@ -603,8 +679,8 @@ if (cursor) {
   // Get current cursor position
   const pos = doc.getCursorPos(cursor);
   console.log(pos.offset); // Current position
-  console.log(pos.side);   // Cursor side
-  
+  console.log(pos.side); // Cursor side
+
   // Cursor position updates automatically with concurrent edits
   text.insert(0, "abc");
   const newPos = doc.getCursorPos(cursor);
@@ -616,16 +692,17 @@ if (cursor) {
 
 Track and analyze document changes:
 
-```typescript
+```ts twoslash
+import { LoroDoc, OpId } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("1");
 doc.getText("text").insert(0, "Hello");
 doc.commit();
 // Get number of changes and operations
-console.log(doc.changeCount());  // Number of changes
-console.log(doc.opCount());      // Number of operations
+console.log(doc.changeCount()); // Number of changes
+console.log(doc.opCount()); // Number of operations
 
-// Get all changes
 const changes = doc.getAllChanges();
 for (const [peer, peerChanges] of changes.entries()) {
   for (const change of peerChanges) {
@@ -634,19 +711,19 @@ for (const [peer, peerChanges] of changes.entries()) {
       counter: change.counter,
       lamport: change.lamport,
       timestamp: change.timestamp,
-      message: change.message
+      message: change.message,
     });
   }
 }
 
 // Get specific change
-const changeId = { peer: "1", counter: 0 };
+
+const changeId = { peer: "1", counter: 0 } as OpId;
 const change = doc.getChangeAt(changeId);
 
 // Get operations in a change
 const ops = doc.getOpsInChange(changeId);
 
-// Track change ancestors
 doc.travelChangeAncestors([changeId], (change) => {
   console.log("Ancestor change:", change);
   return true; // continue traversal
@@ -660,20 +737,22 @@ const modifiedContainers = doc.getChangedContainersIn(changeId, 1);
 
 Loro supports various import and export modes:
 
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 // Export modes
 const doc = new LoroDoc();
 const previousVersion = doc.version();
 doc.getText("text").insert(0, "Hello");
 const snapshot = doc.export({ mode: "snapshot" });
 const updates = doc.export({ mode: "update", from: previousVersion });
-const shallowSnapshot = doc.export({ 
-  mode: "shallow-snapshot", 
-  frontiers: doc.oplogFrontiers() 
+const shallowSnapshot = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.oplogFrontiers(),
 });
 const rangeUpdates = doc.export({
   mode: "updates-in-range",
-  spans: [{ id: { peer: "1", counter: 0 }, len: 10 }]
+  spans: [{ id: { peer: "1", counter: 0 }, len: 10 }],
 });
 
 // Import with status tracking
@@ -689,7 +768,7 @@ const jsonStatus = doc.importJsonUpdates({
   schema_version: 1,
   start_version: new Map([["1", 0]]),
   peers: ["1"],
-  changes: []
+  changes: [],
 });
 ```
 
@@ -697,7 +776,9 @@ const jsonStatus = doc.importJsonUpdates({
 
 Access document content through paths:
 
-```typescript
+```ts no_run twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 // Get value or container by path
 const value = doc.getByPath("map/key");
@@ -726,9 +807,9 @@ const json = doc.toJsonWithReplacer((key, value) => {
 
 Access debug information and metadata:
 
-```typescript
+```ts no_run twoslash
 import { setDebug, LoroDoc, decodeImportBlobMeta } from "loro-crdt";
-
+// ---cut---
 const doc = new LoroDoc();
 // Enable debug info
 setDebug();
@@ -739,6 +820,6 @@ console.log({
   startTimestamp: metadata.startTimestamp,
   endTimestamp: metadata.endTimestamp,
   mode: metadata.mode,
-  changeNum: metadata.changeNum
+  changeNum: metadata.changeNum,
 });
 ```
