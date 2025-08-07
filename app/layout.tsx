@@ -2,7 +2,8 @@ import { Footer, Layout, Navbar } from 'nextra-theme-docs'
 import { Banner, Head } from 'nextra/components'
 import Image from 'next/image'
 import FooterComponent from '../components/landing/Footer'
-import 'nextra-theme-docs/style.css'
+import 'nextra-theme-docs/style-prefixed.css'
+import '../style.css'
 
 export const metadata = {
   title: 'Loro',
@@ -39,6 +40,7 @@ export default function RootLayout({
       </Head>
       <body>
         <Layout
+          pageMap={[]}
           navbar={
             <Navbar
               logo={
@@ -62,20 +64,9 @@ export default function RootLayout({
                   Loro
                 </span>
               }
-              project={{
-                link: 'https://github.com/loro-dev/loro',
-              }}
-              chat={{
-                link: 'https://discord.gg/tUsBSVfqzf',
-              }}
             />
           }
           footer={<FooterComponent />}
-          docsRepositoryBase="https://github.com/loro-dev/loro-docs/tree/main"
-          darkMode={true}
-          nextThemes={{
-            defaultTheme: 'dark',
-          }}
         >
           {children}
         </Layout>

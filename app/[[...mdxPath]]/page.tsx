@@ -1,48 +1,37 @@
-import { evalutePage, fetchPageMap } from 'nextra/page-map'
 import { notFound } from 'next/navigation'
 
-export const revalidate = 60
-
-type Params = Promise<{
-  mdxPath?: string[]
-}>
-
 export async function generateStaticParams() {
-  const pageMap = await fetchPageMap()
-  const paths = []
-  
-  function extractPaths(items: any[], prefix = '') {
-    for (const item of items) {
-      if (item.type === 'page' || item.type === 'mdx') {
-        const path = prefix ? `${prefix}/${item.name}` : item.name
-        paths.push(path.split('/'))
-      }
-      if (item.children) {
-        extractPaths(item.children, prefix ? `${prefix}/${item.name}` : item.name)
-      }
-    }
-  }
-  
-  extractPaths(pageMap)
-  
-  return paths.map(mdxPath => ({ mdxPath }))
+  return [
+    { mdxPath: [] },
+    { mdxPath: ['about'] },
+    { mdxPath: ['blog'] },
+    { mdxPath: ['changelog'] },
+    { mdxPath: ['docs'] },
+    // Add more routes as needed
+  ]
 }
 
-export default async function Page({ params }: { params: Params }) {
+export default async function Page({
+  params
+}: {
+  params: Promise<{ mdxPath?: string[] }>
+}) {
   const { mdxPath } = await params
-  const route = mdxPath?.join('/') || ''
-  const filePath = route ? `/${route}` : '/index'
+  const pagePath = mdxPath?.length ? mdxPath.join('/') : 'index'
   
   try {
-    const page = await evalutePage({ filePath, pageMap: await fetchPageMap() })
+    // Dynamically import the MDX content based on the path
+    const MDXContent = await import(`../../content/${pagePath}.mdx`)
+      .catch(() => import(`../../content/${pagePath}/index.mdx`))
+      .catch(() => null)
     
-    if (!page) {
+    if (!MDXContent) {
       notFound()
     }
     
-    return page
+    return <MDXContent.default />
   } catch (error) {
-    console.error('Error rendering page:', error)
+    console.error('Page not found:', pagePath, error)
     notFound()
   }
 }

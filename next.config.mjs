@@ -15,21 +15,25 @@ export default withNextra({
       config.experiments = { ...config.experiments, asyncWebAssembly: true };
       
       // =========================================================================
-      // SVG handling - first remove any existing SVG rules
-      config.module.rules = config.module.rules.map(rule => {
-        if (rule.test && rule.test.toString().includes('svg')) {
-          return {
-            ...rule,
-            exclude: /\.svg$/,
-          };
-        }
-        return rule;
+      // SVG handling
+      // Find and modify the existing rule that handles SVG imports
+      const fileLoaderRule = config.module.rules.find((rule) => {
+        const test = rule.test;
+        if (!test) return false;
+        if (test.source) return test.source.includes('svg');
+        if (test instanceof RegExp) return test.test('.svg');
+        return false;
       });
 
-      // Then add our own SVG handling
+      if (fileLoaderRule) {
+        // Exclude SVG from the file loader
+        fileLoaderRule.exclude = /\.svg$/;
+      }
+
+      // Add SVGR loader for SVG files
       config.module.rules.push({
         test: /\.svg$/,
-        use: ["@svgr/webpack"],
+        use: ['@svgr/webpack'],
       });
       return config;
     },
