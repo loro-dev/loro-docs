@@ -18,6 +18,7 @@ import CustomerWall from "@components/landing/CustomerWall";
 import { Separator } from "@ariakit/react";
 import Demo from "@components/richtextDemo";
 import Testimonial from "@components/Testimonial";
+import { CodeBlock } from "@components/CodeBlock";
 
 <div className="relative landing-page-root dark bg-zinc-900">
   <div style={{ maxWidth: 1600, margin: "0 auto" }}>
@@ -111,24 +112,28 @@ import Testimonial from "@components/Testimonial";
         Effortless Document Synchronization, <br/>
         Even in P2P Environments
       </h2>
-      ```ts
-      import { LoroDoc } from "npm:loro-crdt";
-      const docA = new LoroDoc();
-      const docB = new LoroDoc();
-      docA.getText("text").update("Hello!");
-      docB.getText("text").update("Hi!");
-      const bytesA: Uint8Array = docA.export({ mode: "update" });
-      const bytesB: Uint8Array = docB.export({ mode: "update" });
+    </section>
 
-      // Exchange bytesA and bytesB via any methods
-      docB.import(bytesA);
-      docA.import(bytesB);
+```ts
+import { LoroDoc } from "npm:loro-crdt";
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.getText("text").update("Hello!");
+docB.getText("text").update("Hi!");
+const bytesA: Uint8Array = docA.export({ mode: "update" });
+const bytesB: Uint8Array = docB.export({ mode: "update" });
 
-      // The merge result is consistent
-      // They should both be "Hello!Hi!" or "Hi!Hello!"
-      console.log(docA.getText("text").toString()); 
-      console.log(docB.getText("text").toString()); 
-      ```
+// Exchange bytesA and bytesB via any methods
+docB.import(bytesA);
+docA.import(bytesB);
+
+// The merge result is consistent
+// They should both be "Hello!Hi!" or "Hi!Hello!"
+console.log(docA.getText("text").toString()); 
+console.log(docB.getText("text").toString()); 
+```
+
+    <section className="px-5 md:px-15 z-10 relative">
 
     <div className="mt-8 flex">
       <div className="relative group">
