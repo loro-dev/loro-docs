@@ -3210,6 +3210,7 @@ You can use Loro in your application by using:
 - [`loro`](https://crates.io/crates/loro) Rust crate
 - [`loro-swift`](https://github.com/loro-dev/loro-swift) Swift package
 - [`loro-py`](https://github.com/loro-dev/loro-py) Python package
+- [`loro-cs`](https://github.com/sensslen/loro-cs) Community-maintained C# package
 - You can also find a list of examples in
   [Loro examples in Deno](https://github.com/loro-dev/loro-examples-deno).
 
@@ -3241,6 +3242,47 @@ export default defineConfig({
   plugins: [...otherConfigures, wasm(), topLevelAwait()],
 });
 ```
+
+<details>
+<summary>⚠️ DOMContentLoaded Timing Issue with Vite</summary>
+
+When using Loro with Vite, be aware of module loading timing issues with DOM events:
+
+**Problem:** The following code will cause nothing to load on the screen:
+
+```ts
+import { LoroDoc } from 'loro-crdt';
+
+document.addEventListener("DOMContentLoaded", () => {
+  const doc = new LoroDoc();
+  // Your code here...
+});
+```
+
+**Reason:** This occurs because Vite loads ES modules asynchronously, and the WASM module initialization within `loro-crdt` also happens asynchronously. When you import at the top level but execute code inside `DOMContentLoaded`, the WASM module may not be fully initialized when the event fires, causing the application to fail silently.
+
+**Solutions:**
+
+1. **Remove the event listener** (recommended for most cases):
+   ```ts
+   import { LoroDoc } from 'loro-crdt';
+   
+   const doc = new LoroDoc();
+   // Your code here...
+   ```
+
+2. **Use dynamic import inside the event listener**:
+   ```ts
+   document.addEventListener("DOMContentLoaded", async () => {
+     const { LoroDoc } = await import('loro-crdt');
+     const doc = new LoroDoc();
+     // Your code here...
+   });
+   ```
+
+The dynamic import ensures the module and its WASM dependencies are fully loaded before use.
+
+</details>
 
 If you're using `Next.js`, you should add the following to your next.config.js:
 
@@ -5020,6 +5062,14 @@ Choosing the right CRDT type means understanding their potential behavior in con
 For text, you can choose to represent it directly as a Value on a Map (where the Value can be a string type), or you can choose to use a Text CRDT. For the former, each operation completely overwrites the previous one, so if A and B make concurrent modifications, only one of their edits will remain in the end. For the latter, the CRDT will retain all concurrent insertions by both people, and concurrent deletions are combined to complete the deletion. For most text box edits, you might prefer the latter. But for something like editing a link, you might want to use the former.
 
 For Lists, concurrently removing the same element and inserting a single element creates a new element, differentiating from the semantics of Set on a Map (we may consider providing a list set method in the future). For representing coordinates, it's better to use a Map rather than a List. If you represent coordinates as [x, y], and the A client updates the y coordinate by deleting the y element and reinserting a new y_a, and the B client also deletes y and inserts y_b, then after merging, the array will become [x, y_a, y_b], which does not conform to the user's schema. Using a Map can prevent this problem.
+
+
+# FILE: pages/docs/llm.md
+
+# LLM Resouces
+
+- [llms.txt](/llm.txt)
+- [llms-full.txt](/llm-full.txt)
 
 
 # FILE: pages/docs/performance/docsize.md
@@ -7810,6 +7860,26 @@ export function setDebug(): void;
  * - changeNum
  */
 export function decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata;
+/**
+ * Redacts sensitive content in JSON updates within the specified version range.
+ *
+ * This function allows you to share document history while removing potentially sensitive content.
+ * It preserves the document structure and collaboration capabilities while replacing content with
+ * placeholders according to these redaction rules:
+ *
+ * - Preserves delete and move operations
+ * - Replaces text insertion content with the Unicode replacement character
+ * - Substitutes list and map insert values with null
+ * - Maintains structure of child containers
+ * - Replaces text mark values with null
+ * - Preserves map keys and text annotation keys
+ *
+ * @param {Object|string} jsonUpdates - The JSON updates to redact (object or JSON string)
+ * @param {Object} versionRange - Version range defining what content to redact,
+ *                  format: { peerId: [startCounter, endCounter], ... }
+ * @returns {Object} The redacted JSON updates
+ */
+export function redactJsonUpdates(json_updates: string | JsonSchema, version_range: any): JsonSchema;
 
 /**
 * Container types supported by loro.
@@ -7980,11 +8050,11 @@ interface LoroDoc {
      * doc.commit();
      * expect(doc.getChangeAt({ peer: "0", counter: 0 }).message).toBe("test");
      * ```
-     * 
+     *
      * ### Advanced Example: Creating a Merkle DAG
-     * 
+     *
      * By combining `doc.subscribePreCommit` with `doc.exportJsonInIdSpan`, you can implement advanced features like representing Loro's editing history as a Merkle DAG:
-     * 
+     *
      * ```ts
      * const doc = new LoroDoc();
      * doc.setPeerId(0);
@@ -8004,7 +8074,7 @@ interface LoroDoc {
      *   const sha256Hash = hash.digest('hex');
      *   e.modifier.setMessage(sha256Hash);
      * });
-     * 
+     *
      * doc.getList("list").insert(0, 100);
      * doc.commit();
      * // Change 0
@@ -8022,8 +8092,8 @@ interface LoroDoc {
      * //     }
      * //   ]
      * // }
-     * 
-     * 
+     *
+     *
      * doc.getList("list").insert(0, 200);
      * doc.commit();
      * // Change 1
@@ -8043,13 +8113,13 @@ interface LoroDoc {
      * //     }
      * //   ]
      * // }
-     * 
+     *
      * expect(doc.getChangeAt({ peer: "0", counter: 0 }).message).toBe("2af99cf93869173984bcf6b1ce5412610b0413d027a5511a8f720a02a4432853");
      * expect(doc.getChangeAt({ peer: "0", counter: 1 }).message).toBe("aedbb442c554ecf59090e0e8339df1d8febf647f25cc37c67be0c6e27071d37f");
      * ```
-     * 
+     *
      * @param f - A callback function that receives a pre commit event.
-     * 
+     *
      **/
     subscribePreCommit(f: (e: { changeMeta: Change, origin: string, modifier: ChangeModifier }) => void): () => void
 
@@ -8373,9 +8443,6 @@ interface LoroMovableList {
 }
 
 export type Side = -1 | 0 | 1;
-
-
-
 export type JsonOpID = `${number}@${PeerID}`;
 export type JsonContainerID =  `🦜:${ContainerID}` ;
 export type JsonValue  =
@@ -8674,6 +8741,24 @@ interface UndoManager {
      * @param listener - The callback function.
      */
     setOnPop(listener?: UndoConfig["onPop"]): void;
+
+    /**
+     * Starts a new grouping of undo operations.
+     * All changes/commits made after this call will be grouped/merged together.
+     * to end the group, call `groupEnd`.
+     *
+     * If a remote import is received within the group, its possible that the undo item will be
+     * split and the group will be automatically ended.
+     *
+     * Calling `groupStart` within an active group will throw but have no effect.
+     *
+     */
+    groupStart(): void;
+
+    /**
+     * Ends the current grouping of undo operations.
+     */
+    groupEnd(): void;
 }
 interface LoroDoc<T extends Record<string, Container> = Record<string, Container>> {
     /**
@@ -8717,7 +8802,7 @@ interface LoroDoc<T extends Record<string, Container> = Record<string, Container
      * import { LoroDoc } from "loro-crdt";
      *
      * const doc = new LoroDoc();
-     * const list = doc.getList("list");
+     * const list = doc.getMovableList("list");
      * ```
      */
     getMovableList<Key extends keyof T | ContainerID>(name: Key): T[Key] extends LoroMovableList ? T[Key] : LoroMovableList;
@@ -8753,9 +8838,9 @@ interface LoroDoc<T extends Record<string, Container> = Record<string, Container
      * It ensures deterministic output, making it ideal for hash calculations and integrity checks.
      *
      * This method can also export pending changes from the uncommitted transaction that have not yet been applied to the OpLog.
-     * 
+     *
      * This method will NOT trigger a new commit implicitly.
-     * 
+     *
      * @param idSpan - The id span to export.
      * @returns The changes in the given id span.
      */
@@ -9932,6 +10017,7 @@ export class LoroDoc {
    * @param mode - The export mode to use. Can be one of:
    *   - `{ mode: "snapshot" }`: Export a full snapshot of the document.
    *   - `{ mode: "update", from?: VersionVector }`: Export updates from the given version vector.
+   *     If `from` is not provided, it will export the whole history of the document.
    *   - `{ mode: "updates-in-range", spans: { id: ID, len: number }[] }`: Export updates within the specified ID spans.
    *   - `{ mode: "shallow-snapshot", frontiers: Frontiers }`: Export a garbage-collected snapshot up to the given frontiers.
    *
@@ -11359,6 +11445,10 @@ export class UndoManager {
    * Redo the last undone operation.
    */
   redo(): boolean;
+  /**
+   * Get the peer id of the undo manager.
+   */
+  peer(): PeerID;
   /**
    * Can undo the last operation.
    */

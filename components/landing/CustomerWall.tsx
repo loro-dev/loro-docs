@@ -129,6 +129,22 @@ export default function CustomerWall() {
                                 />
                             </a>
                         </div>
+
+                        {/* Macro */}
+                        <div className="group md:col-span-2 lg:col-span-1">
+                            <a
+                                href="https://macro.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center p-6 h-24 bg-zinc-800/30 border border-zinc-700/30 rounded-xl hover:border-zinc-600/50 hover:bg-zinc-800/50 transition-all duration-300 group"
+                            >
+                                <img
+                                    src="/images/macro.png"
+                                    alt="Macro"
+                                    className="max-w-[120px] max-h-12 w-auto h-auto brightness-[0.8] group-hover:brightness-100 transition-all duration-300"
+                                />
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

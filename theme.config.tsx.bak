@@ -27,6 +27,10 @@ const config: DocsThemeConfig = {
       Loro
     </span>
   ),
+  sidebar: {
+    defaultMenuCollapseLevel: 1,
+    autoCollapse: true,
+  },
   nextThemes: {
     defaultTheme: "dark",
   },
