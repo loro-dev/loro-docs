@@ -1,6 +1,13 @@
+"use client";
+
 import dynamic from "next/dynamic";
 
-export default dynamic(
-  () => import("@components/landing/Demonstration"),
-  { ssr: false }
+const DemoSection = dynamic(
+  () => import("@components/landing/Demonstration").then(mod => mod.default || mod),
+  { 
+    ssr: false,
+    loading: () => <div>Loading demo...</div>
+  }
 );
+
+export default DemoSection;

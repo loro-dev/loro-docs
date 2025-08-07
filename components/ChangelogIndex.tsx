@@ -47,7 +47,13 @@ export function ChangelogIndex() {
   return (
     <>
       {changelogPages.map((page) => {
-        const Mdx = dynamic(() => import(`../content/changelog/${page.name}.mdx`), { ssr: false });
+        const Mdx = dynamic(
+          () => import(`../content/changelog/${page.name}.mdx`).then(mod => mod.default || mod),
+          { 
+            ssr: false,
+            loading: () => <div>Loading changelog...</div>
+          }
+        );
         return (
           <ChangelogComponent
             key={page.title}
