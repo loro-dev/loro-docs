@@ -67,6 +67,62 @@ comment1.set("user", "userId");
 comment1.set("comment", "comment");
 ```
 
+## Supported Data Types (LoroValue)
+
+Loro supports storing various data types in its containers. The `LoroValue` type represents all possible values that can be stored in a LoroDoc:
+
+```ts
+type LoroValue =
+  | null             // Null values
+  | boolean          // true or false
+  | number           // Numeric values (both integer and floating point)
+  | string           // Text values
+  | Uint8Array       // Binary data
+  | LoroValue[]      // Arrays (nested)
+  | { [key: string]: LoroValue }  // Objects/Maps (nested)
+```
+
+### Examples of Storing Different Data Types
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const map = doc.getMap("data");
+
+// Primitive types
+map.set("name", "Alice");                    // string
+map.set("age", 30);                          // integer number
+map.set("score", 95.5);                      // floating point number
+map.set("isActive", true);                   // boolean
+map.set("metadata", null);                   // null
+
+// Binary data
+const binaryData = new Uint8Array([1, 2, 3, 4, 5]);
+map.set("bytes", binaryData);                // Uint8Array
+
+// Nested objects (plain JavaScript objects)
+map.set("profile", {
+  email: "alice@example.com",
+  settings: {
+    theme: "dark",
+    notifications: true
+  }
+});
+
+// Arrays
+map.set("tags", ["javascript", "typescript", "loro"]);
+
+// Mixed nested structures
+map.set("complex", {
+  items: [1, 2, { nested: true }],
+  binary: new Uint8Array([255, 128]),
+  active: false
+});
+```
+
+Note: When you need to store a CRDT container (like LoroText, LoroList, etc.) within another container, use `setContainer()` or `insertContainer()` methods instead of regular `set()` or `insert()`. This creates a proper sub-container relationship that maintains CRDT properties.
+
 ## Container Types
 
 LoroDoc supports several container types:
