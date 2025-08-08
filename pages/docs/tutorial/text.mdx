@@ -18,6 +18,8 @@ documents containing several million characters.
 > To learn how rich text CRDT in Loro works under the hood, please refer to our
 > blog: [Introduction to Loro's Rich Text CRDT](/blog/loro-richtext).
 
+LoroText also supports stable cursor and selection positions. Using the Cursor API (`text.getCursor`, `doc.getCursorPos`, `Side`), you can represent caret/selection endpoints that remain valid across concurrent edits—similar to Yjs's `RelativePosition`. See the [Cursor](/docs/tutorial/cursor) guide for details.
+
 ## Editor Bindings
 
 Loro provides official bindings for popular editors to make it easier to integrate Loro's CRDT capabilities:
@@ -241,9 +243,78 @@ position.
 
 Get the length of text
 
-### `getCursor(pos: number, side: Side): Cursor | undefined`
+### `getCursor(pos: number, side?: Side): Cursor | undefined`
 
-Get the cursor at the given position.
+Create a stable position handle for the given logical index. This is equivalent in purpose to Yjs's `RelativePosition` and is designed to stay valid across concurrent inserts/deletes.
+
+- A cursor can represent a caret or one end of a selection. Store two cursors (anchor/head) to represent a selection.
+- Use `doc.getCursorPos(cursor)` to resolve the current absolute offset and side. It may also return an updated cursor you should persist to minimize future replays.
+- Offsets for Text are UTF-16 indices for the WASM binding.
+- `side` controls whether the cursor sits to the left (-1), center (0), or right (1) of the target ID at boundaries. It affects how the cursor behaves when text is inserted at its position.
+
+See the dedicated guide: [Cursor](/docs/tutorial/cursor).
+
+Example (caret):
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+import { expect } from "expect";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "123");
+
+// Create a stable cursor at the beginning
+const cur = text.getCursor(0, 0);
+{
+  const pos = doc.getCursorPos(cur!);
+  expect(pos.offset).toBe(0);
+}
+
+// Insert before the cursor. The cursor now moves forward
+text.insert(0, "1");
+{
+  const pos = doc.getCursorPos(cur!);
+  expect(pos.offset).toBe(1);
+}
+```
+
+Example (selection via two cursors):
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.update("Hello World");
+
+// Anchor at index 0 (left side), head at index 5 (right side)
+const anchor = text.getCursor(0, -1)!;
+const head = text.getCursor(5, 1)!;
+
+// Resolve to absolute positions when needed
+const a = doc.getCursorPos(anchor);
+const h = doc.getCursorPos(head);
+// selection = [a.offset, h.offset)
+```
+
+Persisting and restoring a cursor:
+
+```ts twoslash
+import { Cursor, LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.update("Hi");
+const cur = text.getCursor(1, 0)!;
+
+// Serialize and share
+const bytes = cur.encode();
+
+// Later on another peer
+const restored = Cursor.decode(bytes);
+const pos = doc.getCursorPos(restored);
+```
 
 ### `toDelta(): Delta<string>[]`
 
