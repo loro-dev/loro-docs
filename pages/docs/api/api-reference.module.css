@@ -1,123 +1,7 @@
-/* API Reference Documentation Styles - Clean indentation and spacing only */
-
 .apiReference {
   /* Enhanced spacing and visual hierarchy through indentation only */
 }
 
-/* Collapsible sections styles */
-.apiReference h4 {
-  position: relative;
-  user-select: none;
-  transition: background-color 0.2s ease;
-}
-
-.apiReference h4:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.apiReference h4.collapsible-processed {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Toggle button styles */
-.collapsible-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  color: inherit;
-  transition: transform 0.3s ease;
-  border-radius: 4px;
-}
-
-.collapsible-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.collapsible-toggle.collapsed {
-  transform: rotate(-90deg);
-}
-
-.toggle-icon {
-  flex-shrink: 0;
-}
-
-/* Collapsible content wrapper */
-.collapsible-wrapper {
-  overflow: hidden;
-}
-
-.collapsible-content {
-  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-  overflow: hidden;
-}
-
-.collapsible-content.expanded {
-  max-height: 10000px;
-  opacity: 1;
-}
-
-.collapsible-content.collapsed {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* Control buttons */
-.collapsible-controls {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem 0;
-}
-
-.expand-all-btn,
-.collapse-all-btn {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(0, 0, 0, 0.02);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.expand-all-btn:hover,
-.collapse-all-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .apiReference h4:hover {
-    background-color: rgba(255, 255, 255, 0.02);
-  }
-  
-  .collapsible-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  .expand-all-btn,
-  .collapse-all-btn {
-    border-color: rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.02);
-  }
-  
-  .expand-all-btn:hover,
-  .collapse-all-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-}
-
-/* Main section spacing (h2) - Top level sections like "LoroDoc", "Container Types" */
 .apiReference h2 {
   @apply mt-16 mb-8;
 }
@@ -128,12 +12,46 @@
 
 /* Category sections (h3) - Method groups like "Configuration Methods", "Container Management" */
 .apiReference h3 {
-  @apply mt-12 mb-6 pl-4;
+  @apply mt-12 mb-6;
 }
 
-/* Method/property sections (h4) - Individual methods like "setPeerId", "getText" */
 .apiReference h4 {
-  @apply mt-10 mb-4 pl-8;
+  @apply mt-10 mb-4;
+}
+
+.apiReference h5 {
+  @apply mt-10 mb-4;
+}
+
+.apiReference h6 {
+  @apply mt-10 mb-4;
+}
+
+/* Content following h4 directly */
+.apiReference h5 + p,
+.apiReference h5 + ul,
+.apiReference h5 + ol,
+.apiReference h5 + .nextra-code,
+.apiReference h5 + div.nextra-code,
+.apiReference h5 + div[class*="nextra-code"] {
+  @apply mt-3;
+}
+
+.apiReference h5 + ul,
+.apiReference h5 + ol,
+.apiReference h5 ~ ul,
+.apiReference h5 ~ ol {
+  @apply mt-3;
+}
+
+/* Content that follows h4 (has other elements in between h4 and content) */
+.apiReference h5 ~ p,
+.apiReference h5 ~ ul,
+.apiReference h5 ~ ol,
+.apiReference h5 ~ .nextra-code,
+.apiReference h5 ~ div.nextra-code,
+.apiReference h5 ~ div[class*="nextra-code"] {
+  @apply mt-3;
 }
 
 
@@ -144,14 +62,14 @@
 .apiReference h4 + .nextra-code,
 .apiReference h4 + div.nextra-code,
 .apiReference h4 + div[class*="nextra-code"] {
-  @apply ml-8 mt-3;
+  @apply mt-3;
 }
 
 .apiReference h4 + ul,
 .apiReference h4 + ol,
 .apiReference h4 ~ ul,
 .apiReference h4 ~ ol {
-  @apply pl-8 mt-3 ml-0;
+  @apply mt-3;
 }
 
 /* Content that follows h4 (has other elements in between h4 and content) */
@@ -161,8 +79,27 @@
 .apiReference h4 ~ .nextra-code,
 .apiReference h4 ~ div.nextra-code,
 .apiReference h4 ~ div[class*="nextra-code"] {
-  @apply ml-8 mt-3;
+  @apply mt-3;
 }
+
+/* Tighter spacing between consecutive elements within methods */
+.apiReference h4 ~ * + p,
+.apiReference h4 ~ * + ul,
+.apiReference h4 ~ * + ol,
+.apiReference h4 ~ * + .nextra-code,
+.apiReference h4 ~ * + div.nextra-code,
+.apiReference h4 ~ * + div[class*="nextra-code"] {
+  @apply !mt-3;
+}
+
+/* Override Nextra's default spacing for content within h4 sections */
+.apiReference h4 ~ p[class*="_mt-6"],
+.apiReference h4 ~ ul[class*="_mt-6"],
+.apiReference h4 ~ ol[class*="_mt-6"],
+.apiReference h4 ~ div[class*="_mt-6"] {
+  @apply !mt-3;
+}
+
 
 /* Content following h3 directly (no h4 in between) */
 .apiReference h3 + p,
@@ -171,7 +108,7 @@
 .apiReference h3 + .nextra-code,
 .apiReference h3 + div.nextra-code,
 .apiReference h3 + div[class*="nextra-code"] {
-  @apply ml-4 mt-3;
+  @apply mt-3;
 }
 
 /* Content that follows h3, but not h4 (has other elements in between h3 and content, but no h4) */
@@ -181,7 +118,7 @@
 .apiReference h3 ~ .nextra-code:not(h4 ~ *),
 .apiReference h3 ~ div.nextra-code:not(h4 ~ *),
 .apiReference h3 ~ div[class*="nextra-code"]:not(h4 ~ *) {
-  @apply ml-4 mt-3;
+  @apply mt-3;
 }
 
 /* Special handling for lists to use padding instead of margin for proper bullet alignment */
@@ -189,7 +126,7 @@
 .apiReference h3 + ol,
 .apiReference h3 ~ ul:not(h4 ~ *),
 .apiReference h3 ~ ol:not(h4 ~ *) {
-  @apply pl-4 mt-3 ml-0;
+  @apply mt-3;
 }
 
 /* Content that follows h2, but not immediately (has other elements in between, but no h3/h4) */
@@ -212,23 +149,7 @@
   @apply mt-3;
 }
 
-/* Tighter spacing between consecutive elements within methods */
-.apiReference h4 ~ * + p,
-.apiReference h4 ~ * + ul,
-.apiReference h4 ~ * + ol,
-.apiReference h4 ~ * + .nextra-code,
-.apiReference h4 ~ * + div.nextra-code,
-.apiReference h4 ~ * + div[class*="nextra-code"] {
-  @apply !mt-3;
-}
 
-/* Override Nextra's default spacing for content within h4 sections */
-.apiReference h4 ~ p[class*="_mt-6"],
-.apiReference h4 ~ ul[class*="_mt-6"],
-.apiReference h4 ~ ol[class*="_mt-6"],
-.apiReference h4 ~ div[class*="_mt-6"] {
-  @apply !mt-3;
-}
 
 /* Improve spacing between major sections */
 .apiReference > h2 + * {
@@ -253,70 +174,3 @@
   @apply mt-2 ml-4 space-y-1;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .apiReference h3 {
-    @apply pl-2;
-  }
-  
-  .apiReference h4 {
-    @apply pl-4;
-  }
-  
-  /* Content following h4 directly on mobile */
-  .apiReference h4 + p,
-  .apiReference h4 + ul,
-  .apiReference h4 + ol,
-  .apiReference h4 + .nextra-code,
-  .apiReference h4 + div.nextra-code,
-  .apiReference h4 + div[class*="nextra-code"] {
-    @apply ml-4;
-  }
-
-  
-  /* Content that follows h4 on mobile */
-  .apiReference h4 ~ p,
-  .apiReference h4 ~ ul,
-  .apiReference h4 ~ ol,
-  .apiReference h4 ~ .nextra-code,
-  .apiReference h4 ~ div.nextra-code,
-  .apiReference h4 ~ div[class*="nextra-code"] {
-    @apply ml-4;
-  }
-  
-  .apiReference h4 + ul,
-  .apiReference h4 + ol,
-  .apiReference h4 ~ ul,
-  .apiReference h4 ~ ol {
-    @apply pl-4 ml-0;
-  }
-  
-  /* Lists on mobile - use padding for proper alignment */
-  .apiReference h3 + ul,
-  .apiReference h3 + ol,
-  .apiReference h3 ~ ul:not(h4 ~ *),
-  .apiReference h3 ~ ol:not(h4 ~ *) {
-    @apply pl-2 ml-0;
-  }
-
-  /* Content following h3 directly on mobile */
-  .apiReference h3 + p,
-  .apiReference h3 + ul,
-  .apiReference h3 + ol,
-  .apiReference h3 + .nextra-code,
-  .apiReference h3 + div.nextra-code,
-  .apiReference h3 + div[class*="nextra-code"] {
-    @apply ml-2;
-  }
-  
-  
-  /* Content that follows h3, but not h4 on mobile */
-  .apiReference h3 ~ p:not(h4 ~ *),
-  .apiReference h3 ~ ul:not(h4 ~ *),
-  .apiReference h3 ~ ol:not(h4 ~ *),
-  .apiReference h3 ~ .nextra-code:not(h4 ~ *),
-  .apiReference h3 ~ div.nextra-code:not(h4 ~ *),
-  .apiReference h3 ~ div[class*="nextra-code"]:not(h4 ~ *) {
-    @apply ml-2;
-  }
-}

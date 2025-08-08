@@ -369,10 +369,6 @@ declare const updates: Uint8Array;
 // ---cut---
 // Import binary updates
 doc.import(updates);
-
-// Import from another document
-const otherDoc = new LoroDoc();
-doc.import(otherDoc);
 ```
 
 #### importBatch
@@ -675,26 +671,6 @@ doc.commit({
 });
 ```
 
-#### isInTransaction
-
-```typescript
-isInTransaction(): boolean
-```
-
-Checks if the document is currently in a transaction.
-
-**Returns:** Boolean indicating transaction state
-
-**Example:**
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-// ---cut---
-if (doc.isInTransaction()) {
-  console.log("Changes are pending commit");
-}
-```
-
 ### Query Methods
 
 #### toJSON
@@ -751,9 +727,7 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
 const vv = doc.version();
-vv.forEach((counter, peer) => {
-  console.log(`Peer ${peer}: ${counter} ops`);
-});
+console.log(vv.toJSON());
 ```
 
 #### frontiers
@@ -1085,7 +1059,10 @@ Removes and returns the last element.
 **Returns:** The removed element or undefined
 
 **Example:**
-```typescript
+```ts no_run twoslash
+import { LoroList } from "loro-crdt";
+declare const list: LoroList;
+// ---cut---
 const lastItem = list.pop();
 ```
 
@@ -1103,7 +1080,10 @@ Gets the value at the specified index.
 **Returns:** The value or undefined
 
 **Example:**
-```typescript
+```ts no_run twoslash
+import { LoroList } from "loro-crdt";
+declare const list: LoroList;
+// ---cut---
 const item = list.get(0);
 ```
 
@@ -1307,30 +1287,6 @@ const map = doc.getMap("map");
 map.clear();
 ```
 
-##### has
-
-```typescript
-has(key: string): boolean
-```
-
-Checks if a key exists.
-
-**Parameters:**
-- `key` - The key to check
-
-**Returns:** Boolean indicating existence
-
-**Example:**
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-const map = doc.getMap("map");
-// ---cut---
-if (map.has("name")) {
-  console.log("Name exists");
-}
-```
-
 ##### keys
 
 ```typescript
@@ -1436,7 +1392,7 @@ const doc = new LoroDoc();
 const tree = doc.getTree("tree");
 // ---cut---
 const root = tree.createNode();
-const child = tree.createNode(root, 0);
+const child = root.createNode(0);
 ```
 
 ##### move
@@ -1617,9 +1573,7 @@ A map container for storing node metadata.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
-// ---cut---
+const node = tree.createNode();
 node.data.set("title", "Node Title");
 node.data.set("expanded", true);
 ```
@@ -1644,9 +1598,7 @@ Creates a child node.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
-// ---cut---
+const node = tree.createNode();
 const childId = node.createNode(0);
 ```
 
@@ -1667,12 +1619,10 @@ Moves this node to a new parent.
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 const parent = tree.createNode();
-const newParentNode = tree.getNodeByID(parent)!;
 // ---cut---
-node.move(newParentNode, 0);
+node.move(parent, 0);
 ```
 
 ###### moveAfter
@@ -1691,12 +1641,10 @@ Moves this node after a sibling.
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 const sibling = tree.createNode();
-const siblingNode = tree.getNodeByID(sibling)!;
 // ---cut---
-node.moveAfter(siblingNode);
+node.moveAfter(sibling);
 ```
 
 ###### moveBefore
@@ -1715,12 +1663,10 @@ Moves this node before a sibling.
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 const sibling = tree.createNode();
-const siblingNode = tree.getNodeByID(sibling)!;
 // ---cut---
-node.moveBefore(siblingNode);
+node.moveBefore(sibling);
 ```
 
 ###### parent
@@ -1738,8 +1684,7 @@ Gets the parent node.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 // ---cut---
 const parentNode = node.parent();
 ```
@@ -1759,8 +1704,7 @@ Gets all child nodes.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 // ---cut---
 const childNodes = node.children();
 ```
@@ -1780,8 +1724,7 @@ Gets the position among siblings.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 // ---cut---
 const position = node.index();
 ```
@@ -1801,8 +1744,7 @@ Checks if this node has been deleted.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = tree.getNodeByID(root)!;
+const node = tree.createNode();
 // ---cut---
 if (node.isDeleted()) {
   console.log("Node is deleted");
@@ -1818,7 +1760,7 @@ A counter CRDT for collaborative numeric values.
 ##### increment
 
 ```typescript
-increment(value?: number): void
+increment(value: number): void
 ```
 
 Increments the counter.
@@ -1832,14 +1774,13 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
 // ---cut---
-counter.increment();    // +1
 counter.increment(5);   // +5
 ```
 
 ##### decrement
 
 ```typescript
-decrement(value?: number): void
+decrement(value: number): void
 ```
 
 Decrements the counter.
@@ -1853,7 +1794,6 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
 // ---cut---
-counter.decrement();    // -1
 counter.decrement(3);   // -3
 ```
 
@@ -2090,28 +2030,8 @@ Track document versions:
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
-const doc1 = new LoroDoc();
-const doc2 = new LoroDoc();
-// ---cut---
-// Get version vector
 const vv = doc.version();
-console.log(`Document has ${vv.size} peers`);
-
-vv.forEach((counter, peer) => {
-  console.log(`Peer ${peer}: ${counter} operations`);
-});
-
-// Compare versions
-const vv1 = doc1.version();
-const vv2 = doc2.version();
-
-// Check if doc1 includes all of doc2's changes
-let doc1HasAllDoc2Changes = true;
-vv2.forEach((counter, peer) => {
-  if (!vv1.has(peer) || vv1.get(peer)! < counter) {
-    doc1HasAllDoc2Changes = false;
-  }
-});
+console.log(`Document has ${vv.length()} peers`);
 ```
 
 ---
@@ -2156,16 +2076,18 @@ const doc = new LoroDoc();
 const text = doc.getText("text");
 // ---cut---
 // Example
-text.subscribe((event) => {
-  if (event.diff.type === "text") {
-    event.diff.diff.forEach(delta => {
-      if (delta.insert) {
-        console.log(`Inserted: "${delta.insert}"`);
-      }
-      if (delta.delete) {
-        console.log(`Deleted ${delta.delete} characters`);
-      }
-    });
+text.subscribe((e) => {
+  for (const event of e.events) {
+    if (event.diff.type === "text") {
+      event.diff.diff.forEach(delta => {
+        if (delta.insert) {
+          console.log(`Inserted: "${delta.insert}"`);
+        }
+        if (delta.delete) {
+          console.log(`Deleted ${delta.delete} characters`);
+        }
+      });
+    }
   }
 });
 ```
@@ -2185,13 +2107,15 @@ const doc = new LoroDoc();
 const list = doc.getList("list");
 // ---cut---
 // Example
-list.subscribe((event) => {
-  if (event.diff.type === "list") {
-    event.diff.diff.forEach(delta => {
-      if (delta.insert) {
-        console.log(`Inserted items:`, delta.insert);
-      }
-    });
+list.subscribe((e) => {
+  for (const event of e.events) {
+    if (event.diff.type === "list") {
+      event.diff.diff.forEach(delta => {
+        if (delta.insert) {
+          console.log(`Inserted items:`, delta.insert);
+        }
+      });
+    }
   }
 });
 ```
@@ -2211,15 +2135,17 @@ const doc = new LoroDoc();
 const map = doc.getMap("map");
 // ---cut---
 // Example
-map.subscribe((event) => {
-  if (event.diff.type === "map") {
-    Object.entries(event.diff.updated).forEach(([key, value]) => {
-      if (value === undefined) {
-        console.log(`Deleted key: ${key}`);
-      } else {
-        console.log(`Updated key: ${key} = ${value}`);
-      }
-    });
+map.subscribe((e) => {
+  for (const event of e.events) {
+    if (event.diff.type === "map") {
+      Object.entries(event.diff.updated).forEach(([key, value]) => {
+        if (value === undefined) {
+          console.log(`Deleted key: ${key}`);
+        } else {
+          console.log(`Updated key: ${key} = ${value}`);
+        }
+      });
+    }
   }
 });
 ```
@@ -2244,21 +2170,23 @@ const doc = new LoroDoc();
 const tree = doc.getTree("tree");
 // ---cut---
 // Example
-tree.subscribe((event) => {
-  if (event.diff.type === "tree") {
-    event.diff.diff.forEach(item => {
-      switch (item.action) {
-        case "create":
-          console.log(`Created node ${item.id}`);
-          break;
-        case "move":
-          console.log(`Moved node ${item.id}`);
-          break;
-        case "delete":
-          console.log(`Deleted node ${item.id}`);
-          break;
-      }
-    });
+tree.subscribe((e) => {
+  for (const event of e.events) {
+    if (event.diff.type === "tree") {
+      event.diff.diff.forEach(item => {
+        switch (item.action) {
+          case "create":
+            console.log(`Created node ${item.target}`);
+            break;
+          case "move":
+            console.log(`Moved node ${item.target}`);
+            break;
+          case "delete":
+            console.log(`Deleted node ${item.target}`);
+            break;
+        }
+      });
+    }
   }
 });
 ```
@@ -2324,14 +2252,15 @@ Group multiple operations into a single undo step:
 ```ts twoslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
-const undo = new UndoManager(doc);
+const undo = new UndoManager(doc, {});
 const text = doc.getText("text");
 const map = doc.getMap("map");
 // ---cut---
 undo.groupStart();
 text.insert(0, "Hello");
-text.mark({ start: 0, end: 5 }, "bold", true);
-map.set("lastEdit", Date.now());
+doc.commit();
+map.set("key", "value");
+doc.commit();
 undo.groupEnd();
 
 // All three operations will be undone together
@@ -2585,255 +2514,5 @@ websocket.on('message', (data) => {
 // Clean up
 store.destroy();
 ```
-
----
-
-## Best Practices
-
-### 1. Peer ID Management
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-declare function getUserId(): string;
-declare function hashCode(str: string): number;
-// ---cut---
-// Use consistent peer IDs across sessions
-const userId = getUserId();
-const peerId = hashCode(userId) % Number.MAX_SAFE_INTEGER;
-doc.setPeerId(peerId.toString());
-```
-
-### 2. Efficient Syncing
-
-```ts twoslash
-import { LoroDoc, VersionVector } from "loro-crdt";
-const doc = new LoroDoc();
-// ---cut---
-// Track sync state
-let lastSyncVersion = new Map<string, VersionVector>();
-
-// Sync only necessary updates
-function syncWithPeer(peerId: string, peerDoc: LoroDoc) {
-  const lastVersion = lastSyncVersion.get(peerId);
-  const updates = doc.export({ 
-    mode: "update", 
-    from: lastVersion 
-  });
-  
-  peerDoc.import(updates);
-  lastSyncVersion.set(peerId, doc.version());
-}
-```
-
-### 3. Container Organization
-
-```ts twoslash
-import { LoroDoc, LoroMap } from "loro-crdt";
-// ---cut---
-// Use clear naming conventions
-const doc = new LoroDoc();
-const content = doc.getTree("content");
-const metadata = doc.getMap("metadata");
-const comments = doc.getList("comments");
-
-// Group related data
-metadata.setContainer("author", new LoroMap());
-const author = metadata.get("author") as LoroMap;
-author.set("name", "Alice");
-author.set("id", "user-123");
-```
-
-### 4. Transaction Batching
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-// ---cut---
-// Batch multiple operations
-doc.getText("text").insert(0, "Hello");
-doc.getText("text").mark({ start: 0, end: 5 }, "bold", true);
-doc.getMap("meta").set("lastEdit", Date.now());
-
-// Commit once with metadata
-doc.commit({
-  message: "Initial document setup",
-  origin: "user-action"
-});
-```
-
-### 5. Memory Management
-
-```ts twoslash
-import { LoroDoc, EphemeralStore } from "loro-crdt";
-const doc = new LoroDoc();
-const ephemeralStore = new EphemeralStore();
-declare const handler: (event: any) => void;
-// ---cut---
-// Use shallow snapshots for large documents
-const snapshot = doc.export({
-  mode: "shallow-snapshot",
-  frontiers: doc.frontiers()
-});
-
-// Clean up subscriptions
-const unsubscribe = doc.subscribe(handler);
-// Later...
-unsubscribe();
-
-// Destroy ephemeral stores
-ephemeralStore.destroy();
-```
-
----
-
-## Error Handling
-
-Common error scenarios and solutions:
-
-```ts twoslash
-import { LoroDoc, UndoManager, isContainerId } from "loro-crdt";
-const doc = new LoroDoc();
-const undo = new UndoManager(doc);
-declare const unknownData: Uint8Array;
-declare const id: string;
-// ---cut---
-try {
-  // Import operations
-  doc.import(unknownData);
-} catch (error: any) {
-  if (error.message.includes("Invalid binary format")) {
-    console.error("Corrupted update data");
-  }
-}
-
-// Validate container IDs
-if (!isContainerId(id)) {
-  throw new Error(`Invalid container ID: ${id}`);
-}
-
-// Check container existence
-const container = doc.getContainerById(id);
-if (!container) {
-  console.warn(`Container ${id} not found`);
-}
-
-// Handle undo/redo limits
-if (!undo.canUndo()) {
-  console.log("Nothing to undo");
-}
-```
-
----
-
-## Performance Tips
-
-### 1. Use Batch Operations
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-declare const update1: Uint8Array;
-declare const update2: Uint8Array;
-declare const update3: Uint8Array;
-// ---cut---
-// Good: Batch import
-doc.importBatch([update1, update2, update3]);
-
-// Avoid: Individual imports
-// doc.import(update1);
-// doc.import(update2);
-// doc.import(update3);
-```
-
-### 2. Optimize Text Updates
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-const text = doc.getText("text");
-declare const newContent: string;
-let pos = 0;
-// ---cut---
-// Good: Use update method for large changes
-text.update(newContent);
-
-// Avoid: Character-by-character updates
-// for (const char of newContent) {
-//   text.insert(pos++, char);
-// }
-```
-
-### 3. Efficient Subscriptions
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-declare const handler: (event: any) => void;
-// ---cut---
-// Subscribe at appropriate level
-const container = doc.getList("items");
-
-// Good: Subscribe to specific container
-container.subscribe(handler);
-
-// Avoid: Document-level subscription for container-specific changes
-// doc.subscribe((event) => {
-//   if (event.currentTarget === container.id) {
-//     // Handle change
-//   }
-// });
-```
-
-### 4. Shallow Snapshots
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-// ---cut---
-// Use shallow snapshots for checkpoints
-const checkpoint = doc.export({
-  mode: "shallow-snapshot",
-  frontiers: doc.frontiers()
-});
-
-// Reduces storage size by GC'ing deleted operations
-```
-
----
-
-## Migration Guide
-
-### From Loro v0.x to v1.x
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// Old API (v0.x)
-// const doc = new Loro();
-// doc.configureTextStyle({ bold: true });
-// ---cut---
-// New API (v1.x)
-const doc = new LoroDoc();
-doc.configTextStyle({ bold: { expand: "after" } });
-
-// Container access remains the same
-const text = doc.getText("text");
-const map = doc.getMap("map");
-```
-
----
-
-## Additional Resources
-
-- [GitHub Repository](https://github.com/loro-dev/loro)
-- [Examples](https://github.com/loro-dev/loro/tree/main/examples)
-- [Discord Community](https://discord.gg/tUsBSVfqzf)
-- [Blog Posts](/blog)
-
----
-
-## License
-
-Loro is licensed under the MIT License. See the [LICENSE](https://github.com/loro-dev/loro/blob/main/LICENSE) file for details.
 
 </div>
