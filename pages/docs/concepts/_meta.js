@@ -6,7 +6,7 @@ export default {
   operations_changes: "Operations and Changes",
   transaction_model: "Transaction Model",
   frontiers: "Frontiers",
-  version_representations: "Version Representations",
+  version_vector: "Version Vector",
   cursor_stable_positions: "Cursor and Stable Positions",
   import_status: "Import Status and Pending Operations",
   peerid_management: "PeerID Management",
