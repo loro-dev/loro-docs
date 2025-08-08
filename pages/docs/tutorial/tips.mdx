@@ -250,7 +250,7 @@ This hook provides an ideal point to associate peer information (such as author 
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 doc.setPeerId(0);
@@ -259,6 +259,7 @@ doc.subscribeFirstCommitFromPeer((e) => {
 });
 doc.getList("list").insert(0, 100);
 doc.commit();
+await Promise.resolve();
 expect(doc.getMap("users").get("0")).toBe("user-0");
 ```
 
