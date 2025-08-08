@@ -1,21 +1,17 @@
 ---
-keywords: "frontiers, version, compact representation, DAG, CRDT, version vector"
-description: "Understanding Frontiers in Loro - a compact way to represent document versions using causal ordering"
+keywords: "frontiers, version, compact representation, DAG, CRDT"
+description: "Understanding Frontiers in Loro - a compact way to represent document versions"
 ---
 
-# Frontiers in Loro
+# Frontiers
 
-Frontiers are a compact and efficient way to represent document versions in Loro. While Version Vectors grow with the number of collaborators, Frontiers maintain a small footprint by leveraging the causal relationships between operations.
+Frontiers are a compact way to represent document versions in Loro by identifying the "frontier" operations - the most recent operations that aren't followed by any other operations.
 
 ## What are Frontiers?
 
-Think of Frontiers as **bookmarks in your document's history**. Instead of listing every single change made by every collaborator (like Version Vectors do), Frontiers identify just the "frontier" operations - the most recent operations that aren't followed by any other operations.
+Think of Frontiers as **bookmarks in your document's history**. Instead of listing every change made by every collaborator (like Version Vectors do), Frontiers only point to the boundary operations that implicitly include all their ancestors through causal relationships.
 
-### Simple Analogy
-
-Imagine a family tree:
-- A **Version Vector** would list every single family member and their generation number
-- A **Frontier** would only point to the youngest generation members - everyone else is implicitly included as their ancestors
+**Analogy**: In a family tree, a Version Vector would list every family member and their generation, while Frontiers would only point to the youngest generation - everyone else is implicitly included as ancestors.
 
 ## Basic Usage
 
@@ -26,430 +22,72 @@ const doc = new LoroDoc();
 const text = doc.getText("content");
 text.insert(0, "Hello World");
 
-// Get the current frontiers
+// Get current frontiers (usually 1-2 elements)
 const frontiers = doc.frontiers();
-console.log("Current frontiers:", frontiers);
-// Output: [{ peer: "...", counter: 0 }]
+console.log(frontiers); // [{ peer: "...", counter: 0 }]
 
-// Frontiers represent the document state after specific operations
+// Use frontiers for checkpoints
+const checkpoint = doc.frontiers();
 text.insert(5, " Beautiful");
-const newFrontiers = doc.frontiers();
-console.log("Updated frontiers:", newFrontiers);
+
+// Restore to checkpoint
+doc.checkout(checkpoint);
+console.log(text.toString()); // Back to "Hello World"
 ```
 
-## Frontiers vs Version Vectors
+## When to Use Frontiers
 
-Let's understand the key differences with a practical example:
+Frontiers are ideal for:
 
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
+1. **Creating checkpoints** - Mark specific points in document history
+2. **Time travel** - Navigate to exact operation points efficiently
+3. **Storage optimization** - Remain compact even with many collaborators (usually 1-2 elements vs N entries in Version Vector)
+4. **Recording milestones** - Save important document states
 
-// Create documents for three collaborators
-const alice = new LoroDoc();
-alice.setPeerId(1n);
-const bob = new LoroDoc();
-bob.setPeerId(2n);
-const charlie = new LoroDoc();
-charlie.setPeerId(3n);
+## Quick Comparison
 
-// Each makes some edits
-const aliceText = alice.getText("doc");
-aliceText.insert(0, "Hello ");
-aliceText.insert(6, "World");
+| Aspect | Frontiers | Version Vectors |
+|--------|-----------|----------------|
+| **Size** | 1-2 elements typically | Grows with peer count |
+| **Use Case** | Checkpoints, time travel | Synchronization, diffing |
+| **Storage** | Very compact | Larger with many peers |
 
-const bobText = bob.getText("doc");
-bobText.insert(0, "Hi ");
-
-const charlieText = charlie.getText("doc");
-charlieText.insert(0, "Hey ");
-
-// Merge all changes
-alice.import(bob.export({ mode: "snapshot" }));
-alice.import(charlie.export({ mode: "snapshot" }));
-
-// Compare representations
-const versionVector = alice.version();
-const frontiers = alice.frontiers();
-
-console.log("Version Vector:", versionVector);
-// { "1": 2, "2": 1, "3": 1 } - tracks all peer counters
-
-console.log("Frontiers:", frontiers);
-// [{ peer: "1", counter: 1 }] - just the frontier operations
-```
-
-### Key Differences Table
-
-| Aspect | Version Vectors | Frontiers |
-|--------|----------------|-----------|
-| **Size** | Grows with number of peers | Typically 1-2 elements |
-| **Information** | Exact operation count per peer | Causal boundary operations |
-| **Use Case** | Synchronization, missing ops detection | Checkpoints, time travel |
-| **Comparison** | Easy to compare and diff | Requires DAG context |
-| **Storage** | Larger for many collaborators | Compact regardless of peer count |
-
-## How Frontiers Work
-
-Frontiers leverage Loro's internal Directed Acyclic Graph (DAG) structure. Each operation records its dependencies, creating a causal ordering:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-const doc = new LoroDoc();
-doc.setPeerId(0n);
-const text = doc.getText("text");
-
-// Operation 0@0: Insert "A"
-text.insert(0, "A");
-doc.commit();
-const v1 = doc.frontiers(); // [0@0]
-
-// Operation 1@0: Insert "B" (depends on 0@0)
-text.insert(1, "B");
-doc.commit();
-const v2 = doc.frontiers(); // [1@0]
-
-// v2 includes v1 because 1@0 causally depends on 0@0
-// The frontier [1@0] implicitly includes all its ancestors
-```
-
-### Visual Representation
-
-```
-Initial state: Empty document
-
-After "A": 
-  0@0 (Insert "A")
-  Frontier: [0@0]
-
-After "B":
-  0@0 → 1@0 (Insert "B" after "A")
-  Frontier: [1@0]
-
-The arrow (→) shows causal dependency
-Frontier only needs to track 1@0, as it includes 0@0
-```
-
-## Practical Examples
-
-### Example 1: Document Checkpointing
-
-Use Frontiers to create lightweight checkpoints in your document's history:
+## Practical Example
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const text = doc.getText("content");
-
-// Track important milestones
 const checkpoints = new Map();
 
-// First draft
-text.insert(0, "First draft of my document");
-doc.commit();
-checkpoints.set("draft-1", doc.frontiers());
+// Save checkpoint with frontiers
+text.insert(0, "Draft version");
+checkpoints.set("draft", doc.frontiers());
 
-// Major revision
-text.delete(0, 11); // Remove "First draft"
-text.insert(0, "Final version");
-doc.commit();
+// Make changes
+text.delete(0, 5);
+text.insert(0, "Final");
 checkpoints.set("final", doc.frontiers());
 
-// Can restore to any checkpoint
-doc.checkout(checkpoints.get("draft-1")!);
-console.log(text.toString()); // "First draft of my document"
-
-doc.checkout(checkpoints.get("final")!);
-console.log(text.toString()); // "Final version of my document"
+// Restore to any checkpoint
+doc.checkout(checkpoints.get("draft"));
+console.log(text.toString()); // "Draft version"
 ```
 
-### Example 2: Parallel Edits
+## Conversion with Version Vectors
 
-When multiple users edit simultaneously, Frontiers may contain multiple operations:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-const doc1 = new LoroDoc();
-doc1.setPeerId(1n);
-const doc2 = new LoroDoc();
-doc2.setPeerId(2n);
-
-// Both users start from the same base
-const text1 = doc1.getText("doc");
-const text2 = doc2.getText("doc");
-
-text1.insert(0, "Alice's edit");
-text2.insert(0, "Bob's edit");
-
-// Merge creates parallel frontiers
-doc1.import(doc2.export({ mode: "snapshot" }));
-const frontiers = doc1.frontiers();
-
-console.log("Parallel frontiers:", frontiers);
-// May contain multiple OpIds when edits are concurrent
-// e.g., [{ peer: "1", counter: 0 }, { peer: "2", counter: 0 }]
-```
-
-### Example 3: Converting Between Representations
-
-Loro allows conversion between Frontiers and Version Vectors when needed:
+Loro allows seamless conversion between representations:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-const text = doc.getText("content");
-text.insert(0, "Hello World");
-
-// Get both representations
 const frontiers = doc.frontiers();
-const versionVector = doc.version();
-
-// Convert frontiers to version vector
-const vvFromFrontiers = doc.frontiersToVV(frontiers);
-console.log("Converted VV equals original:", 
-  JSON.stringify(vvFromFrontiers) === JSON.stringify(versionVector));
-// true
-
-// Convert version vector back to frontiers
-const frontiersFromVV = doc.vvToFrontiers(versionVector);
-console.log("Converted frontiers equals original:", 
-  JSON.stringify(frontiersFromVV) === JSON.stringify(frontiers));
-// true
+const vv = doc.frontiersToVV(frontiers);        // Convert to Version Vector
+const backToFrontiers = doc.vvToFrontiers(vv);  // Convert back
 ```
 
-## When to Use Frontiers vs Version Vectors
+## Learn More
 
-### Use Frontiers When:
-
-1. **Creating checkpoints or snapshots** - Frontiers are perfect for marking specific points in history
-2. **Implementing time travel** - Navigate to exact operation points
-3. **Storage is critical** - Frontiers remain compact even with many collaborators
-4. **Recording milestones** - Mark important document states efficiently
-
-```ts twoslash
-import { LoroDoc, OpId } from "loro-crdt";
-
-// Time travel with frontiers
-class DocumentHistory {
-  private doc: LoroDoc;
-  private history: Array<{ label: string; frontiers: OpId[] }> = [];
-
-  constructor(doc: LoroDoc) {
-    this.doc = doc;
-  }
-
-  saveCheckpoint(label: string) {
-    this.history.push({
-      label,
-      frontiers: this.doc.frontiers()
-    });
-  }
-
-  restoreCheckpoint(label: string) {
-    const checkpoint = this.history.find(h => h.label === label);
-    if (checkpoint) {
-      this.doc.checkout(checkpoint.frontiers);
-    }
-  }
-}
-```
-
-### Use Version Vectors When:
-
-1. **Synchronizing between peers** - Version Vectors make it easy to identify missing operations
-2. **Calculating differences** - Quickly determine what's changed between versions
-3. **Conflict detection** - Compare document states across peers
-4. **Network protocols** - Many sync protocols expect version vectors
-
-```ts twoslash
-import { LoroDoc, VersionVector } from "loro-crdt";
-
-// Efficient sync with version vectors
-function syncDocuments(local: LoroDoc, remote: LoroDoc) {
-  const localVersion = local.version();
-  const remoteVersion = remote.version();
-  
-  // Exchange only missing operations
-  const localUpdates = local.export({ 
-    mode: "update", 
-    from: remoteVersion 
-  });
-  const remoteUpdates = remote.export({ 
-    mode: "update", 
-    from: localVersion 
-  });
-  
-  local.import(remoteUpdates);
-  remote.import(localUpdates);
-}
-```
-
-## Advanced Concepts
-
-### Understanding Causal Ordering
-
-Frontiers work because Loro maintains a causal ordering of operations. Each operation knows which operations it depends on:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-const doc = new LoroDoc();
-doc.setPeerId(0n);
-const list = doc.getList("items");
-
-// Linear causality
-list.insert(0, "A"); // 0@0
-list.insert(1, "B"); // 1@0 depends on 0@0
-list.insert(2, "C"); // 2@0 depends on 1@0
-
-// Frontier [2@0] represents the entire chain
-const frontiers = doc.frontiers();
-console.log("Single frontier for linear edits:", frontiers);
-// [{ peer: "0", counter: 2 }]
-```
-
-### Handling Concurrent Operations
-
-When operations happen concurrently (no causal relationship), Frontiers may contain multiple elements:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-// Simulate concurrent editing
-const alice = new LoroDoc();
-alice.setPeerId(1n);
-const bob = new LoroDoc();
-bob.setPeerId(2n);
-
-// Start from shared state
-const sharedText = alice.getText("doc");
-sharedText.insert(0, "Base");
-alice.commit();
-bob.import(alice.export({ mode: "snapshot" }));
-
-// Concurrent edits (neither knows about the other's change)
-alice.getText("doc").insert(4, " - Alice");
-bob.getText("doc").insert(4, " - Bob");
-
-// After merging
-alice.import(bob.export({ mode: "snapshot" }));
-const frontiers = alice.frontiers();
-
-// Frontiers contain both concurrent operations
-console.log("Concurrent frontiers:", frontiers.length > 1);
-// true - represents parallel branches in the DAG
-```
-
-### Memory and Performance Considerations
-
-Frontiers shine in scenarios with many collaborators:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-// Simulate 100 collaborators
-const docs: LoroDoc[] = [];
-for (let i = 0; i < 100; i++) {
-  const doc = new LoroDoc();
-  doc.setPeerId(BigInt(i));
-  docs.push(doc);
-}
-
-// Each makes one edit
-docs.forEach((doc, i) => {
-  doc.getText("shared").insert(0, `User${i}: `);
-});
-
-// Merge all into first document
-const main = docs[0];
-for (let i = 1; i < docs.length; i++) {
-  main.import(docs[i].export({ mode: "snapshot" }));
-}
-
-// Compare sizes
-const vv = main.version();
-const frontiers = main.frontiers();
-
-console.log("Version Vector entries:", Object.keys(vv).length); // 100
-console.log("Frontier elements:", frontiers.length); // Usually 1-2
-```
-
-## Best Practices
-
-### 1. Choose the Right Tool
-
-- **For synchronization**: Use Version Vectors
-- **For history navigation**: Use Frontiers
-- **For storage**: Prefer Frontiers when possible
-
-### 2. Combine Both When Needed
-
-```ts twoslash
-import { LoroDoc, OpId, VersionVector } from "loro-crdt";
-
-class SmartDocument {
-  private doc: LoroDoc;
-  
-  constructor() {
-    this.doc = new LoroDoc();
-  }
-  
-  // Use frontiers for checkpoints (compact)
-  createCheckpoint(): OpId[] {
-    return this.doc.frontiers();
-  }
-  
-  // Use version vectors for sync (efficient diffing)
-  prepareSync(remoteVersion: VersionVector) {
-    return this.doc.export({ 
-      mode: "update", 
-      from: remoteVersion 
-    });
-  }
-  
-  // Convert when needed
-  checkpointToSyncVersion(checkpoint: OpId[]): VersionVector {
-    return this.doc.frontiersToVV(checkpoint);
-  }
-}
-```
-
-### 3. Document Your Version Strategy
-
-Always make it clear which version representation you're using:
-
-```ts twoslash
-import { OpId, VersionVector } from "loro-crdt";
-
-interface DocumentMetadata {
-  // Use frontiers for compact storage
-  savedAt: OpId[];
-  
-  // Use version vector for sync state
-  lastSyncVersion: VersionVector;
-  
-  // Be explicit about the representation
-  checkpoints: Map<string, OpId[]>; // Frontiers for space efficiency
-  peerStates: Map<string, VersionVector>; // VV for comparison
-}
-```
-
-## Summary
-
-Frontiers provide a space-efficient way to represent document versions in Loro by leveraging causal relationships between operations. While Version Vectors explicitly track every peer's contribution, Frontiers identify just the boundary operations that implicitly include all their dependencies.
-
-**Key Takeaways:**
-- Frontiers are compact (usually 1-2 elements) regardless of peer count
-- Perfect for checkpoints, time travel, and storage
-- Version Vectors are better for synchronization and difference calculation
-- Both can be converted to each other when the version exists in history
-- Understanding when to use each representation is key to building efficient collaborative applications
-
-## Related Topics
-
-- [Version Vectors and Synchronization](/docs/tutorial/version)
-- [Deep Dive into Loro's Versioning](/docs/advanced/version_deep_dive)
-- [Time Travel and History](/docs/tutorial/time_travel)
+For detailed technical explanation of how Frontiers work with Loro's DAG structure and causal ordering, see [Version Deep Dive](/docs/advanced/version_deep_dive).

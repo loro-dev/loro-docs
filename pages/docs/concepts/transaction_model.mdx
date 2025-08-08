@@ -1,492 +1,109 @@
-# Transaction Model in Loro
+# Transaction Model
 
-## What Loro Transactions Are NOT
+## Quick Reference
 
-Before diving into what transactions are in Loro, it's crucial to understand what they are **not**:
+**Loro transactions are NOT database ACID transactions.** They are operation bundling mechanisms for event emission.
 
-**Loro transactions are NOT database ACID transactions.** They do not provide:
-- **Atomicity** in the database sense (no rollback on failure)
-- **Consistency** guarantees (no integrity constraints)
-- **Isolation** levels (no read/write locks)
-- **Durability** guarantees (that's handled separately via export/import)
+## Key Concepts
 
-If you're coming from a database background, forget everything you know about ACID transactions. Loro transactions serve a completely different purpose.
+- **Purpose**: Bundle related operations and control event emission
+- **No rollback**: Failed operations don't undo previous ones
+- **Event batching**: Single event for all operations in transaction
+- **History grouping**: Operations stay together for undo/redo
 
-## What Loro Transactions Actually Are
-
-Loro transactions are **operation bundling mechanisms for event emission**. They serve three primary purposes:
-
-1. **Bundle related operations** into a single unit
-2. **Control when events are emitted** to subscribers
-3. **Group operations for history tracking** (undo/redo, time travel)
-
-Think of them as a way to say: "These operations belong together, and I want them to trigger a single event notification."
-
-## How Transactions Work
-
-### Basic Transaction Pattern
+## Basic Usage
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-
-// Without transaction - each commit triggers separate events
-const text = doc.getText("text");
-text.insert(0, "Hello");
-doc.commit(); // Event emitted after microtask
-text.insert(5, " World");
-doc.commit(); // Another event emitted after microtask
-
-// With transaction - single event for all operations
-doc.transact(() => {
-  const text = doc.getText("text");
-  const list = doc.getList("list");
-  
-  text.insert(0, "Hello");
-  list.push("item1");
-  list.push("item2");
-}); // Single event emitted after microtask when transaction completes
-```
-
-### The Event Bundling Benefit
-
-The primary benefit of transactions is **reducing event noise** in your application:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-let eventCount = 0;
-
-doc.subscribe(() => {
-  eventCount++;
-  console.log(`Event #${eventCount} triggered`);
-});
 
 // Without transaction - multiple events
-const map = doc.getMap("user");
-map.set("name", "Alice");
-doc.commit();
-map.set("age", 30);
-doc.commit();
-map.set("email", "alice@example.com");
-doc.commit();
-// Result: 3 separate events
+const text = doc.getText("text");
+text.insert(0, "Hello");
+doc.commit(); // Event emitted
+text.insert(5, " World");
+doc.commit(); // Another event
 
 // With transaction - single event
-eventCount = 0;
 doc.transact(() => {
-  const profile = doc.getMap("profile");
-  profile.set("name", "Bob");
-  profile.set("age", 25);
-  profile.set("email", "bob@example.com");
-});
-// Result: 1 event containing all changes
+  text.insert(0, "Hello");
+  text.insert(5, " World");
+}); // One event for both operations
 ```
 
-## Relationship to Events and Changes
+## Transaction Guarantees
 
-Transactions directly control how operations are grouped into Changes and when events are emitted:
+- All operations share the same timestamp (if enabled)
+- Operations grouped in a single Change
+- One event emitted after transaction completes
+- Operations committed together at transaction end
 
-### Operations → Changes → Events
 
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId("alice");
+## When to Use Transactions
 
-// Each operation creates an Op
-const text = doc.getText("text");
-text.insert(0, "H");  // Op 1
-text.insert(1, "i");  // Op 2
+### Use Transactions For:
+- **Related operations** that logically belong together
+- **Complex structures** that should appear atomically
+- **Batch UI updates** to reduce re-renders
+- **Form submissions** with multiple fields
 
-// Commit groups Ops into a Change
-doc.commit({
-  message: "Add greeting",  // Metadata for the Change
-  origin: "user-input"
-});
+### Use Direct Operations For:
+- **Real-time collaboration** with character-by-character updates
+- **Simple, independent changes**
+- **When immediate event emission is needed**
 
-// Change triggers an Event (after microtask)
-doc.subscribe((event) => {
-  console.log("Event origin:", event.origin); // "user-input"
-  console.log("Number of changes:", event.events.length);
-});
-```
-
-### Transaction Guarantees
-
-Within a transaction:
-1. **All operations share the same timestamp** (if timestamps are enabled)
-2. **All operations are grouped in a single Change**
-3. **Only one event is emitted** after the transaction completes
-4. **Operations are committed together** at transaction end
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setRecordTimestamp(true);
-
-doc.transact(() => {
-  const text = doc.getText("text");
-  const list = doc.getList("list");
-  
-  // All these operations will have the same timestamp
-  text.insert(0, "Start");
-  list.push("item1");
-  text.insert(5, " End");
-  
-  // They form a single Change in history
-  // And trigger one event notification
-});
-```
-
-## Performance Implications
-
-### Event Processing Overhead
-
-Without transactions, every operation triggers the event processing pipeline:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const text = doc.getText("text");
-
-// Bad: 1000 events for typing a paragraph
-for (const char of "Lorem ipsum...".repeat(100)) {
-  text.insert(text.toString().length, char);
-  doc.commit(); // Event emitted each time
-}
-
-// Good: 1 event for the entire paragraph
-doc.transact(() => {
-  for (const char of "Lorem ipsum...".repeat(100)) {
-    text.insert(text.toString().length, char);
-  }
-});
-```
-
-### Memory and History Optimization
-
-Transactions reduce metadata overhead by sharing Change metadata across operations:
+## Code Example
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
 
-// Without transaction: Multiple Changes with separate metadata
-const list = doc.getList("list");
-for (let i = 0; i < 100; i++) {
-  list.push(i);
-  doc.commit(); // Creates a new Change each time
-}
-console.log(doc.getAllChanges().get("0")?.length); // Many Changes
-
-// With transaction: Single Change with shared metadata
-const doc2 = new LoroDoc();
-doc2.transact(() => {
-  const list = doc2.getList("list");
-  for (let i = 0; i < 100; i++) {
-    list.push(i);
-  }
-});
-console.log(doc2.getAllChanges().get("0")?.length); // 1 Change
-```
-
-## When to Use Transactions vs Direct Operations
-
-### Use Transactions When:
-
-1. **Performing related operations** that logically belong together:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Creating a new user - all fields belong together
-doc.transact(() => {
-  const user = doc.getMap("user");
-  user.set("id", "123");
-  user.set("name", "Alice");
-  user.set("createdAt", Date.now());
-});
-```
-
-2. **Building complex structures** that should appear atomically:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Building a tree structure
-doc.transact(() => {
-  const tree = doc.getTree("tree");
-  const root = tree.createNode();
-  const child1 = root.createNode();
-  const child2 = root.createNode();
-  
-  root.data.set("type", "folder");
-  child1.data.set("type", "file");
-  child2.data.set("type", "file");
-});
-```
-
-3. **Optimizing event handling** in UI updates:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Batch UI updates from form submission
-function saveFormData(formData: Record<string, any>) {
+// Form submission pattern
+function submitForm(data: Record<string, any>) {
   doc.transact(() => {
     const form = doc.getMap("form");
-    for (const [key, value] of Object.entries(formData)) {
+    for (const [key, value] of Object.entries(data)) {
       form.set(key, value);
     }
   });
-  // UI only re-renders once
+  // Single event for entire form update
 }
-```
 
-### Use Direct Operations When:
-
-1. **Real-time collaboration** with character-by-character updates:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const text = doc.getText("text");
-
-// Each keystroke in collaborative editing
-function onKeyPress(char: string, position: number) {
-  text.insert(position, char);
-  doc.commit(); // Immediate sync with collaborators
-}
-```
-
-2. **Simple, independent changes**:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Updating a single value
-doc.getMap("settings").set("theme", "dark");
-doc.commit();
-```
-
-3. **When you need immediate event emission**:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Need to trigger side effects immediately
-doc.getMap("status").set("online", true);
-doc.commit(); // Trigger online notification immediately
-```
-
-## Code Examples: Transaction Patterns
-
-### Pattern 1: Form Submission
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-function submitUserProfile(profile: {
-  name: string;
-  bio: string;
-  avatar: string;
-  settings: Record<string, any>;
-}) {
+// Bulk import pattern  
+function importItems(items: any[]) {
   doc.transact(() => {
-    const userMap = doc.getMap("user");
-    userMap.set("name", profile.name);
-    userMap.set("bio", profile.bio);
-    userMap.set("avatar", profile.avatar);
-    
-    const settings = userMap.setContainer("settings", doc.getMap());
-    for (const [key, value] of Object.entries(profile.settings)) {
-      settings.set(key, value);
+    const list = doc.getList("items");
+    for (const item of items) {
+      list.push(item);
     }
   });
-  // Single event for entire profile update
-}
-```
-
-### Pattern 2: Bulk Operations
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-function importTodos(todos: Array<{id: string, text: string, done: boolean}>) {
-  doc.transact(() => {
-    const todoList = doc.getList("todos");
-    
-    for (const todo of todos) {
-      const todoMap = doc.getMap();
-      todoMap.set("id", todo.id);
-      todoMap.set("text", todo.text);
-      todoMap.set("done", todo.done);
-      todoList.pushContainer(todoMap);
-    }
-  });
-  // Single event for entire import
-}
-```
-
-### Pattern 3: Undo-Friendly Operations
-```ts twoslash
-import { LoroDoc, UndoManager } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const undoManager = new UndoManager(doc);
-
-function moveListItem(fromIndex: number, toIndex: number) {
-  doc.transact(() => {
-    const list = doc.getMovableList("items");
-    list.move(fromIndex, toIndex);
-    
-    // Log the move for debugging
-    const log = doc.getList("actionLog");
-    log.push({
-      action: "move",
-      from: fromIndex,
-      to: toIndex,
-      timestamp: Date.now()
-    });
-  });
-  // Both the move and log entry will be undone together
+  // Single event for all items
 }
 ```
 
 ## Common Misconceptions
 
-### Misconception 1: Transactions Provide Atomicity
-**Wrong:** "If one operation in a transaction fails, all operations are rolled back."
+### ❌ No Atomicity
+If an operation fails, previous operations remain applied - no rollback!
 
-**Reality:** There is no rollback mechanism. If an operation fails, previous operations in the transaction remain applied:
+### ❌ No Isolation  
+Transactions only affect local events. Remote peers see all operations once synced.
 
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-try {
-  doc.transact(() => {
-    const map = doc.getMap("data");
-    map.set("step1", "completed"); // This succeeds
-    
-    // This might throw an error
-    throw new Error("Something went wrong");
-    
-    map.set("step2", "completed"); // Never reached
-  });
-} catch (e) {
-  // step1 is still set - no rollback!
-  console.log(doc.getMap("data").get("step1")); // "completed"
-}
-```
-
-### Misconception 2: Transactions Provide Isolation
-**Wrong:** "Other peers can't see my changes until the transaction completes."
-
-**Reality:** Transactions only affect local event emission. Once synced, remote peers see all operations:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc1 = new LoroDoc();
-const doc2 = new LoroDoc();
-
-doc1.transact(() => {
-  doc1.getText("text").insert(0, "Hello");
-  // Even mid-transaction, if we export...
-  const updates = doc1.export({ mode: "update" });
-  doc2.import(updates);
-  // doc2 can see the partial changes
-});
-```
-
-### Misconception 3: Nested Transactions Create Savepoints
-**Wrong:** "Nested transactions can be independently rolled back."
-
-**Reality:** Nested transactions are flattened - they all contribute to the parent transaction:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-doc.transact(() => {
-  doc.getMap("outer").set("a", 1);
-  
-  doc.transact(() => {
-    doc.getMap("inner").set("b", 2);
-  });
-  
-  doc.getMap("outer").set("c", 3);
-});
-// All operations are in a single Change
-// No independent control over the nested transaction
-```
+### ❌ No Nested Savepoints
+Nested transactions are flattened into the parent transaction.
 
 ## Best Practices
 
-1. **Use transactions for logical units of work** - Operations that belong together semantically should be in the same transaction.
+- Use transactions for logical units of work
+- Don't over-transaction - use when bundling makes sense
+- Consider sync strategy - smaller transactions for real-time collaboration
+- Remember events are async (emitted after microtask)
+- Use origin parameter to tag and filter events
 
-2. **Don't over-transaction** - Wrapping everything in transactions defeats their purpose. Use them when bundling makes sense.
+## Related Documentation
 
-3. **Consider your sync strategy** - In real-time collaboration, smaller transactions (or direct operations) provide better user experience.
-
-4. **Remember the async nature** - Events are emitted after a microtask, even with transactions:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-doc.subscribe(() => console.log("Event received"));
-
-doc.transact(() => {
-  doc.getMap("test").set("key", "value");
-});
-console.log("Transaction complete");
-// Output:
-// "Transaction complete"
-// "Event received" (after microtask)
-```
-
-5. **Use origin for event filtering** - Tag your transactions to help event handlers:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-doc.subscribe((event) => {
-  if (event.origin === "user-action") {
-    // Handle user-initiated changes
-  } else if (event.origin === "sync") {
-    // Handle sync updates
-  }
-});
-
-doc.transact(() => {
-  // User operations
-}, "user-action");
-```
-
-## Summary
-
-Loro transactions are not about ACID properties or database-like guarantees. They are simply a mechanism to:
-- Bundle related operations together
-- Reduce event emission overhead
-- Create logical groupings in document history
-
-Think of them as "event brackets" - a way to tell Loro: "Start collecting operations here, and emit one event when I'm done." This simple concept becomes powerful when building collaborative applications that need efficient event handling and clear operation grouping.
+- [Operations and Changes](./operations_changes) - How transactions create Changes
+- [Event System](../user-guide/events) - Understanding event emission
+- [Undo/Redo](../user-guide/undo-redo) - Using transactions for undo boundaries

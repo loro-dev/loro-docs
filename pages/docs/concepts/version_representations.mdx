@@ -1,600 +1,171 @@
 ---
-keywords: "version representations, version vector, frontiers, CRDT, synchronization, comparison"
-description: "A comprehensive guide to understanding and choosing between Version Vectors and Frontiers in Loro"
+keywords: "version representations, version vector, frontiers, CRDT, synchronization"
+description: "Understanding and choosing between Version Vectors and Frontiers in Loro"
 ---
 
-# Version Representations in Loro
+# Version Representations
 
-Loro provides two distinct ways to represent document versions: **Version Vectors** and **Frontiers**. This guide helps you understand both representations, their trade-offs, and how to choose the right one for your use case.
+Loro provides two ways to represent document versions: **Version Vectors** and **Frontiers**. Each serves different purposes in distributed collaboration.
 
-## Overview
-
-In distributed collaborative applications, tracking document versions is fundamentally different from centralized systems. While a centralized database might use a simple incrementing number or timestamp, Loro needs to track the contributions of multiple peers working independently and potentially offline.
+## Quick Overview
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-
-// Two ways to represent the same version
-const versionVector = doc.version();      // Complete peer state
-const frontiers = doc.frontiers();        // Compact boundary representation
-
-console.log("Version Vector:", versionVector);  // { "peer1": 5, "peer2": 3, ... }
-console.log("Frontiers:", frontiers);          // [{ peer: "...", counter: ... }]
+const versionVector = doc.version();      // { "peer1": 5, "peer2": 3, ... }
+const frontiers = doc.frontiers();        // [{ peer: "...", counter: ... }]
 ```
 
-## Version Vectors: Complete Peer State
+## Comparison Table
 
-Version Vectors provide a complete picture of how many operations each peer has contributed to the document.
+| Aspect | Version Vectors | Frontiers |
+|--------|----------------|-----------|
+| **Structure** | Map of peer → operation count | List of boundary operations |
+| **Size** | Grows with number of peers | Usually 1-2 elements |
+| **Best for** | Synchronization, diffing | Checkpoints, storage |
+| **Compare versions** | Direct comparison | Requires DAG context |
+| **Network protocols** | Widely supported | Custom handling |
+| **Storage efficiency** | Lower with many peers | Always compact |
 
-### What is a Version Vector?
+## Version Vectors
 
-A Version Vector is essentially a map that tracks the operation count for each peer:
-
-```ts
-type VersionVector = {
-  [peerId: string]: number  // How many ops from this peer
-}
-```
-
-### Key Characteristics
-
-- **Comprehensive**: Shows exact contribution from each peer
-- **Growing Size**: Increases with the number of unique peers
-- **Direct Comparison**: Easy to calculate differences between versions
-- **Synchronization-Friendly**: Ideal for network protocols
-
-### Example: Understanding Version Vectors
+Track exactly how many operations each peer has contributed:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
-// Three users collaborating
 const alice = new LoroDoc();
 alice.setPeerId(1n);
 const bob = new LoroDoc();
 bob.setPeerId(2n);
 
-// Alice makes 3 edits
-alice.getText("doc").insert(0, "Hello ");
-alice.getText("doc").insert(6, "World ");
-alice.getText("doc").insert(12, "!");
+// Make edits
+alice.getText("doc").insert(0, "Hello");
+bob.getText("doc").insert(0, "Hi");
 
-// Bob makes 2 edits
-bob.getText("doc").insert(0, "Hi ");
-bob.getText("doc").insert(3, "there");
-
-// After merging
+// Merge
 alice.import(bob.export({ mode: "snapshot" }));
 
-const vv = alice.version();
-console.log(vv);
-// { "1": 3, "2": 2 }
-// Meaning: includes 3 ops from peer 1, 2 ops from peer 2
+console.log(alice.version());
+// { "1": 1, "2": 1 } - one operation from each peer
 ```
 
-## Frontiers: Compact Boundaries
+**Use Version Vectors for:**
+- Synchronization between peers
+- Calculating missing operations
+- Network protocols
+- Conflict detection
 
-Frontiers represent versions by identifying the "frontier" operations - those that aren't followed by any other operations. For a detailed exploration of Frontiers, see the [dedicated Frontiers concept document](/docs/concepts/frontiers).
+## Frontiers
 
-### Quick Frontier Overview
-
-- **Compact**: Usually just 1-2 operation IDs
-- **Space-Efficient**: Size doesn't grow with peer count
-- **DAG-Based**: Leverages causal relationships
-- **Checkpoint-Friendly**: Perfect for marking specific points in history
+Identify boundary operations that implicitly include all ancestors:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-doc.getText("content").insert(0, "Hello World");
+doc.getText("content").insert(0, "Hello");
 
-const frontiers = doc.frontiers();
-// [{ peer: "...", counter: 0 }] - Just one element!
+console.log(doc.frontiers());
+// [{ peer: "...", counter: 0 }] - just one element!
 ```
 
-## Comparison: Version Vectors vs Frontiers
+**Use Frontiers for:**
+- Creating checkpoints
+- Time travel/history navigation
+- Efficient storage
+- Recording milestones
 
-### Size and Storage
+## Decision Guide
 
-| Peers | Version Vector Size | Frontiers Size |
-|-------|-------------------|----------------|
-| 2 | 2 entries | 1-2 elements |
-| 10 | 10 entries | 1-2 elements |
-| 100 | 100 entries | 1-2 elements |
-| 1000 | 1000 entries | 1-2 elements |
+### Choose Version Vectors When:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
-// Demonstrating size difference
-function compareRepresentationSizes(numPeers: number) {
-  const mainDoc = new LoroDoc();
-  
-  // Simulate many peers making edits
-  for (let i = 0; i < numPeers; i++) {
-    const peerDoc = new LoroDoc();
-    peerDoc.setPeerId(BigInt(i));
-    peerDoc.getText("shared").insert(0, `Peer${i}`);
-    mainDoc.import(peerDoc.export({ mode: "snapshot" }));
-  }
-  
-  const vv = mainDoc.version();
-  const frontiers = mainDoc.frontiers();
-  
-  return {
-    versionVectorEntries: Object.keys(vv).length,
-    frontierElements: frontiers.length
-  };
-}
-
-console.log("10 peers:", compareRepresentationSizes(10));
-// { versionVectorEntries: 10, frontierElements: 1 }
-
-console.log("100 peers:", compareRepresentationSizes(100));
-// { versionVectorEntries: 100, frontierElements: 1 }
-```
-
-### Operation Capabilities
-
-| Operation | Version Vectors | Frontiers |
-|-----------|----------------|-----------|
-| **Get current version** | ✅ Immediate | ✅ Immediate |
-| **Calculate missing ops** | ✅ Direct calculation | ⚠️ Requires conversion |
-| **Compare two versions** | ✅ Simple comparison | ⚠️ Needs DAG context |
-| **Storage efficiency** | ❌ Grows with peers | ✅ Always compact |
-| **Time travel to version** | ⚠️ Requires conversion | ✅ Direct checkout |
-| **Network protocol support** | ✅ Widely supported | ⚠️ Custom handling |
-
-## Decision Matrix: When to Use Each
-
-### Use Version Vectors When You Need To:
-
-#### 1. Synchronize Between Peers
-```ts twoslash
-import { LoroDoc, VersionVector } from "loro-crdt";
-
+// Synchronization scenario
 class SyncManager {
-  syncDocuments(local: LoroDoc, remote: LoroDoc) {
-    // Version vectors make it easy to identify what's missing
-    const localVersion = local.version();
-    const remoteVersion = remote.version();
+  syncDocs(local: LoroDoc, remote: LoroDoc) {
+    // VV makes it easy to get only missing updates
+    const localVV = local.version();
+    const remoteVV = remote.version();
     
-    // Get only the missing updates
-    const toRemote = local.export({ 
-      mode: "update", 
-      from: remoteVersion 
-    });
-    const toLocal = remote.export({ 
-      mode: "update", 
-      from: localVersion 
-    });
-    
-    local.import(toLocal);
-    remote.import(toRemote);
+    local.import(remote.export({ mode: "update", from: localVV }));
+    remote.import(local.export({ mode: "update", from: remoteVV }));
   }
 }
 ```
 
-#### 2. Implement Conflict Detection
+### Choose Frontiers When:
+
 ```ts twoslash
-import { LoroDoc, VersionVector } from "loro-crdt";
+import { LoroDoc } from "loro-crdt";
 
-function detectConcurrentEdits(v1: VersionVector, v2: VersionVector): boolean {
-  let hasGreater = false;
-  let hasLesser = false;
-  
-  const allPeers = new Set([...Object.keys(v1), ...Object.keys(v2)]);
-  
-  for (const peer of allPeers) {
-    const count1 = v1[peer] || 0;
-    const count2 = v2[peer] || 0;
-    
-    if (count1 > count2) hasGreater = true;
-    if (count1 < count2) hasLesser = true;
-  }
-  
-  // Concurrent if neither version fully contains the other
-  return hasGreater && hasLesser;
-}
-```
-
-#### 3. Build Network Protocols
-```ts twoslash
-import { VersionVector } from "loro-crdt";
-
-interface SyncMessage {
-  type: "sync_request" | "sync_response";
-  localVersion: VersionVector;  // Standard format for protocols
-  updates?: Uint8Array;
-}
-
-class NetworkProtocol {
-  createSyncRequest(version: VersionVector): SyncMessage {
-    return {
-      type: "sync_request",
-      localVersion: version
-    };
-  }
-}
-```
-
-### Use Frontiers When You Need To:
-
-#### 1. Create Checkpoints
-```ts twoslash
-import { LoroDoc, OpId } from "loro-crdt";
-
+// Checkpoint scenario
 class DocumentCheckpoints {
-  private checkpoints = new Map<string, OpId[]>();
+  private checkpoints = new Map<string, any>();
   
-  saveCheckpoint(doc: LoroDoc, name: string) {
-    // Frontiers are perfect for compact checkpoints
+  save(doc: LoroDoc, name: string) {
+    // Frontiers are compact for storage
     this.checkpoints.set(name, doc.frontiers());
   }
   
-  restoreCheckpoint(doc: LoroDoc, name: string) {
+  restore(doc: LoroDoc, name: string) {
     const frontiers = this.checkpoints.get(name);
-    if (frontiers) {
-      doc.checkout(frontiers);
-    }
-  }
-  
-  // Compact serialization
-  serialize(): string {
-    return JSON.stringify(Array.from(this.checkpoints.entries()));
-  }
-}
-```
-
-#### 2. Implement Time Travel
-```ts twoslash
-import { LoroDoc, OpId } from "loro-crdt";
-
-class TimeTravel {
-  private history: OpId[][] = [];
-  private doc: LoroDoc;
-  
-  constructor(doc: LoroDoc) {
-    this.doc = doc;
-  }
-  
-  recordState() {
-    // Frontiers make time travel efficient
-    this.history.push(this.doc.frontiers());
-  }
-  
-  goToState(index: number) {
-    if (index >= 0 && index < this.history.length) {
-      this.doc.checkout(this.history[index]);
-    }
-  }
-  
-  goBack() {
-    if (this.history.length > 1) {
-      this.history.pop(); // Remove current
-      const previous = this.history[this.history.length - 1];
-      this.doc.checkout(previous);
-    }
-  }
-}
-```
-
-#### 3. Store Versions Efficiently
-```ts twoslash
-import { OpId } from "loro-crdt";
-
-interface StoredDocument {
-  content: Uint8Array;
-  version: OpId[];  // Compact frontiers instead of full VV
-  timestamp: number;
-}
-
-class DocumentStorage {
-  saveDocument(doc: any): StoredDocument {
-    return {
-      content: doc.export({ mode: "snapshot" }),
-      version: doc.frontiers(),  // Much smaller than version vector
-      timestamp: Date.now()
-    };
+    if (frontiers) doc.checkout(frontiers);
   }
 }
 ```
 
 ## Conversion Between Formats
 
-Loro allows seamless conversion between Version Vectors and Frontiers when the version exists in the document's history:
+Convert seamlessly when the version exists in history:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-doc.getText("content").insert(0, "Hello World");
+doc.getText("content").insert(0, "Hello");
 
-// Get both representations
-const originalVV = doc.version();
-const originalFrontiers = doc.frontiers();
+const vv = doc.version();
+const frontiers = doc.frontiers();
 
-// Convert frontiers → version vector
-const convertedVV = doc.frontiersToVV(originalFrontiers);
-console.log("VV match:", JSON.stringify(convertedVV) === JSON.stringify(originalVV));
-// true
+// Convert between formats
+const vvFromFrontiers = doc.frontiersToVV(frontiers);
+const frontiersFromVV = doc.vvToFrontiers(vv);
 
-// Convert version vector → frontiers
-const convertedFrontiers = doc.vvToFrontiers(originalVV);
-console.log("Frontiers match:", 
-  JSON.stringify(convertedFrontiers) === JSON.stringify(originalFrontiers));
-// true
+console.log(JSON.stringify(vv) === JSON.stringify(vvFromFrontiers)); // true
 ```
 
-### Conversion Patterns
+## Practical Strategy
 
 ```ts twoslash
-import { LoroDoc, VersionVector, OpId } from "loro-crdt";
+import { LoroDoc } from "loro-crdt";
 
-class VersionAdapter {
-  private doc: LoroDoc;
-  
-  constructor(doc: LoroDoc) {
-    this.doc = doc;
-  }
-  
-  // Use frontiers for storage, convert to VV for sync
-  prepareForSync(storedFrontiers: OpId[]): VersionVector {
-    return this.doc.frontiersToVV(storedFrontiers);
-  }
-  
-  // Receive VV from network, store as frontiers
-  storeFromNetwork(networkVV: VersionVector): OpId[] {
-    return this.doc.vvToFrontiers(networkVV);
-  }
-  
-  // Hybrid approach: store both for different purposes
-  getHybridVersion() {
-    return {
-      frontiers: this.doc.frontiers(),      // For storage
-      versionVector: this.doc.version()      // For quick comparison
-    };
-  }
-}
-```
+const doc = new LoroDoc();
 
-## Real-World Scenarios
+// Use VV for synchronization
+const syncData = doc.export({ 
+  mode: "update", 
+  from: doc.version()  // Version Vector for diffing
+});
 
-### Scenario 1: Real-time Collaboration App
-
-**Requirements**: 
-- Many concurrent users
-- Frequent synchronization
-- Network efficiency important
-
-**Recommendation**: Use Version Vectors for sync, Frontiers for checkpoints
-
-```ts twoslash
-import { LoroDoc, VersionVector, OpId } from "loro-crdt";
-
-class CollaborationSession {
-  private doc: LoroDoc;
-  private autosaveCheckpoints: OpId[] = [];
-  
-  constructor() {
-    this.doc = new LoroDoc();
-  }
-  
-  // Use VV for efficient peer-to-peer sync
-  syncWithPeer(peerVersion: VersionVector): Uint8Array {
-    return this.doc.export({ mode: "update", from: peerVersion });
-  }
-  
-  // Use Frontiers for autosave checkpoints
-  autosave(): void {
-    this.autosaveCheckpoints.push(this.doc.frontiers());
-    // Only keep last 10 checkpoints
-    if (this.autosaveCheckpoints.length > 10) {
-      this.autosaveCheckpoints.shift();
-    }
-  }
-  
-  // Restore from autosave
-  restoreAutosave(index: number): void {
-    if (index < this.autosaveCheckpoints.length) {
-      this.doc.checkout(this.autosaveCheckpoints[index]);
-    }
-  }
-}
-```
-
-### Scenario 2: Document Version Control System
-
-**Requirements**:
-- Track document history
-- Storage efficiency critical
-- Support branching/merging
-
-**Recommendation**: Use Frontiers for all version tracking
-
-```ts twoslash
-import { LoroDoc, OpId } from "loro-crdt";
-
-class VersionControl {
-  private branches = new Map<string, OpId[]>();
-  private tags = new Map<string, OpId[]>();
-  
-  createBranch(doc: LoroDoc, branchName: string): void {
-    // Frontiers are perfect for branch points
-    this.branches.set(branchName, doc.frontiers());
-  }
-  
-  tagVersion(doc: LoroDoc, tagName: string): void {
-    // Compact storage for version tags
-    this.tags.set(tagName, doc.frontiers());
-  }
-  
-  switchToBranch(doc: LoroDoc, branchName: string): void {
-    const branchPoint = this.branches.get(branchName);
-    if (branchPoint) {
-      doc.checkout(branchPoint);
-    }
-  }
-  
-  // Efficient storage
-  serialize(): string {
-    return JSON.stringify({
-      branches: Array.from(this.branches.entries()),
-      tags: Array.from(this.tags.entries())
-    });
-  }
-}
-```
-
-### Scenario 3: Offline-First Mobile App
-
-**Requirements**:
-- Limited storage
-- Infrequent sync
-- Must handle many unique device IDs
-
-**Recommendation**: Store Frontiers, convert to VV only during sync
-
-```ts twoslash
-import { LoroDoc, VersionVector, OpId } from "loro-crdt";
-
-class OfflineFirstSync {
-  private doc: LoroDoc;
-  private lastSyncFrontiers?: OpId[];
-  
-  constructor() {
-    this.doc = new LoroDoc();
-  }
-  
-  // Store compact frontiers between syncs
-  markSynced(): void {
-    this.lastSyncFrontiers = this.doc.frontiers();
-    this.saveToLocalStorage();
-  }
-  
-  // Convert to VV only when actually syncing
-  prepareSync(): { version: VersionVector; updates: Uint8Array } {
-    const currentVV = this.doc.version();
-    const fromVV = this.lastSyncFrontiers 
-      ? this.doc.frontiersToVV(this.lastSyncFrontiers)
-      : {};
-    
-    return {
-      version: currentVV,
-      updates: this.doc.export({ mode: "update", from: fromVV })
-    };
-  }
-  
-  private saveToLocalStorage(): void {
-    // Frontiers use much less storage
-    localStorage.setItem('lastSync', JSON.stringify(this.lastSyncFrontiers));
-  }
-}
-```
-
-## Best Practices
-
-### 1. Default Strategy
-
-Start with Version Vectors for synchronization and add Frontiers for specific features:
-
-```ts twoslash
-import { LoroDoc, VersionVector, OpId } from "loro-crdt";
-
-class DefaultStrategy {
-  private doc: LoroDoc;
-  
-  constructor() {
-    this.doc = new LoroDoc();
-  }
-  
-  // Primary: Use VV for sync (most common operation)
-  getVersionForSync(): VersionVector {
-    return this.doc.version();
-  }
-  
-  // Secondary: Add frontiers for special features
-  createCheckpoint(): OpId[] {
-    return this.doc.frontiers();
-  }
-}
-```
-
-### 2. Optimize for Your Use Case
-
-```ts twoslash
-import { LoroDoc, VersionVector, OpId } from "loro-crdt";
-
-// High-frequency sync: Optimize for VV
-class FrequentSyncApp {
-  private doc: LoroDoc;
-  private cachedVersion: VersionVector;
-  
-  constructor() {
-    this.doc = new LoroDoc();
-    this.cachedVersion = this.doc.version();
-  }
-  
-  onEdit(): void {
-    // Keep VV cached and ready
-    this.cachedVersion = this.doc.version();
-  }
-}
-
-// Storage-constrained: Optimize for Frontiers
-class StorageOptimizedApp {
-  private doc: LoroDoc;
-  
-  constructor() {
-    this.doc = new LoroDoc();
-  }
-  
-  saveState(): string {
-    // Always use frontiers for persistence
-    return JSON.stringify(this.doc.frontiers());
-  }
-}
-```
-
-### 3. Document Your Choice
-
-Always make your version representation choice explicit:
-
-```ts twoslash
-import { VersionVector, OpId } from "loro-crdt";
-
-interface AppConfig {
-  sync: {
-    representation: "version-vector";  // Explicit choice
-    format: VersionVector;
-  };
-  storage: {
-    representation: "frontiers";       // Different choice for storage
-    format: OpId[];
-  };
-}
+// Use Frontiers for storage
+const checkpoint = {
+  frontiers: doc.frontiers(),  // Compact for storage
+  timestamp: Date.now()
+};
 ```
 
 ## Summary
 
-Loro's two version representations serve different purposes:
-
-- **Version Vectors** excel at synchronization and difference calculation, providing complete peer state information at the cost of growing with peer count
-- **Frontiers** offer compact version representation ideal for storage and checkpoints, leveraging causal relationships to maintain small size
-
-Choose based on your primary use case:
-- Network-heavy applications → Version Vectors
-- Storage-constrained or history-focused → Frontiers
-- Complex applications → Use both strategically
-
-Remember that Loro allows conversion between formats, so you can leverage the strengths of each representation where they matter most.
+- **Version Vectors**: Complete peer state, ideal for synchronization and diffing
+- **Frontiers**: Compact boundaries, perfect for storage and checkpoints
+- **Both are convertible**: Use the right tool for each task
 
 ## Related Topics
 
-- [Frontiers Concept Deep Dive](/docs/concepts/frontiers) - Detailed exploration of Frontiers
+- [Frontiers Concept](/docs/concepts/frontiers) - Focused guide on Frontiers
 - [Version Tutorial](/docs/tutorial/version) - Basic version concepts
-- [Advanced Versioning Deep Dive](/docs/advanced/version_deep_dive) - Technical details and DAG structure
-- [Time Travel Tutorial](/docs/tutorial/time_travel) - Using versions for history navigation
+- [Version Deep Dive](/docs/advanced/version_deep_dive) - Technical details and DAG structure

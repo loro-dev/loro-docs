@@ -1,435 +1,108 @@
-# Import Status and Pending Operations
+# Import Status
 
-## Why Import Status Matters
+## Quick Reference
 
-In distributed collaborative applications, data synchronization isn't always straightforward. When importing updates from remote peers, operations may arrive out of order due to network latency, connection issues, or complex synchronization patterns. Import status provides crucial feedback about what operations were successfully applied and what operations are waiting for their dependencies, enabling developers to build robust synchronization systems that handle real-world network conditions gracefully.
+**Import status** tells you what operations were applied and what's pending due to missing dependencies. Essential for handling out-of-order updates in distributed systems.
 
-Without proper handling of import status, applications may:
-- Silently fail to apply updates, leading to data inconsistency
-- Miss critical operations that arrive out of order
-- Be unable to recover from network partitions or temporary disconnections
-- Provide poor user experience with unexplained synchronization failures
+## Status Structure
 
-## Understanding Import Status
-
-When you call `import()` on a Loro document, it returns a status object that tells you exactly what happened during the import operation. This isn't just a simple success/failure flag—it's a detailed report that helps you understand the state of your synchronization.
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const updateBytes = new Uint8Array(); // Assume this contains update data
-
-const importStatus = doc.import(updateBytes);
-
-// The import status tells you:
-// 1. What was successfully imported
-// 2. What couldn't be imported yet (pending)
-console.log(importStatus);
-```
-
-### The Import Status Structure
-
-The import status object has two main fields:
-
-```ts twoslash
+```ts
 interface ImportStatus {
-  success: PeerVersionRange;  // Always present
-  pending?: PeerVersionRange; // Only present if operations are pending
+  success: PeerVersionRange;  // What was applied
+  pending?: PeerVersionRange; // What needs dependencies
 }
 
 interface PeerVersionRange {
   [peerId: string]: {
     start: number; // Inclusive
-    end: number;   // Exclusive
+    end: number;   // Exclusive (e.g., 0-50 = ops 0-49)
   };
 }
 ```
 
-## Success: What Was Applied
 
-The `success` field tells you which operations were successfully integrated into your document. Each peer's operations are tracked by a continuous counter range.
+## Pending Operations
+
+Operations become pending when they depend on missing operations (causal dependencies).
+
+### Common Scenario: Out-of-Order Delivery
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-const updateBytes = new Uint8Array(); // Assume this contains update data
 
-const status = doc.import(updateBytes);
-
-// Example: Operations from two peers were successfully applied
-console.log(status.success);
-// Output:
-// {
-//   "peer_123": { start: 0, end: 50 },   // Applied ops 0-49 from peer_123
-//   "peer_456": { start: 10, end: 30 }   // Applied ops 10-29 from peer_456
-// }
-```
-
-The counter ranges use an exclusive end boundary, meaning `{ start: 0, end: 50 }` includes operations 0 through 49, but not 50.
-
-## Pending Operations: Understanding Causal Dependencies
-
-Pending operations occur when Loro receives updates that depend on other updates it hasn't seen yet. This is a fundamental aspect of CRDTs—operations have causal dependencies that must be respected to maintain consistency.
-
-### When Operations Become Pending
-
-Operations become pending in several common scenarios:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// Scenario 1: Out-of-order delivery
-const doc = new LoroDoc();
-
-// Peer A creates operations 0-9
+// Peer A creates ops 0-9, then 10-19
 const peerA = new LoroDoc();
 peerA.getText("text").insert(0, "Hello");
 const update1 = peerA.export({ mode: "update" });
 
-// Peer A creates operations 10-19 (depends on 0-9)
 peerA.getText("text").insert(5, " World");
-const version = peerA.version();
-const update2 = peerA.export({ mode: "update", from: version });
+const update2 = peerA.export({ mode: "update", from: peerA.version() });
 
-// If doc receives update2 before update1:
-const status2 = doc.import(update2);
-console.log(status2.pending);
-// Operations 10-19 are pending because they depend on 0-9
+// If update2 arrives first:
+const status = doc.import(update2);
+console.log(status.pending); // Ops 10-19 pending, need 0-9
 
-// Once the missing dependencies arrive:
-const status1 = doc.import(update1);
-console.log(status1.success);
-// Both update1 and the previously pending update2 are now applied
-```
-
-### Causal Dependencies Explained
-
-Every operation in Loro knows which operations must come before it. This creates a causal ordering that ensures:
-- Text insertions happen in the correct positions
-- List operations maintain proper ordering
-- Concurrent edits are resolved consistently across all peers
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// Example: Why causal ordering matters
-const alice = new LoroDoc();
-const bob = new LoroDoc();
-
-// Alice: Creates a list and adds items
-alice.getList("todos").insert(0, "Task 1");
-alice.getList("todos").insert(1, "Task 2");
-
-// Bob: Receives only the second operation first
-const aliceUpdate2 = alice.export({ 
-  mode: "update", 
-  from: alice.version() // Export only the second operation
-});
-
-const bobStatus = bob.import(aliceUpdate2);
-// Bob can't apply "insert at position 1" without knowing what's at position 0
-// The operation becomes pending
+// Import missing dependencies:
+doc.import(update1); // Both updates now applied
 ```
 
 ## Handling Pending Operations
 
-When you encounter pending operations, you need to fetch the missing dependencies. Here's a robust pattern for handling this:
-
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
-class SyncManager {
-  private doc: LoroDoc;
-  private pendingQueue = new Map<string, Set<{ start: number; end: number }>>();
-  
-  constructor(doc: LoroDoc) {
-    this.doc = doc;
-  }
-  
-  async handleImport(updateBytes: Uint8Array, fetchMissing: (peerId: string, before: number) => Promise<Uint8Array>) {
-    const status = this.doc.import(updateBytes);
-    
-    // Track what was successfully imported
-    console.log("Successfully imported:", status.success);
-    
-    // Handle pending operations
-    if (status.pending) {
-      console.log("Operations pending:", status.pending);
-      
-      // For each peer with pending operations
-      for (const [peerId, range] of Object.entries(status.pending)) {
-        // We need operations before range.start
-        const missingOps = await fetchMissing(peerId, range.start);
-        
-        // Import the missing operations
-        const retryStatus = this.doc.import(missingOps);
-        
-        // The previously pending operations should now be applied
-        if (!retryStatus.pending || !retryStatus.pending[peerId]) {
-          console.log(`Resolved pending operations for ${peerId}`);
-        }
-      }
-    }
-    
-    return status;
-  }
-}
-```
-
-## Error Scenarios and Recovery
-
-### Scenario 1: Network Partition
-
-When peers are temporarily disconnected, operations may accumulate independently:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// During network partition
-const peer1 = new LoroDoc();
-const peer2 = new LoroDoc();
-
-// Both peers make changes independently
-peer1.getText("doc").insert(0, "Peer1 changes");
-peer2.getText("doc").insert(0, "Peer2 changes");
-
-// After reconnection, synchronize with awareness of pending ops
-function synchronizePeers(peer1: LoroDoc, peer2: LoroDoc) {
-  // Exchange version vectors first
-  const v1 = peer1.version();
-  const v2 = peer2.version();
-  
-  // Export missing operations
-  const peer1Updates = peer1.export({ mode: "update", from: v2 });
-  const peer2Updates = peer2.export({ mode: "update", from: v1 });
-  
-  // Import with status checking
-  const status1 = peer2.import(peer1Updates);
-  const status2 = peer1.import(peer2Updates);
-  
-  // Both should succeed without pending operations
-  // since we exported from the correct versions
-  console.assert(!status1.pending, "No pending ops expected");
-  console.assert(!status2.pending, "No pending ops expected");
-}
-```
-
-### Scenario 2: Incomplete Update Propagation
-
-In complex network topologies, updates might propagate incompletely:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// Three peers: A -> B -> C (relay pattern)
-const peerA = new LoroDoc();
-const peerB = new LoroDoc();
-const peerC = new LoroDoc();
-
-// A makes changes
-peerA.getText("doc").insert(0, "First");
-const updateA1 = peerA.export({ mode: "update" });
-
-peerA.getText("doc").insert(5, " Second");
-const updateA2 = peerA.export({ mode: "update", from: peerA.version() });
-
-// B receives both updates
-peerB.import(updateA1);
-peerB.import(updateA2);
-
-// But C only receives the second update (network issue)
-const statusC = peerC.import(updateA2);
-
-// C will have pending operations
-if (statusC.pending) {
-  console.log("C has pending operations, needs updateA1");
-  // Recovery: C requests missing updates from B
-  const missingForC = peerB.export({ 
-    mode: "update", 
-    from: undefined, // Export all history
-    to: peerA.version() // Up to the version before updateA2
-  });
-  peerC.import(missingForC);
-}
-```
-
-## Best Practices for Robust Synchronization
-
-### 1. Always Check Import Status
-
-Never assume imports succeed without checking:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-function safeImport(doc: LoroDoc, update: Uint8Array): boolean {
+async function handleImport(
+  doc: LoroDoc,
+  update: Uint8Array,
+  fetchMissing: (peerId: string, before: number) => Promise<Uint8Array>
+) {
   const status = doc.import(update);
   
   if (status.pending) {
-    // Log or handle pending operations
-    console.warn("Import resulted in pending operations:", status.pending);
-    return false; // Indicate incomplete import
-  }
-  
-  return true; // All operations applied successfully
-}
-```
-
-### 2. Implement Retry Logic for Pending Operations
-
-Build a retry mechanism that fetches missing dependencies:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-class RobustSyncManager {
-  private maxRetries = 3;
-  private retryDelay = 1000; // ms
-  
-  async importWithRetry(
-    doc: LoroDoc,
-    update: Uint8Array,
-    fetchMissing: (peerId: string, before: number) => Promise<Uint8Array>
-  ): Promise<boolean> {
-    let attempts = 0;
-    let status = doc.import(update);
-    
-    while (status.pending && attempts < this.maxRetries) {
-      attempts++;
-      
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-      
-      // Fetch missing dependencies for all pending peers
-      const missingUpdates: Uint8Array[] = [];
-      for (const [peerId, range] of Object.entries(status.pending)) {
-        try {
-          const missing = await fetchMissing(peerId, range.start);
-          missingUpdates.push(missing);
-        } catch (error) {
-          console.error(`Failed to fetch missing ops for ${peerId}:`, error);
-        }
-      }
-      
-      // Import all missing updates
-      for (const missing of missingUpdates) {
-        status = doc.import(missing);
-      }
+    // Fetch missing dependencies
+    for (const [peerId, range] of Object.entries(status.pending)) {
+      const missing = await fetchMissing(peerId, range.start);
+      doc.import(missing); // Resolves pending ops
     }
-    
-    return !status.pending;
   }
+  
+  return status;
 }
 ```
 
-### 3. Use Batch Import for Multiple Updates
 
-When you have multiple updates to apply, use `importBatch()` for better performance and simpler status handling:
+## Best Practices
 
+### Always Check Status
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
-const doc = new LoroDoc();
-const updates: Uint8Array[] = []; // Multiple updates to import
+const status = doc.import(update);
+if (status.pending) {
+  console.warn("Operations pending:", status.pending);
+  // Fetch missing dependencies
+}
+```
 
-// Instead of multiple individual imports with complex status tracking
-// Use batch import for atomic operation
+### Use Batch Import
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const updates: Uint8Array[] = [];
 const batchStatus = doc.importBatch(updates);
-
 // Single status check for all updates
-if (batchStatus.pending) {
-  console.log("Some operations are pending after batch import");
-}
 ```
 
-### 4. Maintain Version Vector Awareness
+### Handle Edge Cases
+- Empty updates (no new operations)
+- All operations pending (missing initial state)
+- Partial success (some applied, some pending)
+- Corrupted update data
 
-Keep track of version vectors to request only necessary updates:
+## Related Documentation
 
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-class VersionAwareSyncManager {
-  private doc: LoroDoc;
-  private lastKnownVersions = new Map<string, any>();
-  
-  constructor(doc: LoroDoc) {
-    this.doc = doc;
-  }
-  
-  requestMissingUpdates(remotePeerId: string, remoteVersion: any): Uint8Array | null {
-    // Compare versions to determine what's missing
-    const localVersion = this.doc.version();
-    
-    if (this.needsUpdatesFrom(remoteVersion, localVersion)) {
-      // Request updates from remote peer
-      return this.doc.export({ 
-        mode: "update", 
-        from: remoteVersion 
-      });
-    }
-    
-    return null;
-  }
-  
-  private needsUpdatesFrom(remote: any, local: any): boolean {
-    // Implementation depends on version vector comparison logic
-    // Return true if remote has updates we don't have
-    return true; // Placeholder
-  }
-}
-```
-
-### 5. Handle Edge Cases Gracefully
-
-Consider these edge cases in your synchronization logic:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-function handleImportEdgeCases(doc: LoroDoc, update: Uint8Array) {
-  try {
-    const status = doc.import(update);
-    
-    // Case 1: Empty update (no operations)
-    if (Object.keys(status.success).length === 0 && !status.pending) {
-      console.log("Received empty update or duplicate operations");
-      return;
-    }
-    
-    // Case 2: All operations pending (missing early history)
-    if (!Object.keys(status.success).length && status.pending) {
-      console.warn("All operations pending - missing initial state");
-      // May need to request full document snapshot
-      return;
-    }
-    
-    // Case 3: Partial success (some applied, some pending)
-    if (status.pending && Object.keys(status.success).length > 0) {
-      console.log("Partial import success, fetching missing dependencies");
-      // Handle mixed success/pending scenario
-    }
-    
-  } catch (error) {
-    // Case 4: Corrupted or invalid update data
-    console.error("Import failed with error:", error);
-    // Implement recovery strategy
-  }
-}
-```
-
-## Summary
-
-Import status and pending operations are essential concepts for building reliable collaborative applications with Loro. By understanding and properly handling these mechanisms, you can:
-
-- **Ensure consistency**: Respect causal dependencies to maintain data integrity
-- **Handle network issues**: Gracefully recover from out-of-order or missing updates  
-- **Optimize synchronization**: Use import status to request only necessary updates
-- **Provide better UX**: Give users feedback about synchronization state
-- **Build resilient systems**: Implement retry logic and error recovery
-
-Remember that pending operations are not errors—they're Loro's way of maintaining consistency in distributed systems. By following the patterns and best practices outlined here, you can build robust synchronization that handles real-world network conditions while maintaining the strong consistency guarantees that CRDTs provide.
+- [Version Representations](./version_representations) - Understanding version vectors
+- [Synchronization Guide](../user-guide/sync) - Complete sync patterns
+- [PeerID Management](./peerid_management) - How peer IDs affect import

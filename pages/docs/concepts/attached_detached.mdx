@@ -5,456 +5,126 @@ description: "Understanding attached and detached states in Loro - two different
 
 # Attached vs Detached States
 
-Loro uses the terms "attached" and "detached" in two distinct contexts that serve different purposes:
+## Quick Reference
 
-1. **Document States** - Whether a document is synchronized with its latest version
-2. **Container States** - Whether a container belongs to a document hierarchy
+Loro uses "attached/detached" in two distinct contexts:
 
-Understanding both concepts is crucial for working effectively with Loro's collaborative features.
+1. **Document States** - Version synchronization (latest vs historical)
+2. **Container States** - Document membership (belongs to doc vs standalone)
 
-## Document States: Version Synchronization
+⚠️ These are independent concepts - a container can be attached to a detached document.
 
-A document's attached/detached state determines whether it reflects the latest changes in its operation log (OpLog).
+## Document States
 
-### Attached Documents
-
-An attached document is synchronized with the latest version in its OpLog:
+### Attached (Default)
+- Synchronized with latest OpLog version
+- Normal editing mode
+- All operations applied immediately
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-
-// Documents start in attached state
-console.log(doc.isDetached()); // false
-
-// Normal operations work as expected
-const text = doc.getText("content");
-text.insert(0, "Hello World!");
-
-// The document state reflects all operations immediately
-console.log(text.toString()); // "Hello World!"
+console.log(doc.isDetached()); // false - normal state
 ```
 
-In attached state:
-- All edits are immediately applied to the document state
-- Imported operations are applied immediately
-- The document version equals the OpLog version
-- This is the normal working mode
-
-### Detached Documents
-
-A detached document is not synchronized with the latest OpLog version. This typically occurs after time travel or explicit detachment:
+### Detached (Time Travel)
+- Viewing historical version
+- Editing disabled by default
+- OpLog has newer operations not shown
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-const text = doc.getText("content");
-text.insert(0, "Version 1");
-doc.commit();
-
-// Save current state
-const frontiers = doc.frontiers();
-
-// Continue editing
-text.insert(9, " -> Version 2");
-doc.commit();
-
-// Checkout previous version (enters detached state)
-doc.checkout(frontiers);
-console.log(doc.isDetached()); // true
-console.log(text.toString()); // "Version 1"
-
-// The OpLog still knows about Version 2
-console.log(doc.version()); // Current state version
-console.log(doc.oplogVersion()); // Latest known version (different!)
-```
-
-### Working with Detached Documents
-
-By default, editing is disabled in detached state to prevent confusion:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.detach();
-
-const text = doc.getText("content");
-// This will throw an error by default
-try {
-  text.insert(0, "Edit in detached state");
-} catch (e) {
-  console.log("Cannot edit in detached state");
-}
-
-// Enable editing in detached state
-doc.setDetachedEditing(true);
-text.insert(0, "Now this works"); // Creates a branch
-
-// Return to latest version
-doc.attach();
-console.log(doc.isDetached()); // false
-```
-
-### Common Document Detachment Scenarios
-
-#### 1. Time Travel
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setRecordTimestamp(true);
-
-// Make changes over time
-const text = doc.getText("content");
-text.insert(0, "Initial");
+doc.getText("text").insert(0, "v1");
 const v1 = doc.frontiers();
+doc.getText("text").insert(2, " -> v2");
 
-text.insert(7, " content");
-const v2 = doc.frontiers();
-
-// Travel back in time (detaches)
+// Time travel to v1
 doc.checkout(v1);
-console.log(text.toString()); // "Initial"
 console.log(doc.isDetached()); // true
+console.log(doc.getText("text").toString()); // "v1"
 
-// Return to present
-doc.checkoutToLatest(); // or doc.attach()
-console.log(text.toString()); // "Initial content"
-```
 
-#### 2. Branching
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.getText("content").insert(0, "Main branch");
+## Container States
 
-// Create a branch at current state
-const branch = doc.fork();
-
-// Original continues
-doc.getText("content").insert(11, " continues");
-
-// Branch diverges
-branch.getText("content").insert(11, " diverges");
-
-console.log(doc.getText("content").toString()); // "Main branch continues"
-console.log(branch.getText("content").toString()); // "Main branch diverges"
-```
-
-#### 3. Importing While Detached
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc1 = new LoroDoc();
-doc1.getText("content").insert(0, "Remote changes");
-const updates = doc1.export({ mode: "update" });
-
-const doc2 = new LoroDoc();
-doc2.detach();
-
-// Import while detached - updates go to OpLog but not state
-doc2.import(updates);
-console.log(doc2.getText("content").toString()); // "" (empty)
-
-// Attach to see the changes
-doc2.attach();
-console.log(doc2.getText("content").toString()); // "Remote changes"
-```
-
-## Container States: Document Association
-
-Container attached/detached state is completely different - it's about whether a container belongs to a document.
-
-### Detached Containers
-
-Containers created with constructors start detached:
+### Detached (Standalone)
+- Created with constructors (`new LoroMap()`)
+- Not part of any document
+- No ContainerID
+- Used as templates
 
 ```ts twoslash
-import { LoroMap, LoroText, LoroList } from "loro-crdt";
+import { LoroMap } from "loro-crdt";
 // ---cut---
-// These containers are detached - not part of any document
 const map = new LoroMap();
-const text = new LoroText();
-const list = new LoroList();
-
-// They work as standalone data structures
-map.set("key", "value");
-text.insert(0, "Hello");
-list.insert(0, "item");
-
-// But they have no document context
 console.log(map.isAttached()); // false
-// No ContainerID assigned yet
-// Changes are not tracked in any document history
 ```
 
-### Attached Containers
-
-Containers become attached when added to a document hierarchy:
+### Attached (Document Member)
+- Part of document hierarchy
+- Has ContainerID
+- Changes tracked in document
 
 ```ts twoslash
-import { LoroDoc, LoroText, LoroMap } from "loro-crdt";
+import { LoroDoc, LoroText } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
+const map = doc.getMap("data"); // Attached
 
-// Root containers are immediately attached
-const rootMap = doc.getMap("settings");
-console.log(rootMap.isAttached()); // true
-
-// Adding a detached container returns an attached version
-const detachedText = new LoroText();
-detachedText.insert(0, "Template text");
-
-const attachedText = rootMap.setContainer("description", detachedText);
-console.log(detachedText.isAttached()); // false - original stays detached
-console.log(attachedText.isAttached()); // true - returned container is attached
-
-// The attached container has a proper ContainerID
-console.log(attachedText.id()); // e.g., "cid:root-settings:Map-description:Text"
+// Adding detached container returns attached version
+const detached = new LoroText();
+const attached = map.setContainer("text", detached);
+console.log(detached.isAttached()); // false - original unchanged
+console.log(attached.isAttached()); // true - new attached copy
 ```
 
-### Container Attachment Process
+## Key Differences
 
-When a detached container is added to a document, Loro:
+| Aspect | Document Attached/Detached | Container Attached/Detached |
+|--------|---------------------------|-----------------------------|
+| **Purpose** | Version control | Document membership |
+| **When** | Time travel, branching | Adding to document |
+| **Independence** | N/A | Independent from doc state |
+| **Editing** | Restricted when detached | Always allowed if attached |
 
-1. Creates a new attached container with a proper ContainerID
-2. Copies the content from the detached container
-3. Returns the attached version
-4. Leaves the original detached container unchanged
+## Common Use Cases
 
+### Time Travel
 ```ts twoslash
-import { LoroDoc, LoroList, LoroMap } from "loro-crdt";
+import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-const list = doc.getList("items");
+const v1 = doc.frontiers();
+// ... more edits ...
+doc.checkout(v1); // View old version
+doc.attach(); // Return to latest
+```
 
-// Create a template
+### Container Templates
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+// ---cut---
 const template = new LoroMap();
 template.set("type", "task");
-template.set("completed", false);
 
-// Use template multiple times
-const task1 = list.insertContainer(0, template);
-const task2 = list.insertContainer(1, template);
-
-// Each insertion creates a unique attached container
-console.log(task1.id() === task2.id()); // false - different IDs
-console.log(template.isAttached()); // false - template remains detached
-```
-
-## The Dual Nature: Common Confusion Points
-
-### They're Independent Concepts
-
-A common source of confusion is thinking these states are related. They're not:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
 const doc = new LoroDoc();
-
-// Document is attached, get an attached container
-const map = doc.getMap("data");
-console.log(doc.isDetached()); // false - document attached
-console.log(map.isAttached()); // true - container attached
-
-// Detach the document
-doc.detach();
-console.log(doc.isDetached()); // true - document detached
-console.log(map.isAttached()); // true - container STILL attached!
-
-// The container's attachment is about its document membership,
-// not about the document's version state
-```
-
-### Container Operations in Detached Document State
-
-When a document is detached, its containers remain attached but editing might be restricted:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const map = doc.getMap("data");
-map.set("initial", "value");
-
-// Checkout old version
-const frontiers = doc.frontiers();
-map.set("new", "data");
-doc.checkout(frontiers);
-
-// Document detached, container still attached
-console.log(doc.isDetached()); // true
-console.log(map.isAttached()); // true
-
-// But editing is disabled by default
-try {
-  map.set("edit", "fails");
-} catch (e) {
-  console.log("Cannot edit attached container in detached document");
-}
-
-// Enable detached editing
-doc.setDetachedEditing(true);
-map.set("edit", "succeeds"); // Now works, creates a branch
+const list = doc.getList("tasks");
+// Reuse template multiple times
+list.insertContainer(0, template);
+list.insertContainer(1, template);
 ```
 
 ## Best Practices
 
-### For Document States
+- **Check before editing**: `if (doc.isDetached()) doc.attach()`
+- **Use templates**: Keep containers detached for reuse
+- **Remember attachment is one-way**: Original stays detached
+- **Re-attach after time travel**: Don't forget to return to latest
 
-1. **Always check state before editing**:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-if (doc.isDetached() && !doc.isDetachedEditingEnabled()) {
-  // Either attach or enable detached editing
-  doc.attach(); // or doc.setDetachedEditing(true)
-}
-```
+## Related Documentation
 
-2. **Be explicit about time travel intentions**:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const frontiers = doc.frontiers();
-// For read-only time travel
-doc.checkout(frontiers);
-// ... examine historical state ...
-doc.attach(); // Return when done
-
-// For branching
-const branch = doc.forkAt(frontiers);
-// Work on branch independently
-```
-
-3. **Understand import behavior**:
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-declare const updates: Uint8Array;
-// ---cut---
-const doc = new LoroDoc();
-// Imports always go to OpLog
-// If detached, they won't appear in state until attach
-doc.import(updates);
-if (doc.isDetached()) {
-  doc.attach(); // Apply imported changes
-}
-```
-
-### For Container States
-
-1. **Use templates for repeated structures**:
-```ts twoslash
-import { LoroDoc, LoroMap } from "loro-crdt";
-// ---cut---
-// Keep template detached for reuse
-const taskTemplate = new LoroMap();
-taskTemplate.set("type", "task");
-taskTemplate.set("status", "pending");
-
-const doc = new LoroDoc();
-const tasks = doc.getList("tasks");
-
-// Create multiple instances
-for (let i = 0; i < 5; i++) {
-  const task = tasks.insertContainer(i, taskTemplate);
-  task.set("id", i); // Customize each instance
-}
-```
-
-2. **Remember attachment is one-way**:
-```ts twoslash
-import { LoroDoc, LoroText } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-const detached = new LoroText();
-const attached = doc.getMap("root").setContainer("text", detached);
-
-// Original remains detached, use the returned container
-detached.insert(0, "Won't affect document");
-attached.insert(0, "This affects document");
-```
-
-3. **Check attachment before operations**:
-```ts twoslash
-import { LoroMap } from "loro-crdt";
-// ---cut---
-function processContainer(container: LoroMap) {
-  if (!container.isAttached()) {
-    console.warn("Container not attached to any document");
-    // Decide: attach it, or work with it standalone
-  }
-}
-```
-
-## Common Pitfalls
-
-### Pitfall 1: Confusing the Two States
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// WRONG: Thinking document detachment affects container attachment
-const doc = new LoroDoc();
-const map = doc.getMap("data");
-doc.detach();
-// map is STILL attached to doc, just doc is in detached version state
-```
-
-### Pitfall 2: Editing Original Detached Container
-
-```ts twoslash
-import { LoroDoc, LoroText } from "loro-crdt";
-// ---cut---
-// WRONG: Editing the detached container after insertion
-const doc = new LoroDoc();
-const detached = new LoroText();
-doc.getMap("root").setContainer("text", detached);
-detached.insert(0, "This doesn't affect the document!");
-
-// RIGHT: Use the returned attached container
-const attached = doc.getMap("root").setContainer("text2", new LoroText());
-attached.insert(0, "This affects the document");
-```
-
-### Pitfall 3: Forgetting to Re-attach After Checkout
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-declare const historicalVersion: any;
-declare const updates: Uint8Array;
-// ---cut---
-const doc = new LoroDoc();
-// WRONG: Staying detached after time travel
-doc.checkout(historicalVersion);
-// ... examine history ...
-// Forgot to attach!
-doc.import(updates); // Updates go to OpLog but not visible
-
-// RIGHT: Re-attach when done with history
-doc.checkout(historicalVersion);
-// ... examine history ...
-doc.attach(); // or doc.checkoutToLatest()
-doc.import(updates); // Now updates are visible
-```
-
-## Summary
-
-Understanding Loro's attached/detached states requires recognizing they serve different purposes:
-
-- **Document attached/detached**: Controls version synchronization and time travel
-  - Attached: Normal mode, synced with latest version
-  - Detached: Historical view or branching mode
-  
-- **Container attached/detached**: Controls document membership
-  - Attached: Part of a document, has ContainerID, changes tracked
-  - Detached: Standalone template or temporary structure
-
-These states are independent - a container can be attached to a detached document, and understanding this distinction is key to effectively using Loro's collaborative features.
+- [OpLog and DocState](./oplog_docstate) - Understanding version states
+- [Containers](./container) - Container types and usage
+- [Time Travel](../user-guide/time-travel) - Using checkout and branching

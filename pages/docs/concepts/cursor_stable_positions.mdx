@@ -5,209 +5,95 @@ description: "Understanding cursor and stable position systems in Loro for maint
 
 # Cursor and Stable Positions
 
-## The Problem: Cursor Jumping in Collaborative Editing
+## Quick Reference
 
-Imagine you're collaboratively editing a document with a colleague. You place your cursor between the words "Hello" and "World" at position 5:
+**Cursors** maintain stable positions across concurrent edits by anchoring to operation IDs instead of indices. Essential for collaborative editing features like shared cursors and persistent annotations.
 
-```
-Hello|World
-     ^ cursor at index 5
-```
+## How It Works
 
-Your colleague simultaneously inserts "Good Morning " at the beginning of the document. Using traditional index-based positioning, your cursor would stay at index 5, but now it points to the wrong location:
+Cursors anchor to operation IDs, not indices:
 
 ```
-Good |Morning Hello World
-     ^ cursor still at index 5 (wrong!)
+Text:    H e l l o   W o r l d
+Op IDs:  1 2 3 4 5 6 7 8 9 A B
+Cursor:  References ID 5 (after 'o')
+
+After concurrent insert at start:
+Text:    N e w   H e l l o   W o r l d  
+Op IDs:  C D E F 1 2 3 4 5 6 7 8 9 A B
+Cursor:  Still references ID 5 - position automatically adjusted
 ```
 
-Your cursor should have moved to index 18 to stay between "Hello" and "World". This cursor jumping problem becomes even more complex with multiple concurrent edits, deletions, and undo operations.
+## Side Parameter
 
-## The Solution: Operation ID-Based Stable Positions
+- **`Side.Before` (-1)**: Stay before the target
+- **`Side.Middle` (0)**: On the target (default)
+- **`Side.After` (1)**: Stay after the target
 
-Loro solves this problem by anchoring positions to the unique IDs of operations rather than numeric indices. Each character or element inserted into a Loro container receives a unique operation ID. Cursors reference these IDs instead of volatile index positions.
-
-### How It Works
-
-When you create a cursor, Loro:
-1. Identifies the operation ID at or near the target position
-2. Records the cursor's relationship to that ID (before, after, or at)
-3. Maintains this stable reference across all edits
-
-```
-Initial: H e l l o   W o r l d
-IDs:     1 2 3 4 5 6 7 8 9 A B
-
-Cursor between 'o' and ' ': References ID 5 with Side.After
-```
-
-When concurrent edits occur:
-```
-After insertion: G o o d   M o r n i n g   H e l l o   W o r l d
-New IDs:         C D E F G H I J K L M N O 1 2 3 4 5 6 7 8 9 A B
-
-Cursor still references ID 5 with Side.After
-Resolved position: After character with ID 5 = index 18 ✓
-```
-
-## Cursor Types and Behavior
-
-### Side Parameter
-
-The `Side` parameter controls cursor behavior at insertion boundaries:
-
-- **`Side.Before` (-1)**: Cursor stays before the target ID
-  - Insertions at the cursor position appear after it
-  - Useful for maintaining position at the start of a word/element
-
-- **`Side.Middle` (0)**: Cursor is directly on the target ID
-  - Default behavior, typically follows the element
-
-- **`Side.After` (1)**: Cursor stays after the target ID
-  - Insertions at the cursor position appear before it
-  - Useful for maintaining position at the end of a word/element
-
-### Visual Example of Side Behavior
-
-```ts
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "ABC");
 
-// Create three cursors at position 1 (after 'A')
-const cursorBefore = text.getCursor(1, -1);  // Side.Before
-const cursorMiddle = text.getCursor(1, 0);   // Side.Middle
-const cursorAfter = text.getCursor(1, 1);    // Side.After
-
-// Insert 'X' at position 1
-text.insert(1, "X");
-// Result: "AXBC"
-
-// Where do the cursors point now?
-doc.getCursorPos(cursorBefore).offset // 1 (before 'X')
-doc.getCursorPos(cursorMiddle).offset // 2 (after 'X')
-doc.getCursorPos(cursorAfter).offset  // 2 (after 'X')
+const cursor = text.getCursor(1, -1); // Before 'B'
+text.insert(1, "X"); // Insert at cursor
+// Result: "AXBC", cursor still before 'B'
 ```
 
-## Cursor Optimization and Updates
 
-Loro optimizes storage by not keeping deleted element IDs. When a cursor references a deleted ID, Loro:
+## Common Use Cases
 
-1. Replays relevant history to determine the current position
-2. Returns an updated cursor referencing a present element
-3. Suggests persisting the updated cursor to avoid future replays
-
-```ts
-const doc = new LoroDoc();
-const list = doc.getList("list");
-list.insert(0, "a");
-const cursor = list.getCursor(0);
-
-list.insert(0, "b");  // "b", "a"
-list.delete(1, 1);    // "b" (deleted "a")
-
-const result = doc.getCursorPos(cursor);
-// result.offset: 1 (after "b")
-// result.side: -1 (before the deleted position)
-// result.update: defined (new cursor referencing "b")
-
-// Persist the updated cursor for better performance
-if (result.update) {
-  cursor = result.update;
-}
-```
-
-## Usage in Different Container Types
-
-### Text Container
-
-Text containers are the most common use case for cursors, supporting:
-- Caret positions
-- Selection ranges (using two cursors)
-- Annotation anchors
-
-```ts
+### Text Selections
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello World");
 
-// Single caret position
-const caret = text.getCursor(5, 0);
-
-// Selection from index 0 to 5
-const selectionStart = text.getCursor(0, -1);  // Anchor
-const selectionEnd = text.getCursor(5, 1);     // Head
-
-// Annotation range for a comment
-const commentStart = text.getCursor(6, -1);
-const commentEnd = text.getCursor(11, 1);
+// Selection range
+const start = text.getCursor(0, -1);  // Anchor
+const end = text.getCursor(5, 1);     // Head
 ```
 
-### List Container
-
-Lists support cursors for maintaining positions in ordered collections:
-
-```ts
+### List Positions
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
 const doc = new LoroDoc();
 const list = doc.getList("items");
-list.insert(0, ["item1", "item2", "item3"]);
+list.insert(0, ["a", "b", "c"]);
 
-// Track position after "item1"
-const cursor = list.getCursor(1, 0);
-
-// Insert at beginning
-list.insert(0, "item0");
-
-// Cursor still points after "item1"
-const pos = doc.getCursorPos(cursor);
-console.log(pos.offset); // 2 (adjusted for insertion)
+const cursor = list.getCursor(1, 0); // After "a"
+list.insert(0, "new"); // Cursor adjusts automatically
 ```
 
-### MovableList Container
+## Code Example
 
-MovableList containers benefit from stable positions when elements are moved:
-
-```ts
-const doc = new LoroDoc();
-const movableList = doc.getMovableList("tasks");
-movableList.insert(0, "Task A");
-movableList.insert(1, "Task B");
-movableList.insert(2, "Task C");
-
-// Track position of "Task B"
-const cursor = movableList.getCursor(1, 0);
-
-// Move "Task A" to the end
-movableList.move(0, 2);
-// Order is now: "Task B", "Task C", "Task A"
-
-// Cursor still references "Task B", now at index 0
-const pos = doc.getCursorPos(cursor);
-console.log(pos.offset); // 0
-```
-
-## Practical Patterns
-
-### Maintaining Selection During Collaborative Editing
-
-```ts
+```ts twoslash
+import { LoroDoc, LoroText, Cursor } from "loro-crdt";
+// ---cut---
 class CollaborativeSelection {
+  private anchor!: Cursor;
+  private head!: Cursor;
+  
   constructor(
     private doc: LoroDoc,
     private text: LoroText
   ) {}
 
   setSelection(start: number, end: number) {
-    // Use different sides to handle insertion behavior correctly
-    this.anchor = this.text.getCursor(start, -1);  // Stay before start
-    this.head = this.text.getCursor(end, 1);       // Stay after end
+    this.anchor = this.text.getCursor(start, -1);
+    this.head = this.text.getCursor(end, 1);
   }
 
   getSelection() {
     const anchorPos = this.doc.getCursorPos(this.anchor);
     const headPos = this.doc.getCursorPos(this.head);
     
-    // Update stored cursors if optimized versions available
+    // Update cursors if optimized versions available
     if (anchorPos.update) this.anchor = anchorPos.update;
     if (headPos.update) this.head = headPos.update;
     
@@ -219,142 +105,15 @@ class CollaborativeSelection {
 }
 ```
 
-### Persistent Annotations
-
-```ts
-class Annotation {
-  constructor(
-    private doc: LoroDoc,
-    private text: LoroText,
-    public content: string
-  ) {}
-
-  static create(doc: LoroDoc, text: LoroText, start: number, end: number, content: string) {
-    const annotation = new Annotation(doc, text, content);
-    annotation.startCursor = text.getCursor(start, -1);
-    annotation.endCursor = text.getCursor(end, 1);
-    return annotation;
-  }
-
-  getRange() {
-    const start = this.doc.getCursorPos(this.startCursor);
-    const end = this.doc.getCursorPos(this.endCursor);
-    
-    // Handle deleted text
-    if (start.side === -1 && end.side === 1) {
-      // The annotated text was deleted
-      return null;
-    }
-    
-    return {
-      start: start.offset,
-      end: end.offset,
-      isPartiallyDeleted: start.side === -1 || end.side === 1
-    };
-  }
-}
-```
-
-### Cursor Synchronization Across Peers
-
-```ts
-class CursorSync {
-  constructor(private doc: LoroDoc) {}
-
-  // Serialize cursor for network transmission
-  shareCursor(cursor: Cursor): Uint8Array {
-    return cursor.encode();
-  }
-
-  // Receive and apply cursor from remote peer
-  receiveCursor(encoded: Uint8Array): Cursor {
-    return Cursor.decode(encoded);
-  }
-
-  // Example: Share caret position
-  broadcastCaretPosition(text: LoroText, position: number) {
-    const cursor = text.getCursor(position, 0);
-    const encoded = this.shareCursor(cursor);
-    
-    // Send 'encoded' to other peers
-    network.broadcast({ type: 'cursor', data: encoded });
-  }
-
-  // Example: Receive and display remote caret
-  handleRemoteCursor(encoded: Uint8Array) {
-    const cursor = this.receiveCursor(encoded);
-    const position = this.doc.getCursorPos(cursor);
-    
-    // Update UI to show remote user's cursor
-    ui.showRemoteCaret(position.offset);
-  }
-}
-```
-
 ## Best Practices
 
-### 1. Choose the Right Side Parameter
+- **Side parameters**: Use -1 for starts, 1 for ends, 0 for simple positions
+- **Handle updates**: Check for and persist cursor updates
+- **Account for deletions**: Check `position.side` for deleted content
+- **UTF-16 awareness**: Emoji and special chars use multiple indices
 
-- Use `Side.Before` (-1) for selection starts and annotation beginnings
-- Use `Side.After` (1) for selection ends and annotation endings
-- Use `Side.Middle` (0) for simple caret positions
+## Related Documentation
 
-### 2. Handle Cursor Updates
-
-Always check for and persist cursor updates to optimize performance:
-
-```ts
-const position = doc.getCursorPos(cursor);
-if (position.update) {
-  // Replace old cursor with optimized version
-  cursor = position.update;
-  storage.saveCursor(cursor);
-}
-```
-
-### 3. Account for Deletions
-
-When text is deleted, cursors may report a side value indicating their relationship to deleted content:
-
-```ts
-const position = doc.getCursorPos(cursor);
-if (position.side === -1) {
-  // Cursor is before deleted content
-  console.log("Referenced content was deleted");
-}
-```
-
-### 4. UTF-16 Considerations
-
-In JavaScript/TypeScript, text positions use UTF-16 indices. Be careful with emoji and other multi-byte characters:
-
-```ts
-const text = doc.getText("text");
-text.insert(0, "Hello 👋 World");
-
-// The emoji takes 2 UTF-16 code units
-const afterEmoji = text.getCursor(8, 0);  // Not 7!
-```
-
-## Performance Considerations
-
-Cursor operations in Loro are highly optimized:
-
-- **O(log n)** cursor creation and position resolution
-- Minimal memory overhead (only stores operation IDs)
-- Automatic optimization through cursor updates
-- Efficient batch processing for multiple cursors
-
-The stable position system adds negligible overhead compared to index-based systems while providing crucial correctness guarantees for collaborative editing.
-
-## Summary
-
-Loro's cursor and stable position system provides:
-
-- **Stability**: Positions remain valid across concurrent edits
-- **Precision**: Fine-grained control over insertion behavior
-- **Efficiency**: Optimized storage and retrieval
-- **Portability**: Cursors can be serialized and shared across peers
-- **Flexibility**: Works across all ordered Loro containers
-
-This foundation enables robust collaborative features like shared cursors, persistent annotations, and accurate undo/redo operations in distributed editing environments.
+- [Text Container](../containers/text) - Text editing with cursors
+- [Collaborative Editing](../user-guide/collaborative-editing) - Building editors
+- [Events](../user-guide/events) - Cursor change events

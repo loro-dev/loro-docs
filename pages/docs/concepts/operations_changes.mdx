@@ -1,17 +1,20 @@
 # Operations and Changes
 
-Operations and Changes are fundamental concepts in Loro that define how edits are tracked, grouped, and synchronized across collaborative documents. Understanding these concepts is essential for effectively using Loro's collaboration features and optimizing performance.
+## Quick Reference
 
-## What are Operations?
+**Operations** are atomic edits. **Changes** are logical groups of operations with metadata. Understanding these helps optimize sync and performance.
 
-An **Operation** (Op) is the atomic unit of change in Loro. Every basic edit to a document creates one or more operations:
+## Key Concepts
 
-- Setting a key-value pair in a Map
-- Adding or removing an item in a List  
-- Inserting or deleting characters in Text
-- Any other modification to a CRDT container
+### Operations
+- Atomic units of change (insert, delete, set, etc.)
+- Automatically merged internally for efficiency
+- Each has unique ID: `(peerId, counter)`
 
-Operations are the smallest indivisible units that Loro tracks. While this might sound expensive, Loro optimizes storage by automatically merging consecutive operations internally (like consecutive text insertions).
+### Changes
+- Groups of consecutive operations
+- Include metadata (timestamp, dependencies, peer ID)
+- Created by `commit()` or auto-commit
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -19,306 +22,96 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 
-// This creates 3 operations (one for each character)
+text.insert(0, "Hello");     // Operation
+text.insert(5, " World");    // Operation
+doc.commit();                // Groups into one Change
+```
+
+## Automatic Merging
+
+Consecutive operations from same peer merge into one Change:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+
 text.insert(0, "abc");
+doc.commit();  // Change #1
 
-// This creates 2 operations (one for insertion, one for deletion)  
-text.insert(3, "d");
-text.delete(1, 1);
-```
+text.insert(3, "def");
+doc.commit();  // Merges with #1 (same peer, consecutive)
 
-## What are Changes?
-
-A **Change** is a logical grouping of one or more consecutive local operations. Changes provide a higher-level view of document modifications and include metadata about the edit session:
-
-- **ID**: The ID of the first operation in the Change
-- **Timestamp**: Optional timestamp (when enabled via `setRecordTimestamp(true)`)
-- **Dependency IDs**: Operations this Change directly depends on (for causal ordering)
-- **Commit Message**: Optional description of the Change (coming soon)
-- **Peer ID**: The peer that created this Change
-- **Lamport timestamp**: For establishing total order across peers
-
-Changes are created when you call `doc.commit()` or when Loro automatically commits operations (like during export).
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId("alice");
-const text = doc.getText("text");
-
-// These operations are not yet part of a Change
-text.insert(0, "Hello");
-text.insert(5, " World");
-
-// Calling commit() groups the operations into a Change
-doc.commit();
-
-// View the created Change
-const changes = doc.getAllChanges();
-console.log(changes);
-// Map(1) { "alice" => [{ ... }] }
-```
-
-## How Operations Merge into Changes
-
-Loro intelligently merges operations to minimize metadata overhead while preserving collaboration semantics. By default, consecutive commits from the same peer are merged into a single Change when possible.
-
-### Basic Merging Example
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId("0");
-const text = doc.getText("text");
-
-// First set of operations
-text.insert(0, "123");
-doc.commit();  // Creates Change #1
-
-// Second set of operations  
-text.insert(0, "ab");
-doc.commit();  // Merges with Change #1 (no new Change created)
-
-const changes = doc.getAllChanges();
-console.log(changes.get("0")?.length);  // 1 - Only one Change exists
-```
-
-### Merging in Transactions
-
-When using transactions, all operations within the transaction are grouped into a single Change:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
+// Transaction = guaranteed single Change
 doc.transact(() => {
-  const text = doc.getText("text");
-  const list = doc.getList("list");
-  
-  // All these operations will be in one Change
   text.insert(0, "Hello");
-  list.push("item1");
-  list.push("item2");
+  text.insert(5, " World");
 });
-// Implicit commit at end of transaction creates one Change
 ```
 
-## When New Changes are Created
+## When New Changes Are Created
 
-While Loro attempts to merge Changes for efficiency, new Changes are created in specific situations:
-
-### 1. Cross-Peer Dependencies
-
-When local operations depend on recently imported remote operations, a new Change must be created to record this causal relationship:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const docA = new LoroDoc();
-docA.setPeerId("0");
-const textA = docA.getText("text");
-
-// Create initial content
-textA.insert(0, "Hello");
-docA.commit();  // Change #1 for peer 0
-
-// Create docB and make changes
-const docB = LoroDoc.fromSnapshot(docA.export({ mode: "snapshot" }));
-docB.setPeerId("1");
-const textB = docB.getText("text");
-textB.insert(5, " World");  // Depends on peer 0's content
-
-// Import changes from docB
-const updates = docB.export({ mode: "update" });  // Implicit commit
-docA.import(updates);
-
-// New local changes after import
-textA.insert(0, "Say: ");
-docA.commit();  // Creates Change #2 for peer 0 (new dependency on peer 1)
-
-const changes = docA.getAllChanges();
-console.log(changes.get("0")?.length);  // 2 - Two separate Changes
-```
-
-### 2. Time-based Separation
-
-When timestamp recording is enabled, Changes are separated if too much time passes between commits:
+1. **Cross-peer dependencies**: After importing remote operations
+2. **Time separation**: When timestamps enabled and >1000s between commits
+3. **Different commit messages**: (Future feature)
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-doc.setRecordTimestamp(true);
-// Default merge interval is 1000 seconds
-// Changes separated if commits are >1000s apart
+doc.setText("text").insert(0, "v1");
+doc.commit(); // Change #1
 
-const text = doc.getText("text");
-text.insert(0, "First");
-doc.commit();  // Change #1
+// Import from another peer
+const remote = new Uint8Array();
+doc.import(remote);
 
-// Simulate time passing...
-// If >1000 seconds pass in real usage:
-text.insert(5, " Second");  
-doc.commit();  // Would create Change #2
+// Next commit creates new Change (dependency on remote)
+doc.setText("text").insert(0, "v2");
+doc.commit(); // Change #2
 ```
 
-### 3. Different Commit Messages
 
-When commit messages are enabled (upcoming feature), Changes with different messages won't merge:
+## Impact on Sync & Storage
 
-```ts
-// Future API (not yet available)
-doc.commit("Feature: Add user authentication");
-// ... more operations ...
-doc.commit("Fix: Handle edge case");  // New Change due to different message
-```
+- **History**: Changes track logical units of work
+- **Sync**: Dependencies ensure causal ordering
+- **Storage**: Auto-merging reduces metadata overhead
 
-## Relationship to Transactions
-
-Transactions provide a way to group multiple operations atomically. The relationship between transactions and Changes is straightforward:
-
-- Operations within a transaction are always grouped into the same Change
-- The Change is created when the transaction completes (implicit commit)
-- Nested transactions contribute to the parent transaction's Change
+## Code Example
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Without transaction - multiple Changes possible
-const text = doc.getText("text");
-text.insert(0, "A");
-doc.commit();  // Change #1
-text.insert(1, "B");  
-doc.commit();  // Might merge with Change #1
-
-// With transaction - guaranteed single Change
-doc.transact(() => {
-  const text = doc.getText("text");
-  text.insert(0, "C");
-  text.insert(1, "D");
-  // Multiple operations, but only one Change created
-});
-```
-
-## Impact on History and Synchronization
-
-Understanding Operations and Changes is crucial for:
-
-### History Tracking
-
-Changes form the basis of Loro's history system. Each Change represents a logical unit of work that can be:
-- Tracked over time (with timestamps)
-- Attributed to specific peers
-- Used for undo/redo operations (when implemented at application level)
-
-### Synchronization Efficiency
-
-The Change structure optimizes synchronization:
-- Dependency tracking ensures correct causal ordering
-- Change merging reduces metadata overhead
-- Peer-based grouping simplifies conflict resolution
-
-### Storage Optimization
-
-Loro automatically optimizes storage by:
-- Merging consecutive operations within Changes
-- Compressing Change metadata where possible
-- Maintaining minimal dependency information
-
-## Practical Examples
-
-### Real-time Collaboration
-
-In a real-time editor where each keystroke triggers a commit:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId("user1");
-const text = doc.getText("text");
-
-// Simulate rapid typing
-"Hello".split("").forEach(char => {
-  text.insert(text.toString().length, char);
-  doc.commit();  // Each keystroke commits
-});
-
-// Despite 5 commits, likely only 1 Change due to merging
-const changes = doc.getAllChanges();
-console.log(changes.get("user1")?.length);  // Likely 1
-```
-
-### Asynchronous Collaboration
-
-In a Git-like workflow with larger, meaningful commits:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Feature implementation
-doc.transact(() => {
-  const config = doc.getMap("config");
-  config.set("feature", true);
-  config.set("version", "1.0");
-  // All changes grouped in one Change
-});
-
-// Later: bug fix
-doc.transact(() => {
-  const config = doc.getMap("config");
-  config.set("bugfix", true);
-  // Separate Change for different logical work
-});
-```
-
-### Viewing Change History
-
-```ts twoslash
-import { Change, LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
 doc.setPeerId("alice");
 
-// Make some changes
-const text = doc.getText("text");
-text.insert(0, "Hello World");
-doc.commit();
+// Real-time typing - operations merge
+"Hello".split("").forEach(char => {
+  doc.getText("text").insert(0, char);
+  doc.commit();
+});
+// Likely creates just 1 Change due to merging
 
-// Examine the Change structure
-const changeMap: Map<`${number}`, Change[]> = doc.getAllChanges();
-for (const [peerId, changes] of changeMap) {
-  console.log(`Peer ${peerId}:`);
-  for (const change of changes) {
-    console.log(`  - ${change.length} ops at lamport ${change.lamport}`);
-    console.log(`    Dependencies: ${change.deps.length > 0 ? 
-      change.deps.map(d => `${d.peer}:${d.counter}`).join(", ") : 
-      "none"}`);
+// View Change history
+const changes = doc.getAllChanges();
+for (const [peerId, peerChanges] of changes) {
+  for (const change of peerChanges) {
+    console.log(`${change.length} ops, deps: ${change.deps.length}`);
   }
 }
 ```
 
 ## Best Practices
 
-1. **Use transactions** for logically related operations to ensure they're grouped together
-2. **Call commit() appropriately** - not too frequently (overhead) but not too rarely (large Changes)
-3. **Enable timestamps** only when needed for time-travel or audit features
-4. **Understand merge behavior** when building undo/redo or history features
-5. **Monitor Change size** in real-time applications to balance responsiveness and efficiency
+- Use transactions for related operations
+- Balance commit frequency (not too often, not too rare)
+- Enable timestamps only when needed
+- Monitor Change size for performance
 
-## Key Takeaways
+## Related Documentation
 
-- **Operations** are atomic edits; **Changes** are logical groups of operations
-- Changes automatically merge to reduce overhead while preserving causal relationships  
-- New Changes are created when crossing peer boundaries or time thresholds
-- Transactions guarantee operations stay in the same Change
-- Understanding this model helps optimize Loro usage for your specific collaboration needs
-
-Unlike Git commits, Loro Changes are designed to be mergeable and flexible, adapting to both real-time (frequent small edits) and asynchronous (batched meaningful changes) collaboration patterns.
+- [Transaction Model](./transaction_model) - Grouping operations
+- [Version Representations](./version_representations) - How Changes form versions
+- [Synchronization](../user-guide/sync) - Using Changes for sync
