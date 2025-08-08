@@ -1,0 +1,70 @@
+---
+keywords: "version vector, logical clock, distributed systems, CRDT, synchronization"
+description: "Understanding Version Vectors in Loro - complete peer state tracking for synchronization"
+---
+
+# Version Vector
+
+Version Vectors are a fundamental concept in distributed systems that track the complete state of all peers by recording how many operations each peer has contributed.
+
+## What is a Version Vector?
+
+A Version Vector is a map from peer IDs to operation counters, explicitly listing every peer and their operation count. It provides a complete picture of which operations are included in a version.
+
+**Example**: `{ "peer-A": 5, "peer-B": 3 }` means this version includes operations 0-4 from peer A and operations 0-2 from peer B.
+
+## Key Characteristics
+
+- **Complete information**: Explicitly lists all peers and their operation counts
+- **Grows with peer count**: Size increases as more peers join
+- **No dependency on history**: Can determine included operations without accessing the operation log
+- **Enables version comparison**: Can easily check if one version includes another
+
+## Basic Usage
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+doc.setPeerId("1");
+const text = doc.getText("content");
+text.insert(0, "Hello");
+
+// Get version vector
+const vv = doc.version();
+console.log(vv.toJSON()); // Map { "1" => 1 }
+```
+
+## When to Use Version Vectors
+
+Version Vectors are ideal for:
+
+1. **Synchronization protocols** - Determine what updates to send between peers
+2. **Network communication** - Self-contained version information
+3. **Distributed systems** - Track state across multiple nodes
+
+## Comparison with Frontiers
+
+| Aspect | Version Vectors | Frontiers |
+|--------|----------------|-----------|
+| **Size** | O(number of peers) | O(1-2) typically |
+| **Information** | Complete peer states | Boundary operations only |
+| **Use Case** | Synchronization | Checkpoints |
+| **History Required** | No | Yes, for full information |
+
+## Conversion with Frontiers
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+const vv = doc.version();
+const frontiers = doc.vvToFrontiers(vv);     // Convert to Frontiers
+const backToVV = doc.frontiersToVV(frontiers); // Convert back
+```
+
+## Related Documentation
+
+- [Frontiers](./frontiers) - Compact version representation
+- [Version Tutorial](../tutorial/version) - Working with versions
+- [Version Deep Dive](../advanced/version_deep_dive) - Technical details

@@ -1,0 +1,185 @@
+---
+keywords: "crdt, event graph walker, eg-walker, synchronization, collaboration, algorithm, innovation"
+description: "Comprehensive guide to Event Graph Walker (Eg-Walker), a revolutionary CRDT algorithm that enables simpler metadata and better performance in Loro"
+---
+
+# Event Graph Walker (Eg-Walker)
+
+Event Graph Walker (Eg-Walker) is a revolutionary CRDT algorithm that fundamentally changes how collaborative editing systems handle concurrent operations. Instead of storing complex CRDT metadata, Eg-Walker enables the use of simple indices by efficiently replaying relevant history when needed.
+
+> **Important Note**: Loro is not a strict implementation of Event Graph Walker. Rather, Loro is heavily inspired by Eg-Walker's design philosophy and incorporates its key insights to achieve similar properties - particularly the ability to use simple indices instead of complex CRDT metadata, and the efficient replay mechanism for handling concurrent operations.
+
+## The Problem: Complex CRDT Metadata
+
+Traditional CRDTs require extensive metadata to maintain consistency across distributed systems:
+
+- **RGA algorithm**: Requires operation ID and Lamport timestamp of the left neighbor
+- **Yjs/Fugue**: Needs operation IDs of both left and right neighbors
+- **Storage overhead**: Each operation carries significant metadata for position tracking
+- **Tombstone accumulation**: Deleted content must be retained indefinitely
+
+This metadata complexity leads to:
+- Increased storage requirements
+- Slower performance as documents grow
+- Complex garbage collection challenges
+- Higher network bandwidth usage
+
+## The Innovation: Simple Indices with Smart Replay
+
+Eg-Walker introduces a paradigm shift: **record simple indices, replay when needed**.
+
+import { ReactPlayer } from "../../../components/video";
+
+<ReactPlayer
+  url="/static/REG.mp4"
+  width={512}
+  style={{maxWidth: "calc(100vw - 40px)"}}
+  height={512}
+  muted={true}
+  loop={true}
+  controls={true}
+  playing={true}
+/>
+
+### Core Concept
+
+Instead of storing complex position descriptors, Eg-Walker:
+1. Records operations with **simple indices** at the time of execution
+2. Maintains a directed acyclic graph (DAG) of the edit history
+3. **Replays relevant portions** of history when merging concurrent changes
+4. Reconstructs the exact CRDT state only when needed
+
+## How It Works
+
+### The Event Graph
+
+In collaborative editing, parallel edits naturally form a directed acyclic graph (DAG), similar to Git's history:
+
+```
+    A --- B --- C     (User 1)
+   /             \
+Root              Merge
+   \             /
+    D --- E --- F     (User 2)
+```
+
+Each node represents an operation, and edges represent causal dependencies.
+
+### The Algorithm
+
+#### 1. **Local Operations: Direct and Fast**
+
+When a user makes a local edit:
+- Record the operation with its **current index position**
+- No complex metadata calculation needed
+- Immediate application to the document
+
+Example:
+```javascript no_run
+// Traditional CRDT (e.g., RGA)
+insert({
+  char: 'a',
+  leftId: 'op-123',
+  timestamp: 1234567890,
+  siteId: 'user-1'
+})
+
+// With Eg-Walker
+insert({
+  char: 'a',
+  index: 5  // Simple index!
+})
+```
+
+#### 2. **Merging Remote Operations: Smart Replay**
+
+When receiving remote operations:
+
+1. **Find the Lowest Common Ancestor (LCA)** between local and remote versions
+2. **Replay operations** from the LCA to both versions
+3. **Construct temporary CRDT state** to calculate effects
+4. **Apply the merged result**
+
+The key insight: You only replay the **divergent portion** of history, not the entire document.
+
+#### 3. **Index Transformation**
+
+Consider this scenario:
+- You highlight text from index 10 to 20
+- Concurrently, someone inserts 5 characters at index 3
+- Your highlight should shift to indices 15 to 25
+
+Eg-Walker handles this by:
+1. Identifying concurrent operations through the event graph
+2. Replaying operations in causal order
+3. Transforming indices based on the replay sequence
+
+## Performance Benefits
+
+### 1. **Reduced Storage**
+
+| Aspect | Traditional CRDT | Eg-Walker |
+|--------|-----------------|-----------|
+| Tombstone storage | Permanent | Can be garbage collected |
+| Document growth | Linear with all operations | Linear with active operations |
+
+### 2. **Faster Local Updates**
+
+- **No metadata computation**: Direct index-based operations
+- **No tombstone traversal**: Clean document state
+- **Predictable performance**: O(1) or O(logN) for most local operations
+
+### 3. **Efficient Synchronization**
+
+- **Minimal replay**: Only divergent history portions
+- **Bounded computation**: Proportional to concurrent edits, not document size
+- **Smart caching**: Reuse computed states when possible
+
+## Implementation in Loro
+
+While Loro is not a pure Eg-Walker implementation, it draws heavily from Eg-Walker's innovations to achieve similar benefits. Loro implements Fugue (a modern CRDT algorithm) with Eg-Walker-inspired optimizations:
+
+- **Fugue's correctness guarantees** for text editing
+- **Eg-Walker-inspired efficiency** in storage and computation
+- **Simple index-based operations** at the API level
+- **Smart replay mechanisms** for merging concurrent changes
+
+This hybrid approach provides:
+```javascript no_run
+// Simple API with powerful internals
+const doc = new Loro();
+const text = doc.getText("content");
+
+// Just use indices - Eg-Walker handles the complexity
+text.insert(5, "Hello");
+text.delete(2, 3);
+
+// Efficient merging happens automatically
+doc.import(remoteUpdate);
+```
+
+## Garbage Collection Revolution
+
+One of Eg-Walker's most significant advantages is **safe garbage collection**:
+
+### Traditional CRDTs
+- Must keep all tombstones forever
+- Document size grows unbounded
+- Complex protocols for coordinated cleanup
+
+### With Eg-Walker
+- Operations synchronized across all endpoints can be **safely removed**
+- No new operations will be concurrent with fully-synchronized ones
+- Document size remains proportional to **active content**
+
+## Research Foundation
+
+Eg-Walker is based on rigorous academic research:
+
+> [Collaborative Text Editing with Eg-walker: Better, Faster, Smaller](https://arxiv.org/abs/2409.14252)  
+> By: Joseph Gentle, Martin Kleppmann
+
+The algorithm has been proven to:
+- Maintain strong eventual consistency
+- Preserve all CRDT correctness properties
+- Significantly reduce computational and storage overhead

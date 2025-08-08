@@ -1,0 +1,111 @@
+# Shallow Snapshots
+
+## Quick Reference
+
+**Shallow snapshots** are like Git's shallow clone - maintain current state while removing old history. Essential for privacy compliance, storage optimization, and performance.
+
+
+## Basic Usage
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+// ... extensive editing history ...
+
+// Regular snapshot - full history
+const full = doc.export({ mode: "snapshot" });
+
+// Shallow snapshot - trimmed history
+const shallow = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.frontiers(),
+});
+
+// Typically 70-90% smaller
+console.log(`Size reduction: ${100 - (shallow.length / full.length * 100)}%`);
+```
+
+## Content Redaction
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("content");
+
+// Sensitive data added
+text.insert(0, "SSN: 123-45-6789. ");
+text.insert(18, "Public info.");
+
+// Redact sensitive part
+text.delete(0, 18);
+
+// Create clean snapshot
+const redacted = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.frontiers(),
+});
+// Sensitive data permanently removed from history
+```
+
+## Synchronization Limitations
+
+⚠️ **Important**: Peers can only sync if they have versions after the shallow snapshot point.
+
+
+## Common Patterns
+
+### Archive and Trim
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+async function archiveAndTrim(doc: LoroDoc) {
+  // 1. Archive full history
+  const full = doc.export({ mode: "snapshot" });
+  await saveToArchive(full);
+  
+  // 2. Create shallow for active use
+  const shallow = doc.export({
+    mode: "shallow-snapshot",
+    frontiers: doc.frontiers(),
+  });
+  
+  return shallow;
+}
+
+async function saveToArchive(data: Uint8Array) {
+  // Save to cold storage
+}
+```
+
+### Privacy-Aware Design
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+class PrivacyDoc {
+  constructor(private doc: LoroDoc) {}
+  
+  async redactSensitive() {
+    // Delete sensitive content
+    this.doc.getText("private").delete(0, this.doc.getText("private").length);
+    
+    // Create clean snapshot
+    return this.doc.export({
+      mode: "shallow-snapshot",
+      frontiers: this.doc.frontiers(),
+    });
+  }
+}
+```
+
+## Best Practices
+
+- **Coordinate before trimming**: Ensure all peers synchronized
+- **Archive before deletion**: Keep full history backup if needed
+
+## Related Documentation
+
+- [Encoding](../tutorial/encoding) - Different export options
+- [Version Tutorial](../tutorial/version) - Managing document versions
+- [Event Graph Walker](./event_graph_walker) - Algorithm powering shallow snapshots

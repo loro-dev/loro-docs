@@ -1,11 +1,7 @@
 export default {
-  doc_state_and_oplog: "DocState and OpLog",
   cid: "Container ID",
-  shallow_snapshot: "Shallow Snapshot",
   timestamp: "Storing Timestamps",
-  op_and_change: "Operations and Change",
   version_deep_dive: "Loro's Versioning Deep Dive: DAG, Frontiers, and Version Vectors",
-  event_graph_walker: "Event Graph Walker",
   undo: "Undo/Redo",
   import_batch: "Batch Import",
   inspector: "Loro Inspector"

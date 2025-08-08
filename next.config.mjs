@@ -72,6 +72,27 @@ export default withNextra({
         destination: '/docs/advanced/event_graph_walker',
         permanent: true,
       },
+      // Redirects for extracted concept documents
+      {
+        source: '/docs/advanced/doc_state_and_oplog',
+        destination: '/docs/concepts/oplog_docstate',
+        permanent: true,
+      },
+      {
+        source: '/docs/advanced/op_and_change',
+        destination: '/docs/concepts/operations_changes',
+        permanent: true,
+      },
+      {
+        source: '/docs/advanced/event_graph_walker',
+        destination: '/docs/concepts/event_graph_walker',
+        permanent: true,
+      },
+      {
+        source: '/docs/advanced/shallow_snapshot',
+        destination: '/docs/concepts/shallow_snapshots',
+        permanent: true,
+      },
     ]
   },
 })

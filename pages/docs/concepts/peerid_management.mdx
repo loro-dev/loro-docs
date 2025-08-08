@@ -1,0 +1,73 @@
+# PeerID Management
+
+## Quick Reference
+
+**Peer IDs** are unique identifiers for each editing session in Loro's distributed system. They ensure operation uniqueness without coordination between peers.
+
+## Key Concepts
+
+- **Peer ID**: A 64-bit unique identifier for each client/session
+- **Operation ID**: Combination of `(peerId, counter)` that uniquely identifies each operation
+- **Counter**: Monotonically increasing number starting at 0 for each peer
+
+```ts
+interface OpId {
+  peerId: `${number}`;  // Unique peer identifier. It's string because 64bit integers are not supported in JS.
+  counter: number;      // Monotonically increasing counter
+}
+```
+
+## Peer ID Assignment
+
+### Automatic (Default)
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc(); // Gets a random peer ID
+// Safe, no coordination needed
+```
+
+**Note**: New peer ID generated for each `LoroDoc` instance, even when loading same document.
+
+### Manual
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.setPeerId("123123123");  // You can only set 64 bit integers as peer IDs
+```
+
+⚠️ **Warning**: Manual assignment requires careful conflict avoidance.
+
+## Counter System
+
+Each peer maintains a monotonic counter starting at 0:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.setPeerId("1");
+const text = doc.getText("text");
+
+text.insert(0, "H");    // Operation ("1", 0)
+text.insert(1, "i!");    // Operation ("1", 1) and Operation ("1", 2) are created
+console.log(doc.version()); // { "1": 2 }
+```
+
+**Properties**: Monotonic, continuous, per-peer, persistent.
+
+## Common Pitfalls
+
+❌ **Never**:
+- Use user IDs as peer IDs, because an user can have multiple devices
+- Use fixed IDs
+- Reuse IDs without proper management
+
+## Related Documentation
+
+- [Version Vector](./version_vector) - How peer IDs form version vectors
+- [Import Status](./import_status) - Handling synchronization with peer IDs
+- [Shallow Snapshots](./shallow_snapshots) - Consolidating peer history

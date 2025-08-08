@@ -1,0 +1,124 @@
+---
+keywords: "attached, detached, state, container, document, version control"
+description: "Understanding attached and detached states in Loro - two different but related concepts"
+---
+
+# Attached vs Detached States
+
+## Quick Reference
+
+Loro uses "attached/detached" in two distinct contexts:
+
+1. **Document States** - Version synchronization (latest vs historical)
+2. **Container States** - Document membership (belongs to doc vs standalone)
+
+⚠️ These are independent concepts - a container can be attached to a detached document.
+
+## Document States
+
+### Attached (Default)
+- Synchronized with latest OpLog version
+- Normal editing mode
+- All operations applied immediately
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+console.log(doc.isDetached()); // false - normal state
+```
+
+### Detached (Time Travel)
+- Viewing historical version
+- Editing disabled by default
+- OpLog has newer operations not shown
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "v1");
+const v1 = doc.frontiers();
+doc.getText("text").insert(2, " -> v2");
+
+// Time travel to v1
+doc.checkout(v1);
+console.log(doc.isDetached()); // true
+console.log(doc.getText("text").toString()); // "v1"
+```
+
+
+## Container States
+
+### Detached (Standalone)
+- Created with constructors (`new LoroMap()`)
+- Not part of any document
+- No valid ContainerID
+- Used as templates
+
+```ts twoslash
+import { LoroMap } from "loro-crdt";
+// ---cut---
+const map = new LoroMap();
+console.log(map.isAttached()); // false
+```
+
+### Attached (Document Member)
+- Part of document hierarchy
+- Has ContainerID
+- Changes tracked in document
+
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const map = doc.getMap("data"); // Attached
+
+// Adding detached container returns attached version
+const detached = new LoroText();
+const attached = map.setContainer("text", detached);
+console.log(detached.isAttached()); // false - original unchanged
+console.log(attached.isAttached()); // true - new attached copy
+```
+
+## Key Differences
+
+| Aspect | Document Attached/Detached | Container Attached/Detached |
+|--------|---------------------------|-----------------------------|
+| **Purpose** | Version control | Document membership |
+| **When** | Time travel, branching | Adding to document |
+| **Independence** | N/A | Independent from doc state |
+| **Editing** | Restricted when detached | Always allowed |
+
+## Common Use Cases
+
+### Time Travel
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const v1 = doc.frontiers();
+// ... more edits ...
+doc.checkout(v1); // View old version
+doc.attach(); // Return to latest
+```
+
+### Container Templates
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+// ---cut---
+const template = new LoroMap();
+template.set("type", "task");
+
+const doc = new LoroDoc();
+const list = doc.getList("tasks");
+// Reuse template multiple times
+list.insertContainer(0, template);
+list.insertContainer(1, template);
+```
+
+## Related Documentation
+
+- [OpLog and DocState](./oplog_docstate) - Understanding version states
+- [Containers](./container) - Container types and usage
+- [Time Travel](../tutorial/time_travel) - Using checkout and branching

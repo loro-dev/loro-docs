@@ -1,0 +1,103 @@
+# Import Status
+
+## Quick Reference
+
+**Import status** tells you what operations were applied and what's pending due to missing dependencies. Essential for handling out-of-order updates in distributed systems.
+
+## Status Structure
+
+```ts twoslash
+interface ImportStatus {
+  success: PeerVersionRange;  // What was applied
+  pending?: PeerVersionRange; // What needs dependencies
+}
+
+interface PeerVersionRange {
+  [peerId: `${number}`]: {
+    start: number; // Inclusive
+    end: number;   // Exclusive (e.g., 0-50 = ops 0-49)
+  };
+}
+```
+
+
+## Pending Operations
+
+Operations become pending when they depend on missing operations (causal dependencies).
+
+### Common Scenario: Out-of-Order Delivery
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// Peer A creates ops 0-4, then 5-10
+const peerA = new LoroDoc();
+peerA.getText("text").insert(0, "Hello");
+const update1 = peerA.export({ mode: "update" });
+
+peerA.getText("text").insert(5, " World");
+const update2 = peerA.export({ mode: "update", from: peerA.version() });
+
+// If update2 arrives first:
+const status = doc.import(update2);
+console.log(status.pending); // Ops 10-19 pending, need 0-9
+
+// Import missing dependencies:
+doc.import(update1); // Both updates now applied
+```
+
+## Handling Pending Operations
+
+```ts twoslash
+import { LoroDoc, VersionVector } from "loro-crdt";
+// ---cut---
+async function handleImport(
+  doc: LoroDoc,
+  update: Uint8Array,
+  fetchMissing: (from: VersionVector) => Promise<Uint8Array>
+) {
+  const status = doc.import(update);
+  
+  if (status.pending) {
+    const missing = await fetchMissing(doc.version());
+    doc.import(missing);
+  }
+}
+```
+
+
+## Best Practices
+
+### Always Check Status
+
+```ts twoslash no_run
+import { LoroDoc } from "loro-crdt";
+const update = new Uint8Array();
+// ---cut---
+const doc = new LoroDoc();
+const status = doc.import(update);
+if (status.pending) {
+  console.warn("Operations pending:", status.pending);
+  // Fetch missing updates
+}
+```
+
+### Use Batch Import
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const updates: Uint8Array[] = [
+  //...
+];
+const doc = new LoroDoc();
+const batchStatus = doc.importBatch(updates);
+// Single status check for all updates
+```
+
+## Related Documentation
+
+- [Version Vector](./version_vector) - Understanding version vectors
+- [Synchronization Guide](../tutorial/sync) - Complete sync patterns
+- [PeerID Management](./peerid_management) - How peer IDs affect import

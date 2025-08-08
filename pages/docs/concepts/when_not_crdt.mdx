@@ -1,45 +1,72 @@
 ---
-keywords: "crdt, crdts, difficulty, synchronization"
-description: "When Not to Rely on CRDTs"
+keywords: "crdt, limitations, constraints, business logic, invariants"
+description: "When CRDTs are not the right tool: hard invariants, exclusivity, ordering, and validation"
 ---
 
-# When Not to Rely on CRDTs
+# When Not to Use CRDTs
 
-If there are no concurrent operations, CRDTs and other solutions don't differ
-much. In handling concurrent editing, CRDTs use predefined algorithms to ensure
-strong eventual consistency (i.e., if multiple people receive the same set of
-Ops, they will see the same content). Furthermore, some CRDT algorithms make the
-merge results as close to user expectations as possible.
+CRDTs shine for collaborative editing and offline-friendly applications. 
+But they are not a universal replacement for coordination, transactions, 
+or authorization. Use this guide to recognize when CRDTs are a poor fit and what to use instead.
 
-However, its problems include:
+## Quick Reference
 
-- Difficulty in maintaining user-defined invariants. For instance, in a meeting
-  room reservation scenario, a room can only be booked once. But if CRDTs
-  represent the reservation status, multiple people booking the same room
-  simultaneously may all see a successful operation, but in reality, only one
-  person will have the reservation after synchronization. Thus, other systems
-  are needed to maintain these invariants.
-- Automatic merged results of concurrent edits may violate the schema. For
-  example, automatically merged code edits may not comply with the code's syntax
-  structure, requiring human intervention to adjust. The requirement that a
-  `<figure>` can only contain one `<caption>` might also be violated in
-  concurrent editing (two people inserting a new `<caption>` concurrently). For
-  such scenarios, this issue can be ignored, or `<caption>` can be represented
-  differently (changing `<caption>` from a List element to a Register on a
-  separate Map can prevent this problem).
+CRDTs merge; they do not reject. This clashes with requirements that demand global agreement at the time of the action:
+- **Hard invariants**: Must never be violated (e.g., balance ≥ 0)
+- **Exclusive ownership**: Only one winner per slot/resource
 
-CRDTs alone may not solve all problems in these scenarios. If maintaining these
-invariants is crucial for your application, you might need to combine CRDTs with
-centralized solutions for synchronization. Alternatively, you can implement an
-additional layer on top of the CRDT that derives a view conforming to the
-correct schema or maintaining the required invariants, using the CRDT state as
-the source of truth. This approach can ensure consistency across clients, but
-its suitability depends on your specific use case and user expectations.
+## Why CRDTs fall short here
 
-When merging edits from a peer that has been offline for a long time, extensive
-changes may result in an automatically merged state that doesn't meet
-expectations. If your application cannot tolerate such merge results, you
-shouldn't rely solely on CRDT's automatic merging. Instead, detect these
-situations of long-term concurrent edits and provide a diff view to users,
-allowing them to resolve conflicts manually. Fortunately, Loro's internal
-architecture supports implementing such manual conflict resolution logic.
+- Merging is monotonic: remote edits cannot be “rolled back” on arrival
+- No locks or transactions across replicas
+- Check-then-set across peers needs coordination, not just convergence
+
+## Common problem scenarios
+
+### 1) Exclusive resource management
+
+Multiple users book the same room/time concurrently.
+
+```ts no_run
+// With a CRDT-only model both intents exist after merge
+// The app must pick a winner out-of-band
+book("A101@2pm", { by: "A" })
+book("A101@2pm", { by: "B" })
+// After sync: both entries are present → invariant violated without coordination
+```
+
+Use instead:
+- Transactional authority (central server or database)
+- Distributed consensus (Raft/Paxos) for ownership
+- Hybrid: CRDT for UI drafts, authoritative booking via server
+
+### 2) Financial transactions
+
+Two withdrawals race on a $100 account.
+
+```ts no_run
+// Each client applies its own withdrawal locally
+withdraw(60) // A
+withdraw(60) // B
+// After merge, naive addition overdrafts without an authority
+```
+
+Use instead:
+- ACID transactions on an authoritative store
+- Command validation with a single writer per account
+- Event-sourced ledger with server-side checks
+
+### Other cases to avoid CRDT-as-the-only-source
+
+- Uniqueness constraints (usernames, slugs, one primary per group)
+- Authorization decisions that must be enforced at write time
+- Global invariants (referential integrity, cross-document totals)
+
+## When CRDTs work well
+
+CRDTs excel when merged results are meaningful and temporary inconsistency is acceptable:
+
+- ✅ Collaborative text, lists, maps, rich presence
+- ✅ Comments, reactions, drafts, annotations
+- ✅ Offline edits where convergence is enough
+

@@ -1,0 +1,82 @@
+# Operations and Changes
+
+## Quick Reference
+
+**Operations** are atomic edits. **Changes** are logical groups of operations with metadata. Understanding these helps optimize sync and performance.
+
+## Key Concepts
+
+### Operations
+- Atomic units of change (insert a single Unicode character, delete a single character, insert an new entry to a map, etc.)
+- Automatically merged internally for efficiency
+- Each has unique ID: `(peerId, counter)`
+
+### Changes
+- Groups of consecutive operations
+- Include metadata (timestamp, dependencies, peer ID)
+- Created by `commit()` or auto-commit
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+
+text.insert(0, "Hello");     // Operation
+text.insert(5, " World");    // Operation
+doc.commit();                // Groups into one Change
+```
+
+## Automatic Merging
+
+Consecutive operations from same peer merge into one Change:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+
+text.insert(0, "abc");
+doc.commit();  // Change #1
+
+text.insert(3, "def");
+doc.commit();  // Merges with #1 (same peer, consecutive)
+```
+
+## When New Changes Are Created
+
+1. **Cross-peer dependencies**: After importing remote operations
+2. **Time separation**: When timestamps enabled and > the merge interval (default 1000s) between commits
+3. **Different commit messages**: 
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "v1");
+doc.commit(); // Change #1
+
+// Import from another peer
+const doc2 = new LoroDoc();
+doc2.getText("text").insert(0, "v1");
+const remote = doc2.export({ mode: "update" });
+doc.import(remote);
+
+// Next commit creates new Change (dependency on remote)
+doc.getText("text").insert(0, "v2");
+doc.commit(); // Change #2
+```
+
+
+## Impact on Sync & Storage
+
+- **History**: Changes track logical units of work
+- **Sync**: Dependencies ensure causal ordering
+- **Storage**: Auto-merging reduces metadata overhead
+
+## Related Documentation
+
+- [Transaction Model](./transaction_model) - Grouping operations
+- [Version Vector](./version_vector) - How Changes form versions
+- [Synchronization](../tutorial/sync) - Using Changes for sync

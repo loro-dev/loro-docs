@@ -1,0 +1,114 @@
+---
+keywords: "frontiers, version, compact representation, DAG, CRDT"
+description: "Understanding Frontiers in Loro - a compact way to represent document versions"
+---
+
+# Frontiers
+
+Frontiers are a compact way to represent document versions in Loro by identifying the "frontier" operations - the most recent operations that aren't followed by any other operations.
+
+## What are Frontiers?
+
+Think of Frontiers as **bookmarks in your document's history**. Instead of listing every change made by every collaborator (like Version Vectors do), Frontiers only point to the boundary operations that implicitly include all their ancestors through causal relationships.
+
+## Basic Usage
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+const text = doc.getText("content");
+text.insert(0, "Hello World");
+
+// Get current frontiers (usually 1-2 elements)
+const frontiers = doc.frontiers();
+console.log(frontiers); // [{ peer: "...", counter: 0 }]
+
+// Use frontiers for checkpoints
+const checkpoint = doc.frontiers();
+text.insert(5, " Beautiful");
+
+// Restore to checkpoint
+doc.checkout(checkpoint);
+console.log(text.toString()); // Back to "Hello World"
+```
+
+## When to Use Frontiers
+
+Frontiers are ideal for:
+
+1. **Creating checkpoints** - Mark specific points in document history
+2. **Time travel** - Navigate to exact operation points efficiently
+3. **Storage optimization** - Remain compact even with many collaborators (usually 1-2 elements vs N entries in Version Vector)
+4. **Recording milestones** - Save important document states
+
+## Quick Comparison
+
+| Aspect | Frontiers | Version Vectors |
+|--------|-----------|----------------|
+| **Size** | 1-2 elements typically | Grows with peer count |
+| **Use Case** | Checkpoints, time travel | Synchronization, diffing |
+| **Storage** | Very compact | Larger with many peers |
+| **Unknown ops** | Cannot determine included ops | Can determine all included ops |
+
+## Practical Example
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+const text = doc.getText("content");
+const checkpoints = new Map();
+
+// Save checkpoint with frontiers
+text.insert(0, "Draft version");
+checkpoints.set("draft", doc.frontiers());
+
+// Make changes
+text.delete(0, 5);
+text.insert(0, "Final");
+checkpoints.set("final", doc.frontiers());
+
+// Restore to any checkpoint
+doc.checkout(checkpoints.get("draft"));
+console.log(text.toString()); // "Draft version"
+```
+
+## Important Limitation
+
+Frontiers have a key limitation when dealing with unknown operations:
+- When you have a Frontier pointing to operations you don't know about, you cannot determine the complete set of operation IDs included in that version
+- Version Vectors don't have this limitation - they explicitly list all peers and their operation counts, so you always know exactly which operations are included
+
+**Example**:
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+// If you receive a frontier [{ peer: "unknown-peer", counter: 42 }]
+// Without having the operations from "unknown-peer":
+// - Frontiers: Cannot tell which specific operations are included
+// - Version Vector: Would show { "unknown-peer": 43 }, clearly indicating ops 0-42
+
+const doc = new LoroDoc();
+const frontiers = doc.frontiers();
+// Frontiers are compact but require operation history for full information
+```
+
+This limitation is why Frontiers are best for scenarios where you have access to the operation history (like checkpoints in a local document), while Version Vectors are preferred for synchronization between peers who may not share complete history.
+
+## Conversion with Version Vectors
+
+Loro allows seamless conversion between representations:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+const frontiers = doc.frontiers();
+const vv = doc.frontiersToVV(frontiers);        // Convert to Version Vector
+const backToFrontiers = doc.vvToFrontiers(vv);  // Convert back
+```
+
+## Learn More
+
+For detailed technical explanation of how Frontiers work with Loro's DAG structure and causal ordering, see [Version Deep Dive](/docs/advanced/version_deep_dive).

@@ -1,0 +1,78 @@
+---
+keywords: "cursor, stable position, collaborative editing, CRDT, concurrent edits, selection, annotation, caret"
+description: "Understanding cursor and stable position systems in Loro for maintaining accurate positions across concurrent edits"
+---
+
+# Cursor and Stable Positions
+
+## Quick Reference
+
+**Cursors** maintain stable positions across concurrent edits by anchoring to operation IDs instead of indices. Essential for collaborative editing features like collaborative cursors and persistent annotations.
+
+## How It Works
+
+Cursors anchor to operation IDs and ContainerIDs, not indices:
+
+```
+Text:    H e l l o   W o r l d
+Op IDs:  1 2 3 4 5 6 7 8 9 A B
+Cursor:  References ID 5 (after 'o')
+
+After concurrent insert at start:
+Text:    N e w   H e l l o   W o r l d  
+Op IDs:  C D E F 1 2 3 4 5 6 7 8 9 A B
+Cursor:  Still references ID 5 - position automatically adjusted
+```
+
+## Side Parameter
+
+- **`Side.Before` (-1)**: Stay before the target
+- **`Side.Middle` (0)**: On the target (default)
+- **`Side.After` (1)**: Stay after the target
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "ABC");
+
+const cursor = text.getCursor(1, -1); // Before 'B'
+text.insert(1, "X"); // Insert at cursor
+// Result: "AXBC", cursor still before 'B'
+const pos = doc.getCursorPos(cursor!);
+console.log(pos); // { offset: 2, side: Side.Before }
+```
+
+## Common Use Cases
+
+### Text Selections
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+
+// Selection range
+const start = text.getCursor(0, -1);  // Anchor
+const end = text.getCursor(5, 1);     // Head
+```
+
+### List Positions
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const list = doc.getList("items");
+list.insert(0, ["a", "b", "c"]);
+
+const cursor = list.getCursor(0, 1); // After "a"
+list.insert(0, "new"); // Cursor adjusts automatically
+```
+
+## Related Documentation
+
+- [Text Container](../tutorial/text) - Text editing with cursors
+- [Cursor Tutorial](../tutorial/cursor) - Building collaborative features
+- [Events](../tutorial/event) - Cursor change events

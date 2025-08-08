@@ -1,0 +1,115 @@
+---
+keywords: "crdt, oplog, snapshot, doc state, checkout, version, architecture, memory, performance"
+description: "Understanding Loro's architectural separation of OpLog and DocState for efficient CRDT operations and version control"
+---
+
+# OpLog and DocState
+
+## Quick Reference
+
+- **OpLog** = Sequence of events/operations that compose the document history
+- **DocState** = Current materialized state of the document
+
+This separation enables time travel, efficient sync, and flexible storage strategies.
+
+## Key Concepts
+
+**OpLog (Operation Log)**
+- Append-only sequence of operations
+- Causal relationships and metadata
+
+**DocState (Document State)**
+- Current materialized view of the document
+- Actual data structures and values
+- What your app reads and displays
+
+## Benefits
+
+- **Memory efficiency**: Load OpLog without state (relay servers)
+- **Time travel**: Navigate history without losing the log
+- **Fast startup**: Load state via snapshots, fetch history later
+- **Flexible storage**: Store separately for optimization
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// Edit updates both
+doc.getText("text").insert(0, "Hello");
+console.log(doc.oplogVersion());  // Latest known version
+console.log(doc.version());       // The version of the current state of the document
+// If the document is attached, they are the same.
+```
+
+## Time Travel & Detachment
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "v1");
+const v1 = doc.frontiers();
+
+doc.getText("text").insert(2, " -> v2");
+
+// Checkout old version - DocState diverges from OpLog
+doc.checkout(v1);
+console.log(doc.version());       // v1 state
+console.log(doc.oplogVersion());  // Still has v2
+console.log(doc.isDetached());    // true
+
+// Return to latest
+doc.attach();
+```
+
+**Detached state**: DocState shows old version while OpLog has all operations. Editing disabled by default.
+
+
+## Export Strategies
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+// Update: OpLog only (sync)
+const update = doc.export({ mode: "update" });
+
+// Snapshot: OpLog + DocState (persistence)
+const snapshot = doc.export({ mode: "snapshot" });
+
+// Shallow: Minimal OpLog + DocState (fast startup)
+const shallow = doc.export({ mode: "shallow-snapshot", frontiers: doc.frontiers() });
+```
+
+## Common Patterns
+
+### Relay Server (OpLog Only)
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+class RelayServer {
+  private doc: LoroDoc;
+  constructor() {
+    this.doc = new LoroDoc();
+    this.doc.detach(); // Never materialize state
+  }
+
+  handleUpdate(update: Uint8Array) {
+    this.doc.import(update);
+  }
+}
+```
+
+## Best Practices
+
+- **Export modes**: Updates for sync, snapshots for persistence, shallow for startup
+- **Optimize by use case**: 
+  - Editors: Both in memory
+  - Relays: OpLog only
+
+## Related Documentation
+
+- [Attached/Detached States](./attached_detached) - Document and container states
+- [Shallow Snapshots](./shallow_snapshots) - History trimming
+- [Time Travel](../tutorial/time_travel) - Using checkout
