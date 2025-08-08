@@ -7,7 +7,7 @@
 ## Key Concepts
 
 ### Operations
-- Atomic units of change (insert, delete, set, etc.)
+- Atomic units of change (insert a single Unicode character, delete a single character, insert an new entry to a map, etc.)
 - Automatically merged internally for efficiency
 - Each has unique ID: `(peerId, counter)`
 
@@ -53,8 +53,8 @@ doc.transact(() => {
 ## When New Changes Are Created
 
 1. **Cross-peer dependencies**: After importing remote operations
-2. **Time separation**: When timestamps enabled and >1000s between commits
-3. **Different commit messages**: (Future feature)
+2. **Time separation**: When timestamps enabled and > the merge interval (default 1000s) between commits
+3. **Different commit messages**: 
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -64,7 +64,9 @@ doc.setText("text").insert(0, "v1");
 doc.commit(); // Change #1
 
 // Import from another peer
-const remote = new Uint8Array();
+const doc2 = new LoroDoc();
+doc2.setText("text").insert(0, "v1");
+const remote = doc2.export({ mode: "updates" });
 doc.import(remote);
 
 // Next commit creates new Change (dependency on remote)
@@ -103,12 +105,6 @@ for (const [peerId, peerChanges] of changes) {
 }
 ```
 
-## Best Practices
-
-- Use transactions for related operations
-- Balance commit frequency (not too often, not too rare)
-- Enable timestamps only when needed
-- Monitor Change size for performance
 
 ## Related Documentation
 

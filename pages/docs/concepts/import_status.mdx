@@ -32,7 +32,7 @@ import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
 
-// Peer A creates ops 0-9, then 10-19
+// Peer A creates ops 0-4, then 5-10
 const peerA = new LoroDoc();
 peerA.getText("text").insert(0, "Hello");
 const update1 = peerA.export({ mode: "update" });
@@ -51,24 +51,19 @@ doc.import(update1); // Both updates now applied
 ## Handling Pending Operations
 
 ```ts twoslash
-import { LoroDoc } from "loro-crdt";
+import { LoroDoc, VersionVector } from "loro-crdt";
 // ---cut---
 async function handleImport(
   doc: LoroDoc,
   update: Uint8Array,
-  fetchMissing: (peerId: string, before: number) => Promise<Uint8Array>
+  fetchMissing: (from: VersionVector) => Promise<Uint8Array>
 ) {
   const status = doc.import(update);
   
   if (status.pending) {
-    // Fetch missing dependencies
-    for (const [peerId, range] of Object.entries(status.pending)) {
-      const missing = await fetchMissing(peerId, range.start);
-      doc.import(missing); // Resolves pending ops
-    }
+    const missing = await fetchMissing(doc.version());
+    doc.import(missing);
   }
-  
-  return status;
 }
 ```
 
@@ -82,7 +77,7 @@ import { LoroDoc } from "loro-crdt";
 const status = doc.import(update);
 if (status.pending) {
   console.warn("Operations pending:", status.pending);
-  // Fetch missing dependencies
+  // Fetch missing updates
 }
 ```
 
@@ -94,12 +89,6 @@ const updates: Uint8Array[] = [];
 const batchStatus = doc.importBatch(updates);
 // Single status check for all updates
 ```
-
-### Handle Edge Cases
-- Empty updates (no new operations)
-- All operations pending (missing initial state)
-- Partial success (some applied, some pending)
-- Corrupted update data
 
 ## Related Documentation
 

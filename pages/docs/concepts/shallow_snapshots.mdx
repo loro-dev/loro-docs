@@ -4,15 +4,6 @@
 
 **Shallow snapshots** are like Git's shallow clone - maintain current state while removing old history. Essential for privacy compliance, storage optimization, and performance.
 
-## Key Features
-
-| Aspect | Full Snapshot | Shallow Snapshot |
-|--------|--------------|------------------|
-| **History** | Complete | From critical version only |
-| **Size** | Larger | 70-90% smaller |
-| **Sync** | Any version | Only after starting point |
-| **Use Case** | Audit trail | Privacy/performance |
-
 
 ## Basic Usage
 
@@ -60,26 +51,8 @@ const redacted = doc.export({
 
 ## Synchronization Limitations
 
-⚠️ **Important**: Peers can only sync if they have versions after the snapshot point.
+⚠️ **Important**: Peers can only sync if they have versions after the shallow snapshot point.
 
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// Safe shallow snapshot creation
-async function createShallowSnapshot(
-  doc: LoroDoc, 
-  confirmSync: () => Promise<boolean>
-) {
-  // Ensure all peers synchronized
-  await confirmSync();
-  
-  // Now safe to create shallow snapshot
-  return doc.export({
-    mode: "shallow-snapshot",
-    frontiers: doc.frontiers(),
-  });
-}
-```
 
 ## Common Patterns
 
@@ -130,8 +103,6 @@ class PrivacyDoc {
 
 - **Coordinate before trimming**: Ensure all peers synchronized
 - **Archive before deletion**: Keep full history backup if needed
-- **Consider sync boundaries**: Peers need post-snapshot versions
-- **Use for compliance**: GDPR right-to-be-forgotten implementation
 
 ## Related Documentation
 

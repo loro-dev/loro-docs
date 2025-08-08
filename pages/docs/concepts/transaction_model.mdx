@@ -24,12 +24,6 @@ text.insert(0, "Hello");
 doc.commit(); // Event emitted
 text.insert(5, " World");
 doc.commit(); // Another event
-
-// With transaction - single event
-doc.transact(() => {
-  text.insert(0, "Hello");
-  text.insert(5, " World");
-}); // One event for both operations
 ```
 
 ## How Transactions Work
@@ -75,72 +69,7 @@ doc.export({ mode: "update" }); // Implicit commit before export
 - Operations grouped in a single Change
 - One event emitted after transaction completes
 - Operations committed together at transaction end
-- Pending operations committed implicitly by import/checkout/export
-
-
-## When to Use Transactions
-
-### Use Transactions For:
-- **Related operations** that logically belong together
-- **Complex structures** that should appear atomically
-- **Batch UI updates** to reduce re-renders
-- **Form submissions** with multiple fields
-
-### Use Direct Operations For:
-- **Real-time collaboration** with character-by-character updates
-- **Simple, independent changes**
-- **When immediate event emission is needed**
-
-## Code Example
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-
-// Form submission pattern
-function submitForm(data: Record<string, any>) {
-  doc.transact(() => {
-    const form = doc.getMap("form");
-    for (const [key, value] of Object.entries(data)) {
-      form.set(key, value);
-    }
-  });
-  // Single event for entire form update
-}
-
-// Bulk import pattern  
-function importItems(items: any[]) {
-  doc.transact(() => {
-    const list = doc.getList("items");
-    for (const item of items) {
-      list.push(item);
-    }
-  });
-  // Single event for all items
-}
-```
-
-## Common Misconceptions
-
-### ❌ No Atomicity
-If an operation fails, previous operations remain applied - no rollback!
-
-### ❌ No Isolation  
-Transactions only affect local events. Remote peers see all operations once synced.
-
-### ❌ No Nested Savepoints
-Nested transactions are flattened into the parent transaction.
-
-## Best Practices
-
-- Use transactions for logical units of work
-- Don't over-transaction - use when bundling makes sense
-- Consider sync strategy - smaller transactions for real-time collaboration
-- Remember events are async (emitted after microtask)
-- Use origin parameter to tag and filter events
-- Be aware of implicit commits when using import/checkout/export
-- Explicitly commit when you need immediate event emission
+- Before committing, the local edits are not synced to other peers
 
 ## Related Documentation
 

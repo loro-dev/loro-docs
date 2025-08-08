@@ -12,8 +12,8 @@
 
 ```ts
 interface OpId {
-  peerId: string | number;  // Unique peer identifier
-  counter: number;           // Monotonically increasing counter
+  peerId: `${number}`;  // Unique peer identifier. It's string because 64bit integers are not supported in JS.
+  counter: number;      // Monotonically increasing counter
 }
 ```
 
@@ -25,7 +25,7 @@ interface OpId {
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc(); // Gets a random peer ID
-// Safe, no coordination needed, 2^64 possible values
+// Safe, no coordination needed
 ```
 
 **Note**: New peer ID generated for each `LoroDoc` instance, even when loading same document.
@@ -36,8 +36,7 @@ const doc = new LoroDoc(); // Gets a random peer ID
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-doc.setPeerId("alice");  // String IDs converted to numbers internally
-// Or: doc.setPeerId(12345);
+doc.setPeerId("123123123");  // You can only set 64 bit integers as peer IDs
 ```
 
 ⚠️ **Warning**: Manual assignment requires careful conflict avoidance.
@@ -50,93 +49,22 @@ Each peer maintains a monotonic counter starting at 0:
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-doc.setPeerId("alice");
+doc.setPeerId("1");
 const text = doc.getText("text");
 
-text.insert(0, "H");    // Operation (alice, 0)
-text.insert(1, "i");    // Operation (alice, 1)
-console.log(doc.version()); // { alice: 2 }
+text.insert(0, "H");    // Operation ("1", 0)
+text.insert(1, "i!");    // Operation ("1", 1) and Operation ("1", 2) are created
+console.log(doc.version()); // { "1": 2 }
 ```
 
 **Properties**: Monotonic, continuous, per-peer, persistent.
 
-## Avoiding Conflicts
-
-### Recommended Strategies
-
-1. **Use Automatic Assignment** (Safest)
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc(); // Let Loro handle it
-```
-
-2. **UUID-Based IDs**
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId(crypto.randomUUID());
-```
-
-3. **Structured IDs**
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const peerId = `${deviceId}-${Date.now()}-${Math.random()}`;
-doc.setPeerId(peerId);
-```
-
-### Common Pitfalls
+## Common Pitfalls
 
 ❌ **Never**:
-- Use user IDs as peer IDs
-- Use fixed IDs like "frontend-app"
+- Use user IDs as peer IDs, because an user can have multiple devices
+- Use fixed IDs
 - Reuse IDs without proper management
-
-## Best Practices
-
-- **Initial content**: Load from shared snapshot, don't create in each peer
-- **Track peer-to-user mappings**: Store associations in document
-- **Monitor usage**: Track active peers and operation counts
-- **Use frontiers over version vectors**: More compact representation
-
-
-## Code Example
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-// Real-time collaborative editor
-class CollaborativeEditor {
-  private doc: LoroDoc;
-  
-  constructor() {
-    this.doc = new LoroDoc(); // Auto-generated peer ID
-    this.setupSync();
-  }
-  
-  private setupSync() {
-    // Track peer metadata on first commit
-    this.doc.subscribeFirstCommitFromPeer((event) => {
-      this.doc.getMap("peers").set(event.peer, {
-        joinedAt: Date.now(),
-        isOnline: true
-      });
-    });
-    
-    // Subscribe to local updates for sync
-    this.doc.subscribeLocalUpdates((update) => {
-      // Send update to other peers
-      this.broadcast(update);
-    });
-  }
-  
-  private broadcast(update: Uint8Array) {
-    // Implementation depends on transport
-  }
-}
-```
 
 ## Related Documentation
 
