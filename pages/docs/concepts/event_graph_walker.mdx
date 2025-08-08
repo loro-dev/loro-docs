@@ -75,7 +75,7 @@ When a user makes a local edit:
 - Immediate application to the document
 
 Example:
-```javascript
+```javascript no_run
 // Traditional CRDT (e.g., RGA)
 insert({
   char: 'a',
@@ -145,7 +145,7 @@ While Loro is not a pure Eg-Walker implementation, it draws heavily from Eg-Walk
 - **Smart replay mechanisms** for merging concurrent changes
 
 This hybrid approach provides:
-```javascript
+```javascript no_run
 // Simple API with powerful internals
 const doc = new Loro();
 const text = doc.getText("content");

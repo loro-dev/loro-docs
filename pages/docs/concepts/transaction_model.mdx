@@ -47,8 +47,9 @@ doc.commit();
 ### Implicit Commits
 Certain operations trigger implicit commits automatically:
 
-```ts twoslash
+```ts twoslash no_run
 import { LoroDoc } from "loro-crdt";
+const update = new Uint8Array();
 // ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -56,7 +57,7 @@ const text = doc.getText("text");
 text.insert(0, "Hello"); // Pending operation
 
 // These operations trigger implicit commit:
-doc.import(new Uint8Array()); // Implicit commit before import
+doc.import(update); // Implicit commit before import
 // or
 doc.checkout(doc.frontiers()); // Implicit commit before checkout
 // or

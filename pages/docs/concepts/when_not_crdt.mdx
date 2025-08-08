@@ -27,7 +27,7 @@ CRDTs merge; they do not reject. This clashes with requirements that demand glob
 
 Multiple users book the same room/time concurrently.
 
-```ts
+```ts no_run
 // With a CRDT-only model both intents exist after merge
 // The app must pick a winner out-of-band
 book("A101@2pm", { by: "A" })
@@ -44,7 +44,7 @@ Use instead:
 
 Two withdrawals race on a $100 account.
 
-```ts
+```ts no_run
 // Each client applies its own withdrawal locally
 withdraw(60) // A
 withdraw(60) // B
