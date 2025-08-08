@@ -51,6 +51,7 @@ Frontiers are ideal for:
 | **Size** | 1-2 elements typically | Grows with peer count |
 | **Use Case** | Checkpoints, time travel | Synchronization, diffing |
 | **Storage** | Very compact | Larger with many peers |
+| **Unknown ops** | Cannot determine included ops | Can determine all included ops |
 
 ## Practical Example
 
@@ -74,6 +75,32 @@ checkpoints.set("final", doc.frontiers());
 doc.checkout(checkpoints.get("draft"));
 console.log(text.toString()); // "Draft version"
 ```
+
+## Important Limitation
+
+Frontiers have a key limitation when dealing with unknown operations. Let's extend our family tree analogy:
+
+**Scenario**: Imagine you only know the youngest generation (the frontier) of a family tree. If someone tells you "person X is an ancestor," but you don't have the full family tree, you cannot determine all family members included up to that youngest generation.
+
+Similarly with Frontiers:
+- When you have a Frontier pointing to operations you don't know about, you cannot determine the complete set of operation IDs included in that version
+- Version Vectors don't have this limitation - they explicitly list all peers and their operation counts, so you always know exactly which operations are included
+
+**Example**:
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+// If you receive a frontier [{ peer: "unknown-peer", counter: 42 }]
+// Without having the operations from "unknown-peer":
+// - Frontiers: Cannot tell which specific operations are included
+// - Version Vector: Would show { "unknown-peer": 43 }, clearly indicating ops 0-42
+
+const doc = new LoroDoc();
+const frontiers = doc.frontiers();
+// Frontiers are compact but require operation history for full information
+```
+
+This limitation is why Frontiers are best for scenarios where you have access to the operation history (like checkpoints in a local document), while Version Vectors are preferred for synchronization between peers who may not share complete history.
 
 ## Conversion with Version Vectors
 
