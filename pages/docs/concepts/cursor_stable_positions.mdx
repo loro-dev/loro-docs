@@ -7,11 +7,11 @@ description: "Understanding cursor and stable position systems in Loro for maint
 
 ## Quick Reference
 
-**Cursors** maintain stable positions across concurrent edits by anchoring to operation IDs instead of indices. Essential for collaborative editing features like shared cursors and persistent annotations.
+**Cursors** maintain stable positions across concurrent edits by anchoring to operation IDs instead of indices. Essential for collaborative editing features like collaborative cursors and persistent annotations.
 
 ## How It Works
 
-Cursors anchor to operation IDs, not indices:
+Cursors anchor to operation IDs and ContainerIDs, not indices:
 
 ```
 Text:    H e l l o   W o r l d
@@ -40,8 +40,9 @@ text.insert(0, "ABC");
 const cursor = text.getCursor(1, -1); // Before 'B'
 text.insert(1, "X"); // Insert at cursor
 // Result: "AXBC", cursor still before 'B'
+const pos = text.getCursorPos(cursor);
+console.log(pos); // { offset: 2, side: Side.Before }
 ```
-
 
 ## Common Use Cases
 
@@ -66,7 +67,7 @@ const doc = new LoroDoc();
 const list = doc.getList("items");
 list.insert(0, ["a", "b", "c"]);
 
-const cursor = list.getCursor(1, 0); // After "a"
+const cursor = list.getCursor(0, 1); // After "a"
 list.insert(0, "new"); // Cursor adjusts automatically
 ```
 
@@ -74,7 +75,6 @@ list.insert(0, "new"); // Cursor adjusts automatically
 
 ```ts twoslash
 import { LoroDoc, LoroText, Cursor } from "loro-crdt";
-// ---cut---
 class CollaborativeSelection {
   private anchor!: Cursor;
   private head!: Cursor;
@@ -104,13 +104,6 @@ class CollaborativeSelection {
   }
 }
 ```
-
-## Best Practices
-
-- **Side parameters**: Use -1 for starts, 1 for ends, 0 for simple positions
-- **Handle updates**: Check for and persist cursor updates
-- **Account for deletions**: Check `position.side` for deleted content
-- **UTF-16 awareness**: Emoji and special chars use multiple indices
 
 ## Related Documentation
 

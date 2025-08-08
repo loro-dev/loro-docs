@@ -120,7 +120,6 @@ Eg-Walker handles this by:
 
 | Aspect | Traditional CRDT | Eg-Walker |
 |--------|-----------------|-----------|
-| Per-operation metadata | 20-50 bytes | 4-8 bytes |
 | Tombstone storage | Permanent | Can be garbage collected |
 | Document growth | Linear with all operations | Linear with active operations |
 
@@ -128,7 +127,7 @@ Eg-Walker handles this by:
 
 - **No metadata computation**: Direct index-based operations
 - **No tombstone traversal**: Clean document state
-- **Predictable performance**: O(1) for most local operations
+- **Predictable performance**: O(1) or O(logN) for most local operations
 
 ### 3. **Efficient Synchronization**
 
@@ -184,18 +183,3 @@ The algorithm has been proven to:
 - Maintain strong eventual consistency
 - Preserve all CRDT correctness properties
 - Significantly reduce computational and storage overhead
-
-## Key Takeaways
-
-1. **Simplicity**: Replace complex metadata with simple indices
-2. **Efficiency**: Replay only what's necessary, when necessary
-3. **Scalability**: Bounded storage growth with safe garbage collection
-4. **Performance**: Fast local operations, efficient synchronization
-5. **Innovation**: Fundamental rethinking of CRDT implementation
-
-Eg-Walker represents a breakthrough in collaborative editing technology, making CRDTs more practical and performant for real-world applications. While Loro is not a strict Eg-Walker implementation, it has been profoundly influenced by Eg-Walker's design philosophy and achieves many of the same benefits through this inspiration. By cleverly leveraging the causal history already present in collaborative systems, both Eg-Walker and Loro-inspired approaches achieve the seemingly impossible: simpler data structures with better performance.
-
-[Lamport]: https://en.wikipedia.org/wiki/Lamport_timestamp
-[Fugue]: https://arxiv.org/abs/2305.00583
-[RGA algorithm]: https://www.sciencedirect.com/science/article/abs/pii/S0743731510002716
-[Yjs]: https://github.com/yjs/yjs

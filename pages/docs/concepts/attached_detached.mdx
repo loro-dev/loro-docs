@@ -45,6 +45,7 @@ doc.getText("text").insert(2, " -> v2");
 doc.checkout(v1);
 console.log(doc.isDetached()); // true
 console.log(doc.getText("text").toString()); // "v1"
+```
 
 
 ## Container States
@@ -52,7 +53,7 @@ console.log(doc.getText("text").toString()); // "v1"
 ### Detached (Standalone)
 - Created with constructors (`new LoroMap()`)
 - Not part of any document
-- No ContainerID
+- No valid ContainerID
 - Used as templates
 
 ```ts twoslash
@@ -87,7 +88,7 @@ console.log(attached.isAttached()); // true - new attached copy
 | **Purpose** | Version control | Document membership |
 | **When** | Time travel, branching | Adding to document |
 | **Independence** | N/A | Independent from doc state |
-| **Editing** | Restricted when detached | Always allowed if attached |
+| **Editing** | Restricted when detached | Always allowed |
 
 ## Common Use Cases
 
@@ -115,13 +116,6 @@ const list = doc.getList("tasks");
 list.insertContainer(0, template);
 list.insertContainer(1, template);
 ```
-
-## Best Practices
-
-- **Check before editing**: `if (doc.isDetached()) doc.attach()`
-- **Use templates**: Keep containers detached for reuse
-- **Remember attachment is one-way**: Original stays detached
-- **Re-attach after time travel**: Don't forget to return to latest
 
 ## Related Documentation
 
