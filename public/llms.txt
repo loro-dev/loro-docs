@@ -1,8 +1,15 @@
 # Loro
 
-> Loro is a high-performance CRDT library for building real-time collaborative applications. It enables automatic conflict resolution when multiple users edit simultaneously, supporting offline editing and peer-to-peer synchronization.
+> Loro is a high-performance CRDT library for building real-time collaborative applications. It enables automatic conflict resolution when multiple users edit simultaneously, supporting offline editing and peer-to-peer synchronization without requiring a central server.
 
 Loro provides JSON-compatible data structures with built-in version control, time travel, and rich text editing. Available for Rust, JavaScript/WASM, Swift, and Python.
+
+## Quick Links
+
+- **Website**: https://loro.dev
+- **GitHub**: https://github.com/loro-dev/loro
+- **Inspector**: https://inspector.loro.dev
+- **Examples**: https://github.com/loro-dev/loro-examples-deno
 
 ## Core Features
 
@@ -13,44 +20,199 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - **Rich Text**: Full support for overlapping styles and editor bindings (Quill, ProseMirror, CodeMirror)
 - **Performance**: 10-100x faster import than v0.x, handles 25M+ operations efficiently
 
-## Documentation
+## Getting Started
 
-- [Getting Started](https://loro.dev/docs/tutorial/get_started): Quick integration guide with code examples
-- [Core Concepts](https://loro.dev/docs/concepts/crdt): Understanding CRDTs and Loro's architecture
-- [Container Types](https://loro.dev/docs/concepts/container): Map, List, Text, Tree, and Counter containers
-- [Performance](https://loro.dev/docs/performance): Benchmarks comparing Loro with Yjs and Automerge
+- [Introduction](https://loro.dev/docs): Overview of Loro and its capabilities
+- [Quick Start](https://loro.dev/docs/tutorial/get_started): Installation and basic usage with code examples
+- [Examples](https://loro.dev/docs/examples): Integration libraries and sample applications
+- [LLM Resources](https://loro.dev/docs/llm): AI-friendly documentation
 
 ## Tutorials
 
-- [LoroDoc](https://loro.dev/docs/tutorial/loro_doc): Main API entry point and document management
-- [Text Editing](https://loro.dev/docs/tutorial/text): Plain and rich text with editor integration
-- [Lists](https://loro.dev/docs/tutorial/list): List vs MovableList for different use cases
-- [Maps](https://loro.dev/docs/tutorial/map): Key-value stores with Last-Write-Wins semantics
-- [Trees](https://loro.dev/docs/tutorial/tree): Hierarchical structures with move operations
-- [Synchronization](https://loro.dev/docs/tutorial/sync): Syncing documents between peers
-- [Time Travel](https://loro.dev/docs/tutorial/time_travel): Implementing history navigation
+### Core API
+- [LoroDoc](https://loro.dev/docs/tutorial/loro_doc): Main entry point for all Loro functionality
+- [Sync](https://loro.dev/docs/tutorial/sync): Synchronizing documents between peers
+- [Events](https://loro.dev/docs/tutorial/event): Event system and transaction handling
 - [Persistence](https://loro.dev/docs/tutorial/persistence): Efficient saving and loading strategies
+- [Encoding](https://loro.dev/docs/tutorial/encoding): Three encoding modes (Updates, Snapshot, Shallow)
+
+### Data Types
+- [Counter](https://loro.dev/docs/tutorial/counter): Distributed counter with automatic sum
+- [Map](https://loro.dev/docs/tutorial/map): Key-value store with Last-Write-Wins semantics
+- [List](https://loro.dev/docs/tutorial/list): List vs MovableList for different concurrent editing needs
+- [Text](https://loro.dev/docs/tutorial/text): Plain and rich text with editor bindings
+- [Tree](https://loro.dev/docs/tutorial/tree): Hierarchical structures with move operations
+
+### Advanced Features
+- [Cursor](https://loro.dev/docs/tutorial/cursor): Stable position tracking across edits
+- [Time Travel](https://loro.dev/docs/tutorial/time_travel): History navigation and checkout
+- [Version](https://loro.dev/docs/tutorial/version): Version vectors and frontiers
+- [Composition](https://loro.dev/docs/tutorial/composition): Building complex nested structures
+- [Ephemeral](https://loro.dev/docs/tutorial/ephemeral): Managing presence and temporary state
+- [Tips](https://loro.dev/docs/tutorial/tips): Best practices and common pitfalls
+
+## Core Concepts
+
+### CRDT Theory
+- [CRDT Introduction](https://loro.dev/docs/concepts/crdt): Understanding Conflict-free Replicated Data Types
+- [When Not to Use CRDTs](https://loro.dev/docs/concepts/when_not_crdt): Understanding CRDT limitations
+- [Choosing CRDT Types](https://loro.dev/docs/concepts/choose_crdt_type): Selecting the right container for your use case
+
+### Architecture
+- [Containers](https://loro.dev/docs/concepts/container): Building blocks for organizing data
+- [OpLog & DocState](https://loro.dev/docs/concepts/oplog_docstate): Separation of history and current state
+- [Attached/Detached States](https://loro.dev/docs/concepts/attached_detached): Container and document state management
+- [Event Graph Walker](https://loro.dev/docs/concepts/event_graph_walker): The algorithm powering Loro
+
+### Version Control
+- [Version Vectors](https://loro.dev/docs/concepts/version_vector): Complete peer state tracking
+- [Frontiers](https://loro.dev/docs/concepts/frontiers): Compact version representation
+- [Operations & Changes](https://loro.dev/docs/concepts/operations_changes): Atomic edits vs logical groups
+- [Shallow Snapshots](https://loro.dev/docs/concepts/shallow_snapshots): Privacy-compliant history removal
+
+### Synchronization
+- [PeerID Management](https://loro.dev/docs/concepts/peerid_management): Unique identification in distributed systems
+- [Import Status](https://loro.dev/docs/concepts/import_status): Handling out-of-order updates
+- [Transaction Model](https://loro.dev/docs/concepts/transaction_model): Operation bundling for events
+
+### Features
+- [Cursor Positions](https://loro.dev/docs/concepts/cursor_stable_positions): Stable positions through concurrent edits
 
 ## Advanced Topics
 
-- [Version Vectors & Frontiers](https://loro.dev/docs/advanced/version_deep_dive): Loro's versioning system
-- [Shallow Snapshots](https://loro.dev/docs/concepts/shallow_snapshots): Privacy-compliant history removal
+- [Container ID (CID)](https://loro.dev/docs/advanced/cid): Unique container identification system
+- [Batch Import](https://loro.dev/docs/advanced/import_batch): Performance optimization for multiple updates
+- [Inspector](https://loro.dev/docs/advanced/inspector): Visual debugging tool for Loro documents
+- [Timestamp Recording](https://loro.dev/docs/advanced/timestamp): Temporal tracking of changes
 - [Undo/Redo](https://loro.dev/docs/advanced/undo): Local undo in collaborative environments
-- [Import Status](https://loro.dev/docs/concepts/import_status): Handling out-of-order updates
-- [Attached/Detached States](https://loro.dev/docs/concepts/attached_detached): Container and document states
+- [Version Deep Dive](https://loro.dev/docs/advanced/version_deep_dive): DAG history and synchronization
 
-## Blog
+## Performance
 
+- [Benchmarks Overview](https://loro.dev/docs/performance): Comparison with Yjs and Automerge
+- [Document Size](https://loro.dev/docs/performance/docsize): Storage efficiency analysis
+- [Native Performance](https://loro.dev/docs/performance/native): Rust implementation benchmarks
+
+### Key Metrics
+- B4 dataset (259k ops): 2.3 seconds processing
+- B4x100 (25.9M ops): Successfully handles massive documents
+- Import speed: 10-100x faster than v0.x
+- Document size: Shallow snapshots provide 75% reduction
+
+## Blog Posts
+
+### Technical Deep Dives
 - [Loro v1.0 Release](https://loro.dev/blog/v1.0): Major performance improvements and stable format
-- [Rich Text CRDT](https://loro.dev/blog/loro-richtext): Novel algorithm for rich text collaboration
-- [Movable Tree](https://loro.dev/blog/movable-tree): Handling complex tree operations with cycle detection
+- [Rich Text CRDT](https://loro.dev/blog/loro-richtext): Novel algorithm using style anchors
+- [Movable Tree](https://loro.dev/blog/movable-tree): Handling complex tree operations
+- [CRDT RichText](https://loro.dev/blog/crdt-richtext): Peritext and Fugue implementation
 - [Open Source Announcement](https://loro.dev/blog/loro-now-open-source): Loro's journey to open source
 
-## Optional
+## Version History
 
-- [When Not to Use CRDTs](https://loro.dev/docs/concepts/when_not_crdt): Understanding CRDT limitations
-- [Choosing CRDT Types](https://loro.dev/docs/concepts/choose_crdt_type): Selecting the right container
-- [Event Graph Walker](https://loro.dev/docs/concepts/event_graph_walker): Algorithm powering Loro
-- [API Examples](https://loro.dev/docs/examples): Integration libraries and code samples
-- [Inspector Tool](https://inspector.loro.dev): Visual debugging for Loro documents
-- [About](https://loro.dev/about): Created by Zixuan Chen and Leon Zhao
+### Latest Releases
+- [v1.5.0](https://loro.dev/changelog/v1.5.0): Advanced hooks, EphemeralStore, multi-threading
+- [v1.4.7](https://loro.dev/changelog/v1.4.7): Text styling fixes and uncommitted ops access
+- [v1.4.0](https://loro.dev/changelog/v1.4.0): Commit customization and versioning
+- [v1.3.0](https://loro.dev/changelog/v1.3.0): Time travel with revertTo()
+- [v1.2.0](https://loro.dev/changelog/v1.2.0): Deletion tracking and oplog statistics
+- [v1.1.0](https://loro.dev/changelog/v1.1.0): Document forking and container tracking
+- [v1.0.0](https://loro.dev/changelog/v1.0.0-beta): First stable release
+
+### Tools
+- [Inspector v0.1.0](https://loro.dev/changelog/inspector-v0.1.0): Visual debugging tool release
+
+## Integration Ecosystem
+
+### Editor Bindings
+- **loro-prosemirror**: ProseMirror/Tiptap integration
+- **loro-codemirror**: CodeMirror 6 integration
+- **Quill**: Native binding support
+
+### Language Support
+- **Rust**: Native implementation
+- **JavaScript/TypeScript**: WASM bindings
+- **Swift**: iOS/macOS support
+- **Python**: Python bindings
+- **C#**: .NET support
+
+## Use Cases
+
+### Ideal For
+✅ Collaborative document editing (Google Docs-like)
+✅ Real-time multiplayer applications
+✅ Offline-first mobile/desktop apps
+✅ Distributed systems without central coordination
+✅ Applications requiring complete edit history
+✅ Peer-to-peer synchronization scenarios
+
+### Not Suitable For
+❌ Applications requiring hard invariants (e.g., balance ≥ 0)
+❌ Exclusive resource management (booking systems)
+❌ ACID transaction requirements
+❌ Large binary/media streaming
+❌ Bundle-size sensitive applications
+
+## Technical Innovations
+
+### Algorithms
+- **Event Graph Walker (Eg-Walker)**: Efficient CRDT with simple indices
+- **Fugue**: Minimizes text editing anomalies
+- **Movable Tree**: Handles complex tree operations with cycle detection
+- **Style Anchors**: Novel rich text implementation
+
+### Design Principles
+- Separation of OpLog and DocState for flexibility
+- Deterministic container IDs based on context
+- Monotonic merging without rejection
+- Memory-efficient relay servers (OpLog only)
+
+## Installation
+
+```bash
+# NPM/JavaScript
+npm install loro-crdt
+
+# Rust
+cargo add loro
+
+# Swift Package Manager
+dependencies: [
+  .package(url: "https://github.com/loro-dev/loro-swift", from: "1.5.0")
+]
+```
+
+## Basic Usage
+
+```javascript
+import { LoroDoc } from "loro-crdt";
+
+// Create document
+const doc = new LoroDoc();
+
+// Get containers
+const text = doc.getText("content");
+const map = doc.getMap("metadata");
+
+// Make changes
+text.insert(0, "Hello World");
+map.set("author", "Alice");
+
+// Synchronize
+const updates = doc.export({ mode: "update" });
+otherDoc.import(updates);
+```
+
+## About
+
+Created by Zixuan Chen and Leon Zhao in 2022 with the vision of empowering local-first software and simplifying collaborative application development.
+
+## Additional Resources
+
+- [About Loro](https://loro.dev/about): Background and acknowledgments
+- [Changelog](https://loro.dev/changelog): Complete version history
+- [Blog](https://loro.dev/blog): Technical articles and announcements
+
+## Summary
+
+Loro is a production-ready CRDT library that makes building collaborative applications straightforward. It combines theoretical rigor with practical performance, offering features like time travel, version control, and rich text editing while maintaining excellent performance characteristics. The library is particularly suited for applications requiring real-time collaboration, offline editing, and automatic conflict resolution in distributed environments.
