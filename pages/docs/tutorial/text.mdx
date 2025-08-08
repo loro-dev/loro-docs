@@ -173,7 +173,7 @@ There are four kinds of expansion behaviors:
 
 ```ts twoslash
 import { LoroDoc, Delta } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 doc.configTextStyle({
@@ -382,7 +382,7 @@ implicitly.
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -406,7 +406,7 @@ example works:
 
 ```ts no_run twoslash
 import { LoroDoc, TextDiff } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 (async () => {
   const doc1 = new LoroDoc();

@@ -33,7 +33,7 @@ to implement the move operation.
 
 ```ts twoslash
 import { LoroDoc, Loro } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("1");
@@ -74,7 +74,7 @@ expect(docB.toJSON()).toStrictEqual({ list: [0, 1, 8, 9] });
 
 ```ts twoslash
 import { LoroDoc, Loro } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const docA = new LoroDoc();
 docA.setPeerId("1");

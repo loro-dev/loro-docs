@@ -13,7 +13,7 @@ By leveraging these fundamental CRDTs, you can effectively model the states and 
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 const map = doc.getMap("map");
