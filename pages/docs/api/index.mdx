@@ -1,13 +1,8 @@
----
-title: API Reference
-description: Complete API documentation for Loro CRDT library
----
+import styles from './api-reference.module.css'
 
-import LanguageSelector from '../../components/api/LanguageSelector'
+<div className={styles.apiReference}>
 
 # API Reference
-
-<LanguageSelector />
 
 ## Overview
 
@@ -23,19 +18,9 @@ Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enable
 - [**Undo/Redo**](#undoredo) - Local undo management
 - [**Types & Interfaces**](#types--interfaces) - TypeScript type definitions
 
-## Installation
-
-```bash
-npm install loro-crdt
-# or
-yarn add loro-crdt
-# or
-pnpm add loro-crdt
-```
-
 ## Basic Usage
 
-```typescript
+```typescript twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -43,7 +28,7 @@ const text = doc.getText("text");
 text.insert(0, "Hello World");
 
 // Subscribe to changes
-doc.subscribe((event) => {
+const unsubscribe = doc.subscribe((event) => {
   console.log("Document changed:", event);
 });
 
@@ -2456,3 +2441,5 @@ const map = doc.getMap("map");
 ## License
 
 Loro is licensed under the MIT License. See the [LICENSE](https://github.com/loro-dev/loro/blob/main/LICENSE) file for details.
+
+</div>
