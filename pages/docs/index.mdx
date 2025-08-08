@@ -92,6 +92,25 @@ import { Cards } from "nextra/components";
   </Cards.Card>
 </Cards>
 
+# Is Loro Right for You?
+
+### ✅ Use Loro when you need:
+
+- Real-time collaboration on documents
+- Automatic conflict resolution for concurrent edits
+- Offline editing with later synchronization
+- Complete edit history and time travel
+- P2P synchronization capabilities
+
+### ⚠️ Consider alternatives when:
+
+- Your application requires strong consistency
+- Your data isn't JSON-like (e.g., large binary/media streaming)
+- Simple client–server sync is sufficient (e.g., basic WebSockets)
+- Your application is sensitive to bundle size (Loro WASM binary ~970KB gzipped)
+
+[Learn more about when not to use CRDTs →](/docs/concepts/when_not_crdt)
+
 # Differences from other CRDT libraries
 
 The table below summarizes Loro's features, which may not be present in other

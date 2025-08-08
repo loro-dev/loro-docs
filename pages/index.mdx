@@ -20,7 +20,7 @@ import Demo from "@components/richtextDemo";
 import Testimonial from "@components/Testimonial";
 
 <div className="relative landing-page-root dark bg-zinc-900">
-  <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+  <div style={{ maxWidth: 1400, margin: "0 auto" }}>
     <Hero />
     <section className="px-5 md:px-15 mt-10 z-10 relative flex justify-center">
       <div className="relative group">
@@ -36,6 +36,7 @@ import Testimonial from "@components/Testimonial";
         </a>
       </div>
     </section>
+    
     <Features />
 
     <CustomerWall />
@@ -98,13 +99,12 @@ import Testimonial from "@components/Testimonial";
         />
       </div>
     </section>
-    <section className="px-5 md:px-15 z-10 relative">
+    <section id="demo" className="px-5 md:px-15 z-10 relative">
       <h2 className="text-2xl not-italic font-semibold leading-[normal] bg-clip-text mb-8 bg-blue-green text-fill-transparent">
         Rich Text Editor Demo
       </h2>
       <Demo />
     </section>
-
 
     <section className="px-5 md:px-15 mt-10 z-10 relative">
       <h2 className="text-2xl not-italic font-semibold leading-[normal] bg-clip-text mb-4 bg-blue-green text-fill-transparent">
@@ -147,6 +147,72 @@ import Testimonial from "@components/Testimonial";
         </div>
       </div>
     </section>
+
+    <section className="px-5 md:px-15 mt-24 z-10 relative">
+      <h2 className="text-2xl not-italic font-semibold leading-[normal] bg-clip-text mb-6 bg-blue-green text-fill-transparent">
+        What You Can Build
+      </h2>
+
+      <div className="opacity-80 mb-6">
+        Loro powers the collaborative state layer. You bring UI, auth, storage, and transport.
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">📝</span>
+            <h3 className="font-semibold">Collaborative Documents</h3>
+          </div>
+          <div className="text-sm opacity-80">Docs‑style editors with presence, history, and conflict‑free merges.</div>
+          <div className="mt-3 text-sm text-blue-400 hover:text-blue-300">→ <a href="/docs/tutorial/text">Tutorial</a></div>
+        </div>
+
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">🎨</span>
+            <h3 className="font-semibold">Design Tools</h3>
+          </div>
+          <div className="text-sm opacity-80">Figma‑style canvases with lists/trees, undo/redo, and real‑time sync.</div>
+          <div className="mt-3 text-sm text-blue-400 hover:text-blue-300">→ <a href="/docs/tutorial/tree">Tree</a> | <a href="/docs/tutorial/list">Movable List</a></div>
+        </div>
+
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">📊</span>
+            <h3 className="font-semibold">Data Dashboards</h3>
+          </div>
+          <div className="text-sm opacity-80">Airtable‑like tables with shared JSON state, snapshots, and history.</div>
+          <div className="mt-3 text-sm text-blue-400 hover:text-blue-300">→ <a href="/docs/tutorial/persistence">Persistence</a></div>
+        </div>
+
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">🎮</span>
+            <h3 className="font-semibold">Multiplayer Games</h3>
+          </div>
+          <div className="text-sm opacity-80">Shared game state with conflict‑free updates and timeline playback.</div>
+        </div>
+
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">💬</span>
+            <h3 className="font-semibold">Chat Applications</h3>
+          </div>
+          <div className="text-sm opacity-80">Message streams with offline sync, presence, and conflict‑free history.</div>
+          <div className="mt-3 text-sm text-blue-400 hover:text-blue-300">→ <a href="/docs/tutorial/list">List</a></div>
+        </div>
+
+        <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
+          <div className="flex items-center mb-3">
+            <span className="text-3xl mr-3">📱</span>
+            <h3 className="font-semibold">Offline‑First Apps</h3>
+          </div>
+          <div className="text-sm opacity-80">Local‑first state, updates, and merges that sync when online.</div>
+          <div className="mt-3 text-sm text-blue-400 hover:text-blue-300">→ <a href="/docs/tutorial/sync">Sync</a></div>
+        </div>
+      </div>
+    </section>
+
 
     <Support />
     <div className="mb-20" />

@@ -196,3 +196,34 @@ article main li > ul.nx-list-disc {
 .twoslash-popup-docs .nextra-code span {
     background: none !important;
 }
+
+/* Twoslash popup mobile refinements */
+.twoslash-popup-container {
+    /* Ensure the popup never exceeds the viewport width */
+    max-width: min(92vw, 40rem) !important;
+    box-shadow: var(--twoslash-popup-shadow);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.twoslash-popup-code {
+    /* Wrap long signatures nicely on small screens */
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+    .twoslash-popup-container {
+        /* Leave a small gutter on both sides on phones */
+        max-width: calc(100vw - 24px) !important;
+        width: calc(100vw - 24px);
+        z-index: 50;
+    }
+
+    .twoslash-popup-docs,
+    .twoslash-popup-code {
+        font-size: 0.875rem;
+    }
+}
