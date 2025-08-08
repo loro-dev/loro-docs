@@ -34,7 +34,7 @@ The [loro-prosemirror](https://github.com/loro-dev/loro-prosemirror) package pro
 
 The ProseMirror binding can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
 
-```ts no_run twoslash
+```ts no_run
 import {
   CursorAwareness,
   LoroCursorPlugin,
@@ -47,9 +47,7 @@ import { LoroDoc } from "loro-crdt";
 import { EditorView } from "prosemirror-view";
 import { EditorState } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
-declare const pmPlugins: any[];
-declare const editorDom: HTMLElement;
-// ---cut---
+
 const doc = new LoroDoc();
 const awareness = new CursorAwareness(doc.peerIdStr);
 const plugins = [
@@ -76,12 +74,12 @@ The [loro-codemirror](https://github.com/loro-dev/loro-codemirror) package provi
 - Cursor awareness
 - Undo/Redo functionality
 
-```ts no_run twoslash
+```ts no_run
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { LoroExtensions } from "loro-codemirror";
 import { Awareness, LoroDoc, UndoManager } from "loro-crdt";
-// ---cut---
+
 const doc = new LoroDoc();
 const awareness = new Awareness(doc.peerIdStr);
 const undoManager = new UndoManager(doc, {});
