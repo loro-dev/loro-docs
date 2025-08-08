@@ -110,37 +110,58 @@ const list = doc.getList("items");
 const childMap = list.insertContainer(0, new LoroMap());
 ```
 
-### Important: Parameter vs Return Value
+## Container Overwrites
 
-When using methods like `setContainer()` or `insertContainer()`:
+When initializing child containers in parallel, overwrites can occur instead of
+automatic merging. For example:
 
 ```ts twoslash
-import { LoroDoc, LoroMap, LoroText } from "loro-crdt";
+import { LoroDoc, LoroText } from "loro-crdt";
 // ---cut---
+const a: string = "hello";
 const doc = new LoroDoc();
-const map = doc.getMap("root");
+const map = doc.getMap("map");
 
-// The parameter container remains detached
-const detachedText = new LoroText();
-console.log(detachedText.isAttached()); // false
+// Parallel initialization of child containers
+const docB = doc.fork();
+const textA = doc.getMap("map").setContainer("text", new LoroText());
+textA.insert(0, "A");
+const textB = docB.getMap("map").setContainer("text", new LoroText());
+textB.insert(0, "B");
 
-// The returned container is attached
-const attachedText = map.setContainer("text", detachedText);
-console.log(attachedText.isAttached()); // true
-
-// detachedText is still detached!
-console.log(detachedText.isAttached()); // false
+doc.import(docB.export({ mode: "update" }));
+// Result: Either { "meta": { "text": "A" } } or { "meta": { "text": "B" } }
 ```
 
-## Best Practices
+This behavior poses a significant risk of data loss if the editing history is
+not preserved. Even when the complete history is available and allows for data
+recovery, the recovery process can be complex.
 
-1. **Use attached containers for document data**: Always work with containers returned from document methods or container insertion methods.
+<aside>
+By default, Loro and Automerge preserve the whole editing history in a directed
+acyclic graph like Git.
+</aside>
 
-2. **Detached containers as templates**: Use detached containers when you need to prepare data before inserting it into the document.
+When a container holds substantial data or serves as the primary storage for
+document content, overwriting it can lead to the unintended hiding/loss of
+critical information. For this reason, it is essential to implement careful and
+systematic container initialization practices to prevent such issues.
 
-3. **Check attachment status**: Use `isAttached()` method when you need to verify a container's state.
+### Best Practices
 
-4. **Prefer root-level containers for concurrent initialization**: To avoid container overwrites, initialize containers at the root level when possible.
+1. When containers might be initialized concurrently, prefer initializing them
+   at the root level rather than as nested containers
+
+2. When using map containers:
+   - If possible, initialize all child containers during the map container's
+     initialization
+   - Avoid concurrent creation of child containers with the same key in the map
+     container to prevent overwrites
+
+The overwrite behavior occurs because parallel creation of child containers
+results in different container IDs, preventing automatic merging of their
+contents.
+
 
 ## Related Concepts
 
