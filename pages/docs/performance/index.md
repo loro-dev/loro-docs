@@ -25,7 +25,7 @@ The benchmark can be reproduced using the [crdt-benchmarks](https://github.com/z
 - Automerge can perform the `B4` benchmark in about 1 second (see `time`) if all
   changes are applied within a single `change` transaction. However, our
   benchmarks test individual edits that generate individual update events as
-  this more closely simulates actual user behavior. See #21
+  this more closely simulates actual user behavior.
 - Note that `parseTime` is significantly higher with `automerge` and `loro` when
   the initial document is not empty (e.g. when syncing content from a remote
   server).
