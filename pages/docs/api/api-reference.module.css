@@ -4,6 +4,119 @@
   /* Enhanced spacing and visual hierarchy through indentation only */
 }
 
+/* Collapsible sections styles */
+.apiReference h4 {
+  position: relative;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.apiReference h4:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.apiReference h4.collapsible-processed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Toggle button styles */
+.collapsible-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: inherit;
+  transition: transform 0.3s ease;
+  border-radius: 4px;
+}
+
+.collapsible-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.collapsible-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.toggle-icon {
+  flex-shrink: 0;
+}
+
+/* Collapsible content wrapper */
+.collapsible-wrapper {
+  overflow: hidden;
+}
+
+.collapsible-content {
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+
+.collapsible-content.expanded {
+  max-height: 10000px;
+  opacity: 1;
+}
+
+.collapsible-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Control buttons */
+.collapsible-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.expand-all-btn,
+.collapse-all-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expand-all-btn:hover,
+.collapse-all-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .apiReference h4:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+  
+  .collapsible-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .expand-all-btn,
+  .collapse-all-btn {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+  
+  .expand-all-btn:hover,
+  .collapse-all-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
 /* Main section spacing (h2) - Top level sections like "LoroDoc", "Container Types" */
 .apiReference h2 {
   @apply mt-16 mb-8;
