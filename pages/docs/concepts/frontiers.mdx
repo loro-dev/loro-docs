@@ -11,8 +11,6 @@ Frontiers are a compact way to represent document versions in Loro by identifyin
 
 Think of Frontiers as **bookmarks in your document's history**. Instead of listing every change made by every collaborator (like Version Vectors do), Frontiers only point to the boundary operations that implicitly include all their ancestors through causal relationships.
 
-**Analogy**: In a family tree, a Version Vector would list every family member and their generation, while Frontiers would only point to the youngest generation - everyone else is implicitly included as ancestors.
-
 ## Basic Usage
 
 ```ts twoslash
@@ -78,11 +76,7 @@ console.log(text.toString()); // "Draft version"
 
 ## Important Limitation
 
-Frontiers have a key limitation when dealing with unknown operations. Let's extend our family tree analogy:
-
-**Scenario**: Imagine you only know the youngest generation (the frontier) of a family tree. If someone tells you "person X is an ancestor," but you don't have the full family tree, you cannot determine all family members included up to that youngest generation.
-
-Similarly with Frontiers:
+Frontiers have a key limitation when dealing with unknown operations:
 - When you have a Frontier pointing to operations you don't know about, you cannot determine the complete set of operation IDs included in that version
 - Version Vectors don't have this limitation - they explicitly list all peers and their operation counts, so you always know exactly which operations are included
 
