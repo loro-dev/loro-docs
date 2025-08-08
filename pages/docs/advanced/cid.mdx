@@ -58,12 +58,14 @@ When you create a container directly using constructors like `new LoroMap()` or 
 
 ### Attached Containers  
 
-When you get a container through the document API like `doc.getText("text")` or `map.setContainer("key", new LoroText())`, the container becomes **attached**:
+When you get a container through the document API like `doc.getText("text")` or from the return value of `map.setContainer("key", new LoroText())`, the container is **attached**:
 
 - It belongs to a specific document
 - It has a proper ContainerID determined by:
   - **Root containers**: Named by the string parameter (e.g., "text" in `doc.getText("text")`)
   - **Normal containers**: Based on the OpID at insertion time
+
+Note: When using `setContainer()`, the container passed as parameter remains detached, but the method returns a new attached container.
 
 ### Why This Matters
 
@@ -83,10 +85,11 @@ const doc = new LoroDoc();
 // Attached container - has proper ContainerID
 const attachedMap = doc.getMap("myMap");
 
-// Detached text becomes attached when inserted
+// setContainer returns an attached container
 const detachedText = new LoroText();
-attachedMap.setContainer("text", detachedText);
-// Now detachedText is attached with a proper ContainerID
+const attachedText = attachedMap.setContainer("text", detachedText);
+// detachedText remains detached
+// attachedText is the attached version with proper ContainerID
 ```
 
 ## Container Overwrites
