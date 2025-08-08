@@ -2,5 +2,8 @@
     "nodeModulesDir": "auto",
     "tasks": {
         "check": "deno run -A ./run_code_blocks.ts"
+    },
+    "imports": {
+        "expect": "npm:expect@^30.0.5"
     }
 }

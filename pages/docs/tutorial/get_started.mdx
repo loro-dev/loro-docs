@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 1. **Remove the event listener** (recommended for most cases):
 
-   ```ts twoslash
+   ```ts no_run twoslash
    import { LoroDoc } from "loro-crdt";
 
    const doc = new LoroDoc();
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
    ```
 
 2. **Use dynamic import inside the event listener**:
-   ```ts twoslash
+   ```ts no_run twoslash
    document.addEventListener("DOMContentLoaded", async () => {
      const { LoroDoc } = await import("loro-crdt");
      const doc = new LoroDoc();
@@ -222,7 +222,7 @@ Here are their basic operations:
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 const list: LoroList = doc.getList("list");
@@ -273,7 +273,7 @@ form. To open it again, use `doc.import(data)` to load this binary data.
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
@@ -292,7 +292,7 @@ operations since the last export.
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "Hello world!");
@@ -355,7 +355,7 @@ Below is an example of synchronization between two documents:
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 const docA = new LoroDoc();
 const docB = new LoroDoc();
@@ -407,7 +407,7 @@ Below is an example of rich text event:
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
-const expect: any = () => {};
+import { expect } from "expect";
 // ---cut---
 // The code is from https://github.com/loro-dev/loro-examples-deno
 const doc = new LoroDoc();
