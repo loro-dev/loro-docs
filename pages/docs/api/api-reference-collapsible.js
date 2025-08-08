@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 export function useCollapsibleSections() {
   useEffect(() => {
     const initCollapsible = () => {
-      const apiReference = document.querySelector('.apiReference');
+      const apiReference = document.querySelector('.api-reference-container');
       if (!apiReference) return;
 
       // Find all h4 elements (method/property titles)
@@ -135,7 +135,7 @@ export function useCollapsibleSections() {
     
     // Re-initialize on route changes
     const observer = new MutationObserver(() => {
-      const apiReference = document.querySelector('.apiReference');
+      const apiReference = document.querySelector('.api-reference-container');
       if (apiReference && !apiReference.querySelector('.collapsible-controls')) {
         initCollapsible();
       }

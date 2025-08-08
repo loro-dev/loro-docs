@@ -5,7 +5,7 @@ export function ApiReferenceWrapper({ children }) {
   useCollapsibleSections();
   
   return (
-    <div className={styles.apiReference}>
+    <div className={`${styles.apiReference} api-reference-container`}>
       {children}
     </div>
   );
