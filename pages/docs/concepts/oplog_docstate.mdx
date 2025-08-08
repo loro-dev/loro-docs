@@ -7,15 +7,15 @@ description: "Understanding Loro's architectural separation of OpLog and DocStat
 
 ## Quick Reference
 
-**OpLog** = Git commit history (all operations)
-**DocState** = Working directory (current state)
+**OpLog** = Sequence of events/operations that compose the document history
+**DocState** = Current materialized state of the document
 
 This separation enables time travel, efficient sync, and flexible storage strategies.
 
 ## Key Concepts
 
 **OpLog (Operation Log)**
-- Append-only history of all operations
+- Append-only sequence of events/operations
 - Causal relationships and metadata
 - Immutable and grows over time
 
