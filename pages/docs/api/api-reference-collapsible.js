@@ -33,14 +33,26 @@ export function useCollapsibleSections() {
           sibling = sibling.nextElementSibling;
         }
         
-        // Move siblings into content container
-        siblings.forEach(el => {
-          content.appendChild(el);
-        });
-        
-        // Insert wrapper after h4
-        h4.parentNode.insertBefore(wrapper, h4.nextSibling);
-        wrapper.appendChild(content);
+        // Only proceed if there are siblings to wrap
+        if (siblings.length > 0) {
+          // Insert wrapper after h4
+          if (h4.parentNode) {
+            h4.parentNode.insertBefore(wrapper, h4.nextSibling);
+            wrapper.appendChild(content);
+            
+            // Move siblings into content container
+            siblings.forEach(el => {
+              // Check if element still exists and has a parent before moving
+              if (el && el.parentNode) {
+                try {
+                  content.appendChild(el);
+                } catch (e) {
+                  console.warn('Could not move element:', e);
+                }
+              }
+            });
+          }
+        }
         
         // Add toggle button to h4
         const toggleBtn = document.createElement('button');
@@ -90,44 +102,52 @@ export function useCollapsibleSections() {
         }
       });
       
-      // Add option to collapse/expand all
-      const controlsContainer = document.createElement('div');
-      controlsContainer.className = 'collapsible-controls';
-      controlsContainer.innerHTML = `
-        <button class="expand-all-btn">Expand All</button>
-        <button class="collapse-all-btn">Collapse All</button>
-      `;
-      
-      const firstH2 = apiReference.querySelector('h2');
-      if (firstH2) {
-        firstH2.parentNode.insertBefore(controlsContainer, firstH2);
+      // Add option to collapse/expand all (only if not already added)
+      if (!apiReference.querySelector('.collapsible-controls')) {
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'collapsible-controls';
+        controlsContainer.innerHTML = `
+          <button class="expand-all-btn">Expand All</button>
+          <button class="collapse-all-btn">Collapse All</button>
+        `;
+        
+        const firstH2 = apiReference.querySelector('h2');
+        if (firstH2 && firstH2.parentNode) {
+          firstH2.parentNode.insertBefore(controlsContainer, firstH2);
+        }
       }
       
       // Expand all functionality
-      const expandAllBtn = controlsContainer.querySelector('.expand-all-btn');
-      expandAllBtn?.addEventListener('click', () => {
-        apiReference.querySelectorAll('.collapsible-content').forEach(content => {
-          content.classList.remove('collapsed');
-          content.classList.add('expanded');
+      const expandAllBtn = apiReference.querySelector('.expand-all-btn');
+      if (expandAllBtn && !expandAllBtn.hasAttribute('data-listener-added')) {
+        expandAllBtn.setAttribute('data-listener-added', 'true');
+        expandAllBtn.addEventListener('click', () => {
+          apiReference.querySelectorAll('.collapsible-content').forEach(content => {
+            content.classList.remove('collapsed');
+            content.classList.add('expanded');
+          });
+          apiReference.querySelectorAll('.collapsible-toggle').forEach(btn => {
+            btn.classList.remove('collapsed');
+            btn.setAttribute('aria-expanded', 'true');
+          });
         });
-        apiReference.querySelectorAll('.collapsible-toggle').forEach(btn => {
-          btn.classList.remove('collapsed');
-          btn.setAttribute('aria-expanded', 'true');
-        });
-      });
+      }
       
       // Collapse all functionality
-      const collapseAllBtn = controlsContainer.querySelector('.collapse-all-btn');
-      collapseAllBtn?.addEventListener('click', () => {
-        apiReference.querySelectorAll('.collapsible-content').forEach(content => {
-          content.classList.remove('expanded');
-          content.classList.add('collapsed');
+      const collapseAllBtn = apiReference.querySelector('.collapse-all-btn');
+      if (collapseAllBtn && !collapseAllBtn.hasAttribute('data-listener-added')) {
+        collapseAllBtn.setAttribute('data-listener-added', 'true');
+        collapseAllBtn.addEventListener('click', () => {
+          apiReference.querySelectorAll('.collapsible-content').forEach(content => {
+            content.classList.remove('expanded');
+            content.classList.add('collapsed');
+          });
+          apiReference.querySelectorAll('.collapsible-toggle').forEach(btn => {
+            btn.classList.add('collapsed');
+            btn.setAttribute('aria-expanded', 'false');
+          });
         });
-        apiReference.querySelectorAll('.collapsible-toggle').forEach(btn => {
-          btn.classList.add('collapsed');
-          btn.setAttribute('aria-expanded', 'false');
-        });
-      });
+      }
     };
     
     // Initialize after a short delay to ensure DOM is ready
