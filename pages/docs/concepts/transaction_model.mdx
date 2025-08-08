@@ -32,12 +32,50 @@ doc.transact(() => {
 }); // One event for both operations
 ```
 
-## Transaction Guarantees
+## How Transactions Work
+
+### Pending Operations
+Local operations are **pending** by default and won't emit events until committed:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+
+// Operation is pending, no event emitted yet
+text.insert(0, "Hello");
+
+// Explicit commit triggers event emission
+doc.commit();
+```
+
+### Implicit Commits
+Certain operations trigger implicit commits automatically:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+
+text.insert(0, "Hello"); // Pending operation
+
+// These operations trigger implicit commit:
+doc.import(new Uint8Array()); // Implicit commit before import
+// or
+doc.checkout(doc.frontiers()); // Implicit commit before checkout
+// or
+doc.export({ mode: "update" }); // Implicit commit before export
+```
+
+### Transaction Guarantees
 
 - All operations share the same timestamp (if enabled)
 - Operations grouped in a single Change
 - One event emitted after transaction completes
 - Operations committed together at transaction end
+- Pending operations committed implicitly by import/checkout/export
 
 
 ## When to Use Transactions
@@ -101,6 +139,8 @@ Nested transactions are flattened into the parent transaction.
 - Consider sync strategy - smaller transactions for real-time collaboration
 - Remember events are async (emitted after microtask)
 - Use origin parameter to tag and filter events
+- Be aware of implicit commits when using import/checkout/export
+- Explicitly commit when you need immediate event emission
 
 ## Related Documentation
 
