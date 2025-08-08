@@ -8,8 +8,6 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 
 - **Website**: https://loro.dev
 - **GitHub**: https://github.com/loro-dev/loro
-- **Inspector**: https://inspector.loro.dev
-- **Examples**: https://github.com/loro-dev/loro-examples-deno
 
 ## Core Features
 
@@ -17,15 +15,13 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - **Data Types**: Map, List, MovableList, Text (rich/plain), Tree, Counter
 - **Version Control**: Git-like checkout, fork, and merge operations
 - **Time Travel**: Navigate to any point in document history
-- **Rich Text**: Full support for overlapping styles and editor bindings (Quill, ProseMirror, CodeMirror)
-- **Performance**: 10-100x faster import than v0.x, handles 25M+ operations efficiently
+- **Rich Text**: Full support for overlapping styles and editor bindings (ProseMirror, CodeMirror, Lexical)
 
 ## Getting Started
 
 - [Introduction](https://loro.dev/docs): Overview of Loro and its capabilities
 - [Quick Start](https://loro.dev/docs/tutorial/get_started): Installation and basic usage with code examples
 - [Examples](https://loro.dev/docs/examples): Integration libraries and sample applications
-- [LLM Resources](https://loro.dev/docs/llm): AI-friendly documentation
 
 ## Tutorials
 
@@ -93,41 +89,21 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - [Document Size](https://loro.dev/docs/performance/docsize): Storage efficiency analysis
 - [Native Performance](https://loro.dev/docs/performance/native): Rust implementation benchmarks
 
-### Key Metrics
-- B4 dataset (259k ops): 2.3 seconds processing
-- B4x100 (25.9M ops): Successfully handles massive documents
-- Import speed: 10-100x faster than v0.x
-- Document size: Shallow snapshots provide 75% reduction
-
 ## Blog Posts
 
 ### Technical Deep Dives
 - [Loro v1.0 Release](https://loro.dev/blog/v1.0): Major performance improvements and stable format
 - [Rich Text CRDT](https://loro.dev/blog/loro-richtext): Novel algorithm using style anchors
 - [Movable Tree](https://loro.dev/blog/movable-tree): Handling complex tree operations
-- [CRDT RichText](https://loro.dev/blog/crdt-richtext): Peritext and Fugue implementation
 - [Open Source Announcement](https://loro.dev/blog/loro-now-open-source): Loro's journey to open source
 
-## Version History
-
-### Latest Releases
-- [v1.5.0](https://loro.dev/changelog/v1.5.0): Advanced hooks, EphemeralStore, multi-threading
-- [v1.4.7](https://loro.dev/changelog/v1.4.7): Text styling fixes and uncommitted ops access
-- [v1.4.0](https://loro.dev/changelog/v1.4.0): Commit customization and versioning
-- [v1.3.0](https://loro.dev/changelog/v1.3.0): Time travel with revertTo()
-- [v1.2.0](https://loro.dev/changelog/v1.2.0): Deletion tracking and oplog statistics
-- [v1.1.0](https://loro.dev/changelog/v1.1.0): Document forking and container tracking
-- [v1.0.0](https://loro.dev/changelog/v1.0.0-beta): First stable release
-
-### Tools
-- [Inspector v0.1.0](https://loro.dev/changelog/inspector-v0.1.0): Visual debugging tool release
 
 ## Integration Ecosystem
 
 ### Editor Bindings
-- **loro-prosemirror**: ProseMirror/Tiptap integration
-- **loro-codemirror**: CodeMirror 6 integration
-- **Quill**: Native binding support
+- [**loro-prosemirror**](https://github.com/loro-dev/loro-prosemirror): ProseMirror/Tiptap integration
+- [**loro-codemirror**](https://github.com/loro-dev/loro-codemirror): CodeMirror 6 integration
+- [**lexical-loro**](https://github.com/datalayer/lexical-loro)
 
 ### Language Support
 - **Rust**: Native implementation
@@ -136,83 +112,5 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - **Python**: Python bindings
 - **C#**: .NET support
 
-## Use Cases
-
-### Ideal For
-✅ Collaborative document editing (Google Docs-like)
-✅ Real-time multiplayer applications
-✅ Offline-first mobile/desktop apps
-✅ Distributed systems without central coordination
-✅ Applications requiring complete edit history
-✅ Peer-to-peer synchronization scenarios
-
-### Not Suitable For
-❌ Applications requiring hard invariants (e.g., balance ≥ 0)
-❌ Exclusive resource management (booking systems)
-❌ ACID transaction requirements
-❌ Large binary/media streaming
-❌ Bundle-size sensitive applications
-
-## Technical Innovations
-
-### Algorithms
-- **Event Graph Walker (Eg-Walker)**: Efficient CRDT with simple indices
-- **Fugue**: Minimizes text editing anomalies
-- **Movable Tree**: Handles complex tree operations with cycle detection
-- **Style Anchors**: Novel rich text implementation
-
-### Design Principles
-- Separation of OpLog and DocState for flexibility
-- Deterministic container IDs based on context
-- Monotonic merging without rejection
-- Memory-efficient relay servers (OpLog only)
-
-## Installation
-
-```bash
-# NPM/JavaScript
-npm install loro-crdt
-
-# Rust
-cargo add loro
-
-# Swift Package Manager
-dependencies: [
-  .package(url: "https://github.com/loro-dev/loro-swift", from: "1.5.0")
-]
-```
-
-## Basic Usage
-
-```javascript
-import { LoroDoc } from "loro-crdt";
-
-// Create document
-const doc = new LoroDoc();
-
-// Get containers
-const text = doc.getText("content");
-const map = doc.getMap("metadata");
-
-// Make changes
-text.insert(0, "Hello World");
-map.set("author", "Alice");
-
-// Synchronize
-const updates = doc.export({ mode: "update" });
-otherDoc.import(updates);
-```
-
-## About
-
-Created by Zixuan Chen and Leon Zhao in 2022 with the vision of empowering local-first software and simplifying collaborative application development.
-
-## Additional Resources
-
-- [About Loro](https://loro.dev/about): Background and acknowledgments
-- [Changelog](https://loro.dev/changelog): Complete version history
-- [Blog](https://loro.dev/blog): Technical articles and announcements
-
-## Summary
-
-Loro is a production-ready CRDT library that makes building collaborative applications straightforward. It combines theoretical rigor with practical performance, offering features like time travel, version control, and rich text editing while maintaining excellent performance characteristics. The library is particularly suited for applications requiring real-time collaboration, offline editing, and automatic conflict resolution in distributed environments.
+### Tools
+- [Inspector v0.1.0](https://loro.dev/changelog/inspector-v0.1.0): Visual debugging tool release
