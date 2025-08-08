@@ -1,45 +1,170 @@
 ---
-keywords: "crdt, crdts, difficulty, synchronization"
-description: "When Not to Rely on CRDTs"
+keywords: "crdt, limitations, constraints, business logic, invariants"
+description: "Understanding when CRDTs may not be the right solution for your needs"
 ---
 
-# When Not to Rely on CRDTs
+# When Not to Use CRDTs
 
-If there are no concurrent operations, CRDTs and other solutions don't differ
-much. In handling concurrent editing, CRDTs use predefined algorithms to ensure
-strong eventual consistency (i.e., if multiple people receive the same set of
-Ops, they will see the same content). Furthermore, some CRDT algorithms make the
-merge results as close to user expectations as possible.
+CRDTs excel at automatic conflict resolution in collaborative environments. However, they're not always the right solution. This guide helps you identify scenarios where CRDTs might not meet your requirements.
 
-However, its problems include:
+## The Core Limitation
 
-- Difficulty in maintaining user-defined invariants. For instance, in a meeting
-  room reservation scenario, a room can only be booked once. But if CRDTs
-  represent the reservation status, multiple people booking the same room
-  simultaneously may all see a successful operation, but in reality, only one
-  person will have the reservation after synchronization. Thus, other systems
-  are needed to maintain these invariants.
-- Automatic merged results of concurrent edits may violate the schema. For
-  example, automatically merged code edits may not comply with the code's syntax
-  structure, requiring human intervention to adjust. The requirement that a
-  `<figure>` can only contain one `<caption>` might also be violated in
-  concurrent editing (two people inserting a new `<caption>` concurrently). For
-  such scenarios, this issue can be ignored, or `<caption>` can be represented
-  differently (changing `<caption>` from a List element to a Register on a
-  separate Map can prevent this problem).
+CRDTs automatically merge concurrent changes without coordination. This fundamental characteristic creates challenges when your application requires:
+- **Business constraints** that must never be violated
+- **Strict schemas** that must always be valid
+- **Exclusive resources** that can only have one owner
 
-CRDTs alone may not solve all problems in these scenarios. If maintaining these
-invariants is crucial for your application, you might need to combine CRDTs with
-centralized solutions for synchronization. Alternatively, you can implement an
-additional layer on top of the CRDT that derives a view conforming to the
-correct schema or maintaining the required invariants, using the CRDT state as
-the source of truth. This approach can ensure consistency across clients, but
-its suitability depends on your specific use case and user expectations.
+## Common Problem Scenarios
 
-When merging edits from a peer that has been offline for a long time, extensive
-changes may result in an automatically merged state that doesn't meet
-expectations. If your application cannot tolerate such merge results, you
-shouldn't rely solely on CRDT's automatic merging. Instead, detect these
-situations of long-term concurrent edits and provide a diff view to users,
-allowing them to resolve conflicts manually. Fortunately, Loro's internal
-architecture supports implementing such manual conflict resolution logic.
+### 1. Exclusive Resource Management
+
+**Problem**: Multiple users booking the same resource simultaneously.
+
+```ts
+// ❌ With CRDTs: Both users see success, but only one gets the room
+User A: book(room: "A101", time: "2pm") // Success locally
+User B: book(room: "A101", time: "2pm") // Success locally
+// After sync: Conflict! Both bookings exist in the CRDT
+```
+
+**Why CRDTs struggle**: CRDTs merge both operations, violating the "one booking per slot" rule.
+
+**Better alternatives**:
+- Centralized booking server with transactions
+- Distributed consensus (Raft, Paxos)
+- CRDT for UI + server validation for constraints
+
+### 2. Code and Structured Documents
+
+**Problem**: Concurrent edits producing invalid syntax.
+
+```javascript
+// Original code
+function calculate(x) {
+  return x * 2;
+}
+
+// User A adds parameter
+function calculate(x, y) {
+  return x * 2;
+}
+
+// User B adds different parameter
+function calculate(x, z) {
+  return x * 2;
+}
+
+// CRDT merge result (invalid JavaScript!)
+function calculate(x, y, z) {
+  return x * 2;
+}
+```
+
+**Why CRDTs struggle**: Automatic merging doesn't understand language syntax or semantics.
+
+**Better alternatives**:
+- Operational Transformation with syntax awareness
+- Lock-based editing for critical sections
+- CRDT for comments/documentation + locks for code
+
+### 3. Financial Transactions
+
+**Problem**: Account balance constraints.
+
+```ts
+// Account has $100
+User A: withdraw($60) // Sees $100, withdraws $60
+User B: withdraw($60) // Sees $100, withdraws $60
+// After CRDT merge: Account is -$20 (overdraft!)
+```
+
+**Why CRDTs struggle**: Can't enforce invariants like "balance ≥ 0" without coordination.
+
+**Better alternatives**:
+- Traditional database with ACID transactions
+- Event sourcing with command validation
+- Hybrid: CRDT for read, centralized for writes
+
+## When CRDTs Work Well
+
+To provide contrast, CRDTs excel when:
+
+✅ **Eventual consistency is acceptable** - Users can tolerate temporary inconsistencies
+✅ **Conflicts are resolvable** - Merged results are meaningful (e.g., collaborative text)
+✅ **No hard constraints** - No business rules that must never be violated
+✅ **Offline support needed** - Users must work without server connection
+
+## Hybrid Approaches
+
+You don't have to choose all-or-nothing. Consider these patterns:
+
+### 1. CRDT + Validation Layer
+```ts
+class ValidatedDocument {
+  private crdt: LoroDoc;
+  
+  applyChange(change: Change) {
+    // Apply to CRDT (always succeeds)
+    this.crdt.import(change);
+    
+    // Derive valid view (may reject some changes)
+    return this.deriveValidView();
+  }
+  
+  deriveValidView() {
+    // Extract CRDT state and apply business rules
+    // Return sanitized version that meets constraints
+  }
+}
+```
+
+### 2. CRDT for UI, Server for Truth
+```ts
+// Client: Optimistic updates with CRDT
+const localDoc = new LoroDoc();
+localDoc.getText("content").insert(0, "Hello");
+
+// Server: Validate and authoritative state
+server.validate(localDoc.export())
+  .then(approved => localDoc.import(approved))
+  .catch(rejected => localDoc.rollback());
+```
+
+### 3. Scoped CRDTs
+Use CRDTs only for specific features:
+- ✅ CRDT for: Comments, reactions, presence, drafts
+- ❌ Server for: Payments, permissions, critical data
+
+## Decision Framework
+
+Ask yourself these questions:
+
+1. **Can users tolerate conflicts in the merged result?**
+   - Yes → Consider CRDTs
+   - No → Need coordination
+
+2. **Are there inviolable business rules?**
+   - Yes → Need validation layer or server
+   - No → CRDTs might work
+
+3. **Is offline support critical?**
+   - Yes → Consider hybrid approach
+   - No → Server-based might be simpler
+
+4. **How complex is conflict resolution?**
+   - Simple (text merge) → CRDTs work well
+   - Complex (code syntax) → Need specialized tools
+
+## Summary
+
+CRDTs are powerful but not universal. They work best for collaborative features where:
+- Automatic merging produces useful results
+- Business constraints are flexible
+- Offline support is important
+
+For systems with strict invariants, exclusive resources, or complex validation rules, consider:
+- Traditional centralized approaches
+- Hybrid solutions combining CRDTs with validation
+- Scoped use of CRDTs for specific features
+
+Remember: The goal is to build reliable software that meets user needs. Choose the right tool for each part of your system.
