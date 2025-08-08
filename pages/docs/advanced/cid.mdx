@@ -44,53 +44,16 @@ export type ContainerID =
      containers
    - Contains the Operation ID of its creation within its Container ID
 
-## Attached vs Detached Containers
+## Container States and IDs
 
-Containers in Loro exist in two states: **attached** and **detached**.
+The ContainerID is not a random UUID but is deterministically generated based on the container's context. To understand how ContainerIDs work, it's important to first understand container states.
 
-### Detached Containers
+> For a comprehensive guide on containers, including attached vs detached states, see [Container Concepts](/docs/concepts/container).
 
-When you create a container directly using constructors like `new LoroMap()` or `new LoroText()`, the container is **detached**:
-
-- It has not been inserted into any document yet
-- Its ContainerID is a fixed default value
-- The actual ContainerID will be determined when it's inserted into a document
-
-### Attached Containers  
-
-When you get a container through the document API like `doc.getText("text")` or from the return value of `map.setContainer("key", new LoroText())`, the container is **attached**:
-
-- It belongs to a specific document
-- It has a proper ContainerID determined by:
-  - **Root containers**: Named by the string parameter (e.g., "text" in `doc.getText("text")`)
-  - **Normal containers**: Based on the OpID at insertion time
-
-Note: When using `setContainer()`, the container passed as parameter remains detached, but the method returns a new attached container.
-
-### Why This Matters
-
-The ContainerID is not a random UUID. It's deterministically generated:
-- Root-level containers derive their ID from their name
-- Nested containers derive their ID from the operation that created them
-
-This is why a detached container cannot have its final ContainerID until it's actually inserted into a document - we need the insertion context to generate the proper ID.
-
-```ts twoslash
-import { LoroDoc, LoroMap, LoroText } from "loro-crdt";
-// ---cut---
-// Detached container - has default ContainerID
-const detachedMap = new LoroMap();
-
-const doc = new LoroDoc();
-// Attached container - has proper ContainerID
-const attachedMap = doc.getMap("myMap");
-
-// setContainer returns an attached container
-const detachedText = new LoroText();
-const attachedText = attachedMap.setContainer("text", detachedText);
-// detachedText remains detached
-// attachedText is the attached version with proper ContainerID
-```
+Key points about ContainerID generation:
+- **Root containers**: Derive their ID from their name (e.g., "text" in `doc.getText("text")`)
+- **Normal containers**: Derive their ID from the operation (OpID) that created them
+- **Detached containers**: Have a default placeholder ID until they're inserted into a document
 
 ## Container Overwrites
 

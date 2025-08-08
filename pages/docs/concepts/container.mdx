@@ -1,0 +1,149 @@
+# Container
+
+Containers are the fundamental building blocks in Loro for organizing and structuring collaborative data. They provide typed data structures that automatically merge when concurrent edits occur.
+
+## Container Types
+
+Loro provides several container types, each optimized for different use cases:
+
+- **LoroMap**: Key-value pairs with Last-Write-Wins semantics
+- **LoroList**: Ordered sequences that merge concurrent insertions
+- **LoroText**: Text with character-level merging and rich text support
+- **LoroTree**: Hierarchical tree structures with move operations
+- **LoroMovableList**: Lists with reordering capabilities
+- **LoroCounter**: Numerical values with increment/decrement operations
+
+## Container States: Attached vs Detached
+
+Containers in Loro exist in two distinct states that affect their behavior and identity.
+
+### Detached Containers
+
+A container is **detached** when created directly using constructors:
+
+```ts twoslash
+import { LoroMap, LoroText, LoroList } from "loro-crdt";
+// ---cut---
+// These containers are all detached
+const map = new LoroMap();
+const text = new LoroText();
+const list = new LoroList();
+```
+
+Characteristics of detached containers:
+- Not yet part of any document
+- Have a default placeholder ContainerID
+- Can be used as templates or temporary data structures
+- Will get a proper ContainerID when inserted into a document
+
+### Attached Containers
+
+A container becomes **attached** when it's part of a document hierarchy:
+
+```ts twoslash
+import { LoroDoc, LoroMap, LoroText } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// Root containers are immediately attached
+const rootMap = doc.getMap("myMap");
+const rootText = doc.getText("myText");
+
+// Child containers: the returned value is attached
+const detachedChild = new LoroText();
+const attachedChild = rootMap.setContainer("child", detachedChild);
+// Note: detachedChild remains detached
+// attachedChild is the attached version with proper ContainerID
+```
+
+Characteristics of attached containers:
+- Belong to a specific document
+- Have a proper ContainerID that uniquely identifies them
+- Changes are tracked in the document's history
+- Can be synchronized across peers
+
+## Container IDs
+
+Every attached container has a unique ContainerID that identifies it within the distributed system. The ID generation depends on the container type:
+
+- **Root containers**: ID derived from their name (e.g., "myMap" in `doc.getMap("myMap")`)
+- **Child containers**: ID based on the operation that created them (OpID)
+
+This deterministic ID generation ensures that:
+- The same container can be identified across all peers
+- Container IDs are not random but contextually determined
+- A detached container cannot have its final ID until insertion
+
+## Working with Containers
+
+### Creating Root Containers
+
+Root containers are created through the document API and are immediately attached:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// These methods create or get root containers
+const map = doc.getMap("settings");
+const text = doc.getText("content");
+const list = doc.getList("items");
+const tree = doc.getTree("hierarchy");
+```
+
+### Nesting Containers
+
+Containers can be nested to create complex data structures:
+
+```ts twoslash
+import { LoroDoc, LoroMap, LoroList, LoroText } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const rootMap = doc.getMap("root");
+
+// Method 1: Using setContainer (returns attached container)
+const childText = rootMap.setContainer("description", new LoroText());
+
+// Method 2: Using insertContainer for lists
+const list = doc.getList("items");
+const childMap = list.insertContainer(0, new LoroMap());
+```
+
+### Important: Parameter vs Return Value
+
+When using methods like `setContainer()` or `insertContainer()`:
+
+```ts twoslash
+import { LoroDoc, LoroMap, LoroText } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const map = doc.getMap("root");
+
+// The parameter container remains detached
+const detachedText = new LoroText();
+console.log(detachedText.isAttached()); // false
+
+// The returned container is attached
+const attachedText = map.setContainer("text", detachedText);
+console.log(attachedText.isAttached()); // true
+
+// detachedText is still detached!
+console.log(detachedText.isAttached()); // false
+```
+
+## Best Practices
+
+1. **Use attached containers for document data**: Always work with containers returned from document methods or container insertion methods.
+
+2. **Detached containers as templates**: Use detached containers when you need to prepare data before inserting it into the document.
+
+3. **Check attachment status**: Use `isAttached()` method when you need to verify a container's state.
+
+4. **Prefer root-level containers for concurrent initialization**: To avoid container overwrites, initialize containers at the root level when possible.
+
+## Related Concepts
+
+- [Container ID](/docs/advanced/cid): Deep dive into how Container IDs work
+- [Choosing CRDT Types](/docs/concepts/choose_crdt_type): Guide for selecting the right container type
+- [Composition](/docs/tutorial/composition): How to compose containers into complex structures
