@@ -7,6 +7,8 @@ description: "Comprehensive guide to Event Graph Walker (Eg-Walker), a revolutio
 
 Event Graph Walker (Eg-Walker) is a revolutionary CRDT algorithm that fundamentally changes how collaborative editing systems handle concurrent operations. Instead of storing complex CRDT metadata, Eg-Walker enables the use of simple indices by efficiently replaying relevant history when needed.
 
+> **Important Note**: Loro is not a strict implementation of Event Graph Walker. Rather, Loro is heavily inspired by Eg-Walker's design philosophy and incorporates its key insights to achieve similar properties - particularly the ability to use simple indices instead of complex CRDT metadata, and the efficient replay mechanism for handling concurrent operations.
+
 ## The Problem: Complex CRDT Metadata
 
 Traditional CRDTs require extensive metadata to maintain consistency across distributed systems:
@@ -136,11 +138,14 @@ Eg-Walker handles this by:
 
 ## Implementation in Loro
 
-Loro implements Fugue (a modern CRDT algorithm) on top of Eg-Walker, combining:
-- **Fugue's correctness guarantees** for text editing
-- **Eg-Walker's efficiency** in storage and computation
+While Loro is not a pure Eg-Walker implementation, it draws heavily from Eg-Walker's innovations to achieve similar benefits. Loro implements Fugue (a modern CRDT algorithm) with Eg-Walker-inspired optimizations:
 
-This combination provides:
+- **Fugue's correctness guarantees** for text editing
+- **Eg-Walker-inspired efficiency** in storage and computation
+- **Simple index-based operations** at the API level
+- **Smart replay mechanisms** for merging concurrent changes
+
+This hybrid approach provides:
 ```javascript
 // Simple API with powerful internals
 const doc = new Loro();
@@ -188,7 +193,7 @@ The algorithm has been proven to:
 4. **Performance**: Fast local operations, efficient synchronization
 5. **Innovation**: Fundamental rethinking of CRDT implementation
 
-Eg-Walker represents a breakthrough in collaborative editing technology, making CRDTs more practical and performant for real-world applications. By cleverly leveraging the causal history already present in collaborative systems, it achieves the seemingly impossible: simpler data structures with better performance.
+Eg-Walker represents a breakthrough in collaborative editing technology, making CRDTs more practical and performant for real-world applications. While Loro is not a strict Eg-Walker implementation, it has been profoundly influenced by Eg-Walker's design philosophy and achieves many of the same benefits through this inspiration. By cleverly leveraging the causal history already present in collaborative systems, both Eg-Walker and Loro-inspired approaches achieve the seemingly impossible: simpler data structures with better performance.
 
 [Lamport]: https://en.wikipedia.org/wiki/Lamport_timestamp
 [Fugue]: https://arxiv.org/abs/2305.00583
