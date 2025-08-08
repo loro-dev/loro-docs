@@ -26,16 +26,13 @@ A Version Vector is a map from peer IDs to operation counters, explicitly listin
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
+doc.setPeerId("1");
 const text = doc.getText("content");
 text.insert(0, "Hello");
 
 // Get version vector
 const vv = doc.version();
-console.log(vv); // Map { "peer-id" => 1 }
-
-// Check if version includes another
-const otherVV = new Map([["peer-A", 5], ["peer-B", 3]]);
-const includes = doc.vvEq(vv, otherVV);
+console.log(vv.toJSON()); // Map { "1" => 1 }
 ```
 
 ## When to Use Version Vectors
@@ -43,9 +40,8 @@ const includes = doc.vvEq(vv, otherVV);
 Version Vectors are ideal for:
 
 1. **Synchronization protocols** - Determine what updates to send between peers
-2. **Conflict detection** - Identify concurrent operations
-3. **Network communication** - Self-contained version information
-4. **Distributed systems** - Track state across multiple nodes
+2. **Network communication** - Self-contained version information
+3. **Distributed systems** - Track state across multiple nodes
 
 ## Comparison with Frontiers
 
@@ -62,23 +58,8 @@ Version Vectors are ideal for:
 import { LoroDoc } from "loro-crdt";
 
 class SyncProtocol {
-  getUpdatesSince(doc: LoroDoc, remoteVersion: Map<string, number>) {
-    const localVersion = doc.version();
-    
-    // Compare versions to determine what to send
-    const updates: Uint8Array[] = [];
-    for (const [peer, localCounter] of localVersion) {
-      const remoteCounter = remoteVersion.get(peer) || 0;
-      if (localCounter > remoteCounter) {
-        // Remote is missing operations from this peer
-        updates.push(doc.export({ 
-          mode: "update",
-          from: new Map([[peer, remoteCounter]])
-        }));
-      }
-    }
-    
-    return updates;
+  getUpdatesSince(doc: LoroDoc, remoteVersion: VersionVector) {
+    return doc.export({ mode: "updates", from: remoteVersion });
   }
 }
 ```
@@ -93,13 +74,6 @@ const vv = doc.version();
 const frontiers = doc.vvToFrontiers(vv);     // Convert to Frontiers
 const backToVV = doc.frontiersToVV(frontiers); // Convert back
 ```
-
-## Best Practices
-
-- Use Version Vectors for synchronization between peers
-- Convert to Frontiers for efficient storage
-- Include Version Vectors in network protocols for state comparison
-- Be mindful of size growth with many peers
 
 ## Related Documentation
 
