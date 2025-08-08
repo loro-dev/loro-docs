@@ -34,7 +34,7 @@ The [loro-prosemirror](https://github.com/loro-dev/loro-prosemirror) package pro
 
 The ProseMirror binding can also be used with [Tiptap](https://tiptap.dev/), a popular rich text editor built on top of ProseMirror. This means you can easily add collaborative editing capabilities to your Tiptap-based applications.
 
-```ts no_run twoslash
+```ts no_run
 import {
   CursorAwareness,
   LoroCursorPlugin,
@@ -47,9 +47,7 @@ import { LoroDoc } from "loro-crdt";
 import { EditorView } from "prosemirror-view";
 import { EditorState } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
-declare const pmPlugins: any[];
-declare const editorDom: HTMLElement;
-// ---cut---
+
 const doc = new LoroDoc();
 const awareness = new CursorAwareness(doc.peerIdStr);
 const plugins = [
@@ -76,12 +74,12 @@ The [loro-codemirror](https://github.com/loro-dev/loro-codemirror) package provi
 - Cursor awareness
 - Undo/Redo functionality
 
-```ts no_run twoslash
+```ts no_run
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { LoroExtensions } from "loro-codemirror";
 import { Awareness, LoroDoc, UndoManager } from "loro-crdt";
-// ---cut---
+
 const doc = new LoroDoc();
 const awareness = new Awareness(doc.peerIdStr);
 const undoManager = new UndoManager(doc, {});
@@ -316,10 +314,43 @@ const restored = Cursor.decode(bytes);
 const pos = doc.getCursorPos(restored);
 ```
 
+### `toJSON(): string`
+
+Returns the plain text content as a string. This method:
+- Returns only the text content without any formatting marks
+- Is not affected by any rich text attributes (bold, italic, links, etc.)
+- Is equivalent to `toString()` for text containers
+
+If you need rich text information including formatting, use `toDelta()` instead.
+
 ### `toDelta(): Delta<string>[]`
 
-Get the rich text value. It's in
+Get the rich text value with all formatting information. It's in
 [Quill's Delta format](https://quilljs.com/docs/delta/).
+
+Unlike `toJSON()` which returns plain text, `toDelta()` preserves all rich text attributes like bold, italic, links, and custom marks.
+
+Example comparing `toJSON()` vs `toDelta()`:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.configTextStyle({ bold: { expand: "after" } });
+const text = doc.getText("text");
+text.insert(0, "Hello World!");
+text.mark({ start: 0, end: 5 }, "bold", true);
+
+// toJSON returns plain string without marks
+console.log(text.toJSON()); // "Hello World!"
+
+// toDelta returns rich text with formatting
+console.log(text.toDelta());
+// [
+//   { insert: "Hello", attributes: { bold: true } },
+//   { insert: " World!" }
+// ]
+```
 
 ### `mark(range: {start: number, end: number}, key: string, value: any): void`
 

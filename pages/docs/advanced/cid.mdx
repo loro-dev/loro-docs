@@ -44,6 +44,17 @@ export type ContainerID =
      containers
    - Contains the Operation ID of its creation within its Container ID
 
+## Container States and IDs
+
+The ContainerID is not a random UUID but is deterministically generated based on the container's context. To understand how ContainerIDs work, it's important to first understand container states.
+
+> For a comprehensive guide on containers, including attached vs detached states, see [Container Concepts](/docs/concepts/container).
+
+Key points about ContainerID generation:
+- **Root containers**: Derive their ID from their name (e.g., "text" in `doc.getText("text")`)
+- **Normal containers**: Derive their ID from the operation (OpID) that created them
+- **Detached containers**: Have a default placeholder ID until they're inserted into a document
+
 ## Container Overwrites
 
 When initializing child containers in parallel, overwrites can occur instead of
