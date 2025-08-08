@@ -1,3 +1,3 @@
 export default {
-  index: "JavaScript API"
+  js: "JavaScript API"
 }
