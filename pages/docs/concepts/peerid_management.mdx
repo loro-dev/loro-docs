@@ -1,0 +1,660 @@
+# PeerID Management in Loro
+
+## Why Peer Identity Matters in Distributed Systems
+
+In distributed collaborative systems, each participant needs a unique identifier to track their contributions and maintain document consistency. Unlike centralized systems where a server can assign sequential IDs, distributed systems require each peer to independently generate and manage their own identity.
+
+Peer IDs in Loro serve several critical purposes:
+
+1. **Operation Attribution**: Every operation is tagged with the peer ID that created it, enabling tracking of who made which changes
+2. **Conflict Resolution**: When concurrent edits occur, peer IDs help determine operation ordering and merge strategies
+3. **Version Tracking**: The combination of peer ID and counter creates unique operation IDs that form the foundation of Loro's version system
+4. **Synchronization**: Peers use IDs to determine which operations they have and which they need during sync
+
+Without proper peer ID management, distributed documents can become inconsistent, leading to data loss or corruption.
+
+## What Are Peer IDs
+
+A peer ID in Loro is a unique identifier (internally a 64-bit unsigned integer) that represents a single editing session or client instance. Together with a counter that starts at 0 and increments with each operation, it forms the basis for operation IDs:
+
+```ts
+interface OpId {
+  peerId: string | number;  // Unique peer identifier
+  counter: number;           // Monotonically increasing counter
+}
+```
+
+Every operation in Loro has a unique OpId composed of `(peerId, counter)`. For example:
+- Peer "alice" creates operations: (alice, 0), (alice, 1), (alice, 2)...
+- Peer "bob" creates operations: (bob, 0), (bob, 1), (bob, 2)...
+
+This ensures global uniqueness without coordination between peers.
+
+## How Loro Assigns Peer IDs
+
+### Automatic Assignment (Default)
+
+By default, Loro automatically generates a random peer ID when you create a new `LoroDoc`:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc1 = new LoroDoc(); // Gets a random peer ID
+const doc2 = new LoroDoc(); // Gets a different random peer ID
+
+// Each document instance has its own unique peer ID
+console.log(doc1.peerId() !== doc2.peerId()); // true
+```
+
+This automatic assignment ensures:
+- No coordination needed between peers
+- Extremely low probability of collisions (2^64 possible values)
+- Each editing session gets a unique identity
+- Safe for immediate use without configuration
+
+**Important**: A new random peer ID is assigned every time you create a `LoroDoc`, even when loading the same document:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const snapshot = doc.export({ mode: "snapshot" });
+
+// Loading the same document in a new instance
+const doc2 = LoroDoc.fromSnapshot(snapshot);
+// doc2 has a different peer ID than doc!
+```
+
+### Manual Assignment
+
+You can manually set a peer ID when you need consistent identity across sessions or specific ID schemes:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.setPeerId("alice");  // String IDs are converted to numbers internally
+
+// Or use numeric IDs directly
+doc.setPeerId(12345);
+```
+
+**Warning**: Manual peer ID assignment requires careful management to avoid conflicts. See the "Strategies to Avoid Conflicts" section below.
+
+## The Counter System for Operations
+
+Each peer maintains a local counter that starts at 0 and increments with every operation:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.setPeerId("alice");
+
+const text = doc.getText("text");
+text.insert(0, "H");    // Creates operation (alice, 0)
+text.insert(1, "i");    // Creates operation (alice, 1)
+text.insert(2, "!");    // Creates operation (alice, 2)
+
+// The counter continues incrementing throughout the session
+doc.commit();
+console.log(doc.version()); // { alice: 3 }
+```
+
+Key properties of the counter system:
+
+1. **Monotonic**: Counters only increase, never decrease or reset
+2. **Continuous**: No gaps in the sequence (0, 1, 2, 3...)
+3. **Per-peer**: Each peer has its own independent counter
+4. **Persistent**: The counter continues from where it left off when resuming editing
+
+This design enables efficient synchronization - peers can quickly determine missing operations by comparing version vectors.
+
+## Strategies to Avoid Peer ID Conflicts
+
+Peer ID conflicts occur when two different peers use the same ID, potentially causing:
+- Duplicate operation IDs
+- Document inconsistency
+- Lost edits
+- Synchronization failures
+
+### Strategy 1: Use Automatic Assignment (Recommended)
+
+The simplest and safest approach is to let Loro handle peer ID generation:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+// Safe: Each instance gets a unique ID
+const doc1 = new LoroDoc();
+const doc2 = new LoroDoc();
+const doc3 = new LoroDoc();
+```
+
+### Strategy 2: UUID-Based Manual IDs
+
+When you need predictable IDs, use UUIDs or similar globally unique identifiers:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare function generateUUID(): string;
+// ---cut---
+const doc = new LoroDoc();
+const uniqueId = generateUUID(); // e.g., "550e8400-e29b-41d4-a716-446655440000"
+doc.setPeerId(uniqueId);
+```
+
+### Strategy 3: Structured ID Schemes
+
+For applications needing meaningful IDs, use a structured approach:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+// Include device ID, timestamp, and random component
+const deviceId = "device123";
+const timestamp = Date.now();
+const random = Math.random().toString(36).substring(2);
+const peerId = `${deviceId}-${timestamp}-${random}`;
+
+const doc = new LoroDoc();
+doc.setPeerId(peerId);
+```
+
+### Strategy 4: Centralized ID Assignment
+
+In some architectures, a server can assign peer IDs:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare function requestPeerIdFromServer(): Promise<string>;
+// ---cut---
+async function initializeDoc() {
+  const doc = new LoroDoc();
+  const assignedId = await requestPeerIdFromServer();
+  doc.setPeerId(assignedId);
+  return doc;
+}
+```
+
+### Common Pitfalls to Avoid
+
+**Never do this:**
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare const userId: string;
+// ---cut---
+// BAD: Same user might have multiple devices/tabs
+const doc = new LoroDoc();
+doc.setPeerId(userId);
+
+// BAD: Fixed IDs across all instances
+const doc2 = new LoroDoc();
+doc2.setPeerId("frontend-app");
+
+// BAD: Reusing IDs without proper management
+function createDoc() {
+  const doc = new LoroDoc();
+  doc.setPeerId("1"); // Same ID every time!
+  return doc;
+}
+```
+
+## Best Practices for Peer ID Management
+
+### 1. Initial Document State
+
+When documents need initial content, don't create it in every peer:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+// WRONG: Each peer creates duplicate initial content
+function initializeDoc() {
+  const doc = new LoroDoc();
+  const text = doc.getText("content");
+  text.insert(0, "Initial content"); // Different peer ID each time!
+  return doc;
+}
+
+// RIGHT: Load from a shared snapshot
+const INITIAL_SNAPSHOT = new Uint8Array([/* ... */]);
+function initializeDoc() {
+  const doc = LoroDoc.fromSnapshot(INITIAL_SNAPSHOT);
+  return doc;
+}
+```
+
+### 2. Peer ID Caching
+
+If you must reuse peer IDs across sessions, implement proper caching:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+class PeerIdManager {
+  private availableIds: Set<string> = new Set();
+  private usedIds: Map<string, string> = new Map(); // tabId -> peerId
+  
+  async acquirePeerId(tabId: string): Promise<string> {
+    // Try to get a cached ID
+    if (this.availableIds.size > 0) {
+      const peerId = this.availableIds.values().next().value;
+      this.availableIds.delete(peerId);
+      this.usedIds.set(tabId, peerId);
+      return peerId;
+    }
+    
+    // Generate new ID if none available
+    const newId = crypto.randomUUID();
+    this.usedIds.set(tabId, newId);
+    return newId;
+  }
+  
+  releasePeerId(tabId: string) {
+    const peerId = this.usedIds.get(tabId);
+    if (peerId) {
+      this.usedIds.delete(tabId);
+      this.availableIds.add(peerId);
+    }
+  }
+}
+```
+
+### 3. Tracking Peer-to-User Mappings
+
+Store peer-to-user associations within the document for attribution:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+interface UserInfo {
+  name: string;
+  email: string;
+}
+declare function getCurrentUser(): UserInfo;
+// ---cut---
+const doc = new LoroDoc();
+
+// Track first commit from each peer
+doc.subscribeFirstCommitFromPeer((event) => {
+  const userInfo = getCurrentUser();
+  doc.getMap("peerInfo").set(event.peer, {
+    userId: userInfo.name,
+    email: userInfo.email,
+    firstSeen: Date.now()
+  });
+});
+```
+
+### 4. Monitoring Peer ID Usage
+
+Track active peers and their operation counts:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+function analyzePeerActivity() {
+  const version = doc.version();
+  const peerStats = [];
+  
+  for (const [peerId, counter] of Object.entries(version)) {
+    peerStats.push({
+      peerId,
+      operationCount: counter,
+      percentage: (counter / doc.opCount()) * 100
+    });
+  }
+  
+  return peerStats.sort((a, b) => b.operationCount - a.operationCount);
+}
+```
+
+## Impact on Storage and Performance
+
+### Storage Considerations
+
+Peer IDs affect document size in several ways:
+
+1. **Version Vectors**: Grow linearly with number of unique peer IDs
+2. **Operation Metadata**: Each operation stores its peer ID
+3. **Dependency Tracking**: Changes reference peer IDs in dependencies
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// Many peer IDs = larger version vectors
+function checkStorageImpact() {
+  const version = doc.version();
+  const peerCount = Object.keys(version).length;
+  
+  console.log(`Active peers: ${peerCount}`);
+  console.log(`Version vector size: ${peerCount * 16} bytes (approx)`);
+  
+  // Export size grows with peer count
+  const snapshot = doc.export({ mode: "snapshot" });
+  console.log(`Snapshot size: ${snapshot.byteLength} bytes`);
+}
+```
+
+### Performance Implications
+
+1. **Sync Performance**: More peer IDs mean larger version vectors to compare
+2. **Import Performance**: Checking for duplicate operations is O(1) per operation
+3. **Memory Usage**: Each peer's operations are tracked separately
+
+### Optimization Strategies
+
+1. **Use Frontiers Instead of Version Vectors**:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// More compact than version vectors
+const frontiers = doc.frontiers();
+const versionVector = doc.version();
+
+// Frontiers are typically much smaller
+console.log(`Frontiers: ${JSON.stringify(frontiers).length} bytes`);
+console.log(`Version Vector: ${JSON.stringify(versionVector).length} bytes`);
+```
+
+2. **Consolidate History with Shallow Snapshots**:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+
+// Remove old peer IDs from history
+const shallowSnapshot = doc.export({
+  mode: "shallow-snapshot",
+  frontiers: doc.oplogFrontiers()
+});
+
+// New document has same state but minimal history
+const optimizedDoc = new LoroDoc();
+optimizedDoc.import(shallowSnapshot);
+```
+
+## Code Examples for Different Scenarios
+
+### Scenario 1: Real-time Collaborative Editor
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare class WebSocket {
+  send(data: any): void;
+  addEventListener(event: string, handler: (data: any) => void): void;
+}
+// ---cut---
+class CollaborativeEditor {
+  private doc: LoroDoc;
+  private ws: WebSocket;
+  
+  constructor() {
+    this.doc = new LoroDoc();
+    // Let Loro auto-generate a unique peer ID
+    
+    this.ws = new WebSocket();
+    this.setupSync();
+    this.trackPeerInfo();
+  }
+  
+  private setupSync() {
+    // Send local updates to peers
+    this.doc.subscribeLocalUpdates((update) => {
+      this.ws.send({
+        type: "update",
+        data: update,
+        peerId: this.doc.peerId()
+      });
+    });
+    
+    // Receive updates from peers
+    this.ws.addEventListener("message", (event) => {
+      if (event.data.type === "update") {
+        this.doc.import(event.data.data);
+      }
+    });
+  }
+  
+  private trackPeerInfo() {
+    // Store peer metadata on first commit
+    this.doc.subscribeFirstCommitFromPeer((event) => {
+      const metadata = this.doc.getMap("peers");
+      metadata.set(event.peer, {
+        joinedAt: Date.now(),
+        isOnline: true
+      });
+    });
+  }
+}
+```
+
+### Scenario 2: Offline-First Application
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare const localStorage: Storage;
+// ---cut---
+class OfflineFirstDoc {
+  private doc: LoroDoc;
+  private peerId: string;
+  
+  async initialize() {
+    this.doc = new LoroDoc();
+    
+    // Restore peer ID from storage or generate new
+    this.peerId = await this.getOrCreatePeerId();
+    this.doc.setPeerId(this.peerId);
+    
+    // Load cached document state
+    await this.loadFromCache();
+  }
+  
+  private async getOrCreatePeerId(): Promise<string> {
+    const stored = localStorage.getItem("loro-peer-id");
+    if (stored) {
+      return stored;
+    }
+    
+    // Generate new ID with device info
+    const deviceId = navigator.userAgent.substring(0, 20);
+    const timestamp = Date.now();
+    const random = Math.random().toString(36);
+    const newId = `${deviceId}-${timestamp}-${random}`;
+    
+    localStorage.setItem("loro-peer-id", newId);
+    return newId;
+  }
+  
+  private async loadFromCache() {
+    const cached = localStorage.getItem("loro-document");
+    if (cached) {
+      const snapshot = new Uint8Array(JSON.parse(cached));
+      this.doc.import(snapshot);
+    }
+  }
+  
+  async save() {
+    const snapshot = this.doc.export({ mode: "snapshot" });
+    localStorage.setItem("loro-document", 
+      JSON.stringify(Array.from(snapshot)));
+  }
+}
+```
+
+### Scenario 3: Server-Side Document Processing
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+interface DocumentUpdate {
+  peerId: string;
+  updates: Uint8Array;
+}
+// ---cut---
+class DocumentServer {
+  private documents: Map<string, LoroDoc> = new Map();
+  
+  processUpdate(docId: string, update: DocumentUpdate) {
+    let doc = this.documents.get(docId);
+    
+    if (!doc) {
+      doc = new LoroDoc();
+      // Server uses consistent peer ID for its operations
+      doc.setPeerId(`server-${docId}`);
+      this.documents.set(docId, doc);
+    }
+    
+    // Import client update
+    const importStatus = doc.import(update.updates);
+    
+    // Log peer activity
+    this.logPeerActivity(docId, update.peerId, importStatus);
+    
+    // Perform server-side validation or enrichment
+    if (this.needsServerProcessing(doc)) {
+      this.performServerOperations(doc);
+    }
+    
+    return doc.export({ mode: "update" });
+  }
+  
+  private logPeerActivity(
+    docId: string, 
+    peerId: string, 
+    status: any
+  ) {
+    console.log(`Document ${docId}: Peer ${peerId} contributed`, {
+      successful: Object.keys(status.success).length,
+      pending: status.pending ? Object.keys(status.pending).length : 0
+    });
+  }
+  
+  private needsServerProcessing(doc: LoroDoc): boolean {
+    // Check if document needs server-side processing
+    return doc.getMap("config").get("requiresValidation") === true;
+  }
+  
+  private performServerOperations(doc: LoroDoc) {
+    // Server performs its own operations with its peer ID
+    const metadata = doc.getMap("serverMetadata");
+    metadata.set("lastProcessed", Date.now());
+    metadata.set("version", "1.0");
+    doc.commit();
+  }
+}
+```
+
+### Scenario 4: Multi-Tab Synchronization
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare class BroadcastChannel {
+  constructor(name: string);
+  postMessage(data: any): void;
+  addEventListener(event: string, handler: (e: any) => void): void;
+}
+// ---cut---
+class MultiTabDocument {
+  private doc: LoroDoc;
+  private channel: BroadcastChannel;
+  private tabId: string;
+  private isPrimary: boolean = false;
+  
+  constructor() {
+    this.doc = new LoroDoc();
+    this.tabId = this.generateTabId();
+    this.channel = new BroadcastChannel("loro-sync");
+    
+    this.initializePeerIdStrategy();
+    this.setupCrossTabSync();
+  }
+  
+  private generateTabId(): string {
+    return `tab-${Date.now()}-${Math.random()}`;
+  }
+  
+  private async initializePeerIdStrategy() {
+    // Try to become primary tab
+    const primaryLock = await this.tryAcquirePrimaryLock();
+    
+    if (primaryLock) {
+      // Primary tab uses a stable peer ID
+      this.isPrimary = true;
+      this.doc.setPeerId("primary-tab");
+    } else {
+      // Secondary tabs use unique IDs
+      this.doc.setPeerId(this.tabId);
+    }
+  }
+  
+  private async tryAcquirePrimaryLock(): Promise<boolean> {
+    // Simple lock using localStorage
+    const lock = localStorage.getItem("primary-tab-lock");
+    const now = Date.now();
+    
+    if (!lock || JSON.parse(lock).expires < now) {
+      localStorage.setItem("primary-tab-lock", JSON.stringify({
+        tabId: this.tabId,
+        expires: now + 5000 // 5 second lease
+      }));
+      
+      // Renew lease periodically
+      setInterval(() => this.renewPrimaryLock(), 4000);
+      return true;
+    }
+    
+    return false;
+  }
+  
+  private renewPrimaryLock() {
+    if (this.isPrimary) {
+      localStorage.setItem("primary-tab-lock", JSON.stringify({
+        tabId: this.tabId,
+        expires: Date.now() + 5000
+      }));
+    }
+  }
+  
+  private setupCrossTabSync() {
+    // Broadcast local changes
+    this.doc.subscribeLocalUpdates((update) => {
+      this.channel.postMessage({
+        type: "update",
+        tabId: this.tabId,
+        data: update
+      });
+    });
+    
+    // Receive changes from other tabs
+    this.channel.addEventListener("message", (event) => {
+      if (event.data.type === "update" && 
+          event.data.tabId !== this.tabId) {
+        this.doc.import(event.data.data);
+      }
+    });
+  }
+}
+```
+
+## Summary
+
+Peer ID management is fundamental to Loro's distributed architecture. Key points to remember:
+
+1. **Default to automatic assignment** unless you have specific requirements
+2. **Never reuse peer IDs** across parallel sessions without proper coordination
+3. **Track peer-to-user mappings** within the document for attribution
+4. **Consider storage impact** when dealing with many unique peer IDs
+5. **Use structured ID schemes** when manual assignment is necessary
+6. **Implement proper locking** for peer ID reuse scenarios
+7. **Monitor peer proliferation** and consolidate history when needed
+
+By following these practices, you can build robust collaborative applications that maintain consistency across all peers while optimizing for performance and storage efficiency.
