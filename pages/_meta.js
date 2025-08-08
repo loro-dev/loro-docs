@@ -13,6 +13,10 @@ export default {
     title: "Docs",
     type: "page"
   },
+  api: {
+    title: "API",
+    type: "page"
+  },
   blog: {
     title: "Blog",
     type: "page"
