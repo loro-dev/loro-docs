@@ -52,18 +52,6 @@ Version Vectors are ideal for:
 | **Use Case** | Synchronization | Checkpoints |
 | **History Required** | No | Yes, for full information |
 
-## Practical Example: Synchronization
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-class SyncProtocol {
-  getUpdatesSince(doc: LoroDoc, remoteVersion: VersionVector) {
-    return doc.export({ mode: "updates", from: remoteVersion });
-  }
-}
-```
-
 ## Conversion with Frontiers
 
 ```ts twoslash

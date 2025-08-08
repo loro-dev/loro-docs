@@ -42,12 +42,6 @@ doc.commit();  // Change #1
 
 text.insert(3, "def");
 doc.commit();  // Merges with #1 (same peer, consecutive)
-
-// Transaction = guaranteed single Change
-doc.transact(() => {
-  text.insert(0, "Hello");
-  text.insert(5, " World");
-});
 ```
 
 ## When New Changes Are Created
@@ -60,17 +54,17 @@ doc.transact(() => {
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
-doc.setText("text").insert(0, "v1");
+doc.getText("text").insert(0, "v1");
 doc.commit(); // Change #1
 
 // Import from another peer
 const doc2 = new LoroDoc();
-doc2.setText("text").insert(0, "v1");
-const remote = doc2.export({ mode: "updates" });
+doc2.getText("text").insert(0, "v1");
+const remote = doc2.export({ mode: "update" });
 doc.import(remote);
 
 // Next commit creates new Change (dependency on remote)
-doc.setText("text").insert(0, "v2");
+doc.getText("text").insert(0, "v2");
 doc.commit(); // Change #2
 ```
 
@@ -80,31 +74,6 @@ doc.commit(); // Change #2
 - **History**: Changes track logical units of work
 - **Sync**: Dependencies ensure causal ordering
 - **Storage**: Auto-merging reduces metadata overhead
-
-## Code Example
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-// ---cut---
-const doc = new LoroDoc();
-doc.setPeerId("alice");
-
-// Real-time typing - operations merge
-"Hello".split("").forEach(char => {
-  doc.getText("text").insert(0, char);
-  doc.commit();
-});
-// Likely creates just 1 Change due to merging
-
-// View Change history
-const changes = doc.getAllChanges();
-for (const [peerId, peerChanges] of changes) {
-  for (const change of peerChanges) {
-    console.log(`${change.length} ops, deps: ${change.deps.length}`);
-  }
-}
-```
-
 
 ## Related Documentation
 

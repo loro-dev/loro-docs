@@ -7,8 +7,8 @@ description: "Understanding Loro's architectural separation of OpLog and DocStat
 
 ## Quick Reference
 
-**OpLog** = Sequence of events/operations that compose the document history
-**DocState** = Current materialized state of the document
+- **OpLog** = Sequence of events/operations that compose the document history
+- **DocState** = Current materialized state of the document
 
 This separation enables time travel, efficient sync, and flexible storage strategies.
 
@@ -79,7 +79,7 @@ const update = doc.export({ mode: "update" });
 const snapshot = doc.export({ mode: "snapshot" });
 
 // Shallow: Minimal OpLog + DocState (fast startup)
-const shallow = doc.export({ mode: "shallow-snapshot", since: doc.frontiers() });
+const shallow = doc.export({ mode: "shallow-snapshot", frontiers: doc.frontiers() });
 ```
 
 ## Common Patterns

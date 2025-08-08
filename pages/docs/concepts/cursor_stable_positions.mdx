@@ -40,7 +40,7 @@ text.insert(0, "ABC");
 const cursor = text.getCursor(1, -1); // Before 'B'
 text.insert(1, "X"); // Insert at cursor
 // Result: "AXBC", cursor still before 'B'
-const pos = text.getCursorPos(cursor);
+const pos = doc.getCursorPos(cursor!);
 console.log(pos); // { offset: 2, side: Side.Before }
 ```
 
@@ -69,40 +69,6 @@ list.insert(0, ["a", "b", "c"]);
 
 const cursor = list.getCursor(0, 1); // After "a"
 list.insert(0, "new"); // Cursor adjusts automatically
-```
-
-## Code Example
-
-```ts twoslash
-import { LoroDoc, LoroText, Cursor } from "loro-crdt";
-class CollaborativeSelection {
-  private anchor!: Cursor;
-  private head!: Cursor;
-  
-  constructor(
-    private doc: LoroDoc,
-    private text: LoroText
-  ) {}
-
-  setSelection(start: number, end: number) {
-    this.anchor = this.text.getCursor(start, -1);
-    this.head = this.text.getCursor(end, 1);
-  }
-
-  getSelection() {
-    const anchorPos = this.doc.getCursorPos(this.anchor);
-    const headPos = this.doc.getCursorPos(this.head);
-    
-    // Update cursors if optimized versions available
-    if (anchorPos.update) this.anchor = anchorPos.update;
-    if (headPos.update) this.head = headPos.update;
-    
-    return {
-      start: Math.min(anchorPos.offset, headPos.offset),
-      end: Math.max(anchorPos.offset, headPos.offset)
-    };
-  }
-}
 ```
 
 ## Related Documentation
