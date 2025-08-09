@@ -3800,7 +3800,7 @@ Creates a child node.
 **Returns:** New node's handler
 
 **Example:**
-```ts twoslash
+```typescript
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3822,7 +3822,7 @@ Moves this node to a new parent.
 - `index` - Position among siblings
 
 **Example:**
-```ts twoslash
+```typescript
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -4755,7 +4755,7 @@ Small helpers for type checks and IDs. See [Container IDs](/docs/advanced/cid) a
 
 ### Type Checking
 
-```ts twoslash
+```typescript
 import { LoroDoc, isContainer, isContainerId, getType } from "loro-crdt";
 
 const doc = new LoroDoc();
