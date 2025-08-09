@@ -4537,57 +4537,248 @@ Local undo operates on your own changes without breaking collaboration. See [Und
 
 ### UndoManager
 
-Provides local undo/redo functionality:
+Provides local undo/redo functionality.
 
+<Method id="UndoManager.constructor">
 ```typescript
+constructor(doc: LoroDoc, config: UndoConfig)
+```
+</Method>
+<Indent>
+Creates a new UndoManager instance.
+
+**Parameters:**
+- `doc` - The LoroDoc to manage undo/redo for
+- `config` - Configuration options
+  - `mergeInterval?` - Time in ms to merge consecutive operations (default: 1000)
+  - `maxUndoSteps?` - Maximum number of undo steps to keep (default: 100)
+  - `excludeOriginPrefixes?` - Array of origin prefixes to exclude from undo
+  - `onPush?` - Callback when adding to undo stack
+  - `onPop?` - Callback when undoing/redoing
+
+**Example:**
+```ts twoslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 
 const doc = new LoroDoc();
-// Create undo manager
 const undo = new UndoManager(doc, {
-  mergeInterval: 1000,        // Merge changes within 1 second
-  maxUndoSteps: 100,          // Maximum undo stack size
-  excludeOriginPrefixes: ["sync-"],  // Ignore changes with these origins
+  mergeInterval: 1000,
+  maxUndoSteps: 100,
+  excludeOriginPrefixes: ["sync-"]
 });
-
-// Perform undo/redo
-if (undo.canUndo()) {
-  undo.undo();
-}
-
-if (undo.canRedo()) {
-  undo.redo();
-}
 ```
+</Indent>
 
-### Grouping Operations
-
-Group multiple operations into a single undo step:
-
+<Method id="UndoManager.undo">
 ```typescript
+undo(): boolean
+```
+</Method>
+<Indent>
+Undo the last operation.
+
+**Returns:** True if undo was successful
+
+**Example:**
+```ts twoslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
 const undo = new UndoManager(doc, {});
 const text = doc.getText("text");
-const map = doc.getMap("map");
-
-// Usage example:
-undo.groupStart();
 text.insert(0, "Hello");
 doc.commit();
-map.set("key", "value");
-doc.commit();
-undo.groupEnd();
 
-// All three operations will be undone together
-undo.undo();
+// Usage example:
+const success = undo.undo();
+console.log(success); // true
 ```
+</Indent>
+
+<Method id="UndoManager.redo">
+```typescript
+redo(): boolean
+```
+</Method>
+<Indent>
+Redo the last undone operation.
+
+**Returns:** True if redo was successful
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+const text = doc.getText("text");
+text.insert(0, "Hello");
+doc.commit();
+undo.undo();
+
+// Usage example:
+const success = undo.redo();
+console.log(success); // true
+```
+</Indent>
+
+<Method id="UndoManager.canUndo">
+```typescript
+canUndo(): boolean
+```
+</Method>
+<Indent>
+Check if undo is available.
+
+**Returns:** True if can undo
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+if (undo.canUndo()) {
+  undo.undo();
+}
+```
+</Indent>
+
+<Method id="UndoManager.canRedo">
+```typescript
+canRedo(): boolean
+```
+</Method>
+<Indent>
+Check if redo is available.
+
+**Returns:** True if can redo
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+if (undo.canRedo()) {
+  undo.redo();
+}
+```
+</Indent>
+
+<Method id="UndoManager.peer">
+```typescript
+peer(): PeerID
+```
+</Method>
+<Indent>
+Get the peer ID of the undo manager.
+
+**Returns:** The peer ID
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+const peerId = undo.peer();
+console.log(peerId); // e.g., "123456"
+```
+</Indent>
+
+<Method id="UndoManager.setMaxUndoSteps">
+```typescript
+setMaxUndoSteps(steps: number): void
+```
+</Method>
+<Indent>
+Set the maximum number of undo steps.
+
+**Parameters:**
+- `steps` - Maximum number of undo steps
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+undo.setMaxUndoSteps(50);
+```
+</Indent>
+
+<Method id="UndoManager.setMergeInterval">
+```typescript
+setMergeInterval(interval: number): void
+```
+</Method>
+<Indent>
+Set the merge interval for grouping operations.
+
+**Parameters:**
+- `interval` - Merge interval in milliseconds
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+undo.setMergeInterval(2000); // 2 seconds
+```
+</Indent>
+
+<Method id="UndoManager.addExcludeOriginPrefix">
+```typescript
+addExcludeOriginPrefix(prefix: string): void
+```
+</Method>
+<Indent>
+Add a prefix to exclude from undo stack.
+
+**Parameters:**
+- `prefix` - Origin prefix to exclude
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+undo.addExcludeOriginPrefix("sync-");
+undo.addExcludeOriginPrefix("import-");
+```
+</Indent>
+
+<Method id="UndoManager.clear">
+```typescript
+clear(): void
+```
+</Method>
+<Indent>
+Clear the undo and redo stacks.
+
+**Example:**
+```ts twoslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+
+// Usage example:
+undo.clear();
+```
+</Indent>
 
 ### Custom Undo Handlers
 
 Handle cursor restoration and side effects:
 
-```typescript
+```ts twoslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
 declare function saveCursorPositions(): any;
@@ -4753,110 +4944,372 @@ type Delta<T> =
 
 Small helpers for type checks and IDs. See [Container IDs](/docs/advanced/cid) and [Versioning Deep Dive](/docs/advanced/version_deep_dive) for frontiers/version encoding.
 
-### Type Checking
-
-```ts twoslash
-import { LoroDoc, isContainer, isContainerId, getType } from "loro-crdt";
-
-const doc = new LoroDoc();
-// Check if value is a container
-const map = doc.getMap("map");
-console.log(isContainer(map));        // true
-console.log(isContainer("string"));   // false
-
-// Check if string is a container ID
-console.log(isContainerId("cid:root-map:Map"));  // true
-console.log(isContainerId("regular-string"));     // false
-
-// Get type of value
-console.log(getType(map));           // "Map"
-console.log(getType("string"));      // "Json"
-console.log(getType(doc.getText("text")));  // "Text"
-```
-
-### ID Creation
-
-```typescript
-import { newContainerID, newRootContainerID } from "loro-crdt";
-
-// Create container ID from operation ID
-const opId = { peer: "1" as const, counter: 100 };
-const containerId = newContainerID(opId, "List");
-// "cid:100@1:List"
-
-// Create root container ID
-const rootId = newRootContainerID("myMap", "Map");
-// "cid:root-myMap:Map"
-```
-
-### ID Parsing
-
-```typescript
-import { idStrToId } from "loro-crdt";
-
-const op = idStrToId("0@1"); // { peer: "1", counter: 0 }
-```
-
 ### Frontier Encoding
 
+<Method id="encodeFrontiers">
 ```typescript
-import { LoroDoc, encodeFrontiers, decodeFrontiers } from "loro-crdt";
+encodeFrontiers(frontiers: OpId[]): Uint8Array
+```
+</Method>
+<Indent>
+Encode frontiers for efficient transmission.
+
+**Parameters:**
+- `frontiers` - Array of operation IDs representing frontiers
+
+**Returns:** Encoded bytes
+
+**Example:**
+```ts twoslash
+import { LoroDoc, encodeFrontiers } from "loro-crdt";
 
 const doc = new LoroDoc();
-// Encode frontiers for transmission
 const frontiers = doc.frontiers();
 const encoded = encodeFrontiers(frontiers);
-
-// Decode frontiers
-const decoded = decodeFrontiers(encoded);
+// Send encoded to remote peers
 ```
+</Indent>
+
+<Method id="decodeFrontiers">
+```typescript
+decodeFrontiers(bytes: Uint8Array): OpId[]
+```
+</Method>
+<Indent>
+Decode frontiers from bytes.
+
+**Parameters:**
+- `bytes` - Encoded frontier bytes
+
+**Returns:** Array of operation IDs
+
+**Example:**
+```ts twoslash
+import { decodeFrontiers } from "loro-crdt";
+
+declare const encodedData: Uint8Array;
+const frontiers = decodeFrontiers(encodedData);
+console.log(frontiers); // [{ peer: "1", counter: 10 }, ...]
+```
+</Indent>
+
+### Debugging
+
+<Method id="setDebug">
+```typescript
+setDebug(): void
+```
+</Method>
+<Indent>
+Enable debug mode for detailed logging.
+
+**Example:**
+```ts twoslash
+import { setDebug } from "loro-crdt";
+
+// Enable debug logging
+setDebug();
+```
+</Indent>
+
+<Method id="LORO_VERSION">
+```typescript
+LORO_VERSION(): string
+```
+</Method>
+<Indent>
+Get the current Loro version.
+
+**Returns:** Version string
+
+**Example:**
+```ts twoslash
+import { LORO_VERSION } from "loro-crdt";
+
+const version = LORO_VERSION();
+console.log("Loro version:", version);
+```
+</Indent>
+
+### Import Blob Metadata
+
+<Method id="decodeImportBlobMeta">
+```typescript
+decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata
+```
+</Method>
+<Indent>
+Decode metadata from an import blob.
+
+**Parameters:**
+- `blob` - The import blob bytes
+- `check_checksum` - Whether to verify checksum
+
+**Returns:** Import blob metadata
+
+**Example:**
+```ts twoslash
+import { decodeImportBlobMeta } from "loro-crdt";
+
+declare const blob: Uint8Array;
+const metadata = decodeImportBlobMeta(blob, true);
+console.log("Blob metadata:", metadata);
+```
+</Indent>
 
 ---
 
 ## EphemeralStore
 
-Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for 
-concepts and usage patterns:
+Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns.
 
-```ts no_run twoslash
-import { EphemeralStore } from "loro-crdt";
+### EphemeralStoreWasm
 
-// Assume we have:
-declare const websocket: {
-  send: (data: Uint8Array) => void;
-  on: (event: string, handler: (data: any) => void) => void;
-};
+<Method id="EphemeralStoreWasm.constructor">
+```typescript
+constructor(timeout: number)
+```
+</Method>
+<Indent>
+Creates a new EphemeralStore instance.
+
+**Parameters:**
+- `timeout` - Duration in milliseconds. A peer's state is considered outdated if its last update is older than this timeout.
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
 
 // Create ephemeral store with 30 second timeout
-const store = new EphemeralStore(30000);
+const store = new EphemeralStoreWasm(30000);
+```
+</Indent>
 
-// Set ephemeral values
+<Method id="EphemeralStoreWasm.set">
+```typescript
+set(key: string, value: any): void
+```
+</Method>
+<Indent>
+Set an ephemeral value.
+
+**Parameters:**
+- `key` - The key to set
+- `value` - The value to store
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+
+// Usage example:
 store.set("cursor", { line: 10, column: 5 });
 store.set("selection", { start: 0, end: 10 });
 store.set("user", { name: "Alice", color: "#ff0000" });
-
-// Get values
-const cursor = store.get("cursor");
-
-// Subscribe to changes
-store.subscribe((event) => {
-  console.log("Ephemeral state changed:", event);
-});
-
-// Subscribe to local updates for syncing
-store.subscribeLocalUpdates((data) => {
-  // Send to remote peers
-  websocket.send(data);
-});
-
-// Apply remote updates
-websocket.on('message', (data) => {
-  store.apply(new Uint8Array(data));
-});
-
-// Clean up
-store.destroy();
 ```
+</Indent>
+
+<Method id="EphemeralStoreWasm.get">
+```typescript
+get(key: string): any
+```
+</Method>
+<Indent>
+Get an ephemeral value.
+
+**Parameters:**
+- `key` - The key to get
+
+**Returns:** The stored value or undefined
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+
+// Usage example:
+const cursor = store.get("cursor");
+console.log(cursor); // { line: 10 }
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.delete">
+```typescript
+delete(key: string): void
+```
+</Method>
+<Indent>
+Delete an ephemeral value.
+
+**Parameters:**
+- `key` - The key to delete
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+
+// Usage example:
+store.delete("cursor");
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.getAllStates">
+```typescript
+getAllStates(): any
+```
+</Method>
+<Indent>
+Get all ephemeral states.
+
+**Returns:** All stored states
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+store.set("user", { name: "Alice" });
+
+// Usage example:
+const allStates = store.getAllStates();
+console.log(allStates);
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.encode">
+```typescript
+encode(key: string): Uint8Array
+```
+</Method>
+<Indent>
+Encode a specific key's state for transmission.
+
+**Parameters:**
+- `key` - The key to encode
+
+**Returns:** Encoded bytes
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+
+// Usage example:
+const encoded = store.encode("cursor");
+// Send encoded to remote peers
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.encodeAll">
+```typescript
+encodeAll(): Uint8Array
+```
+</Method>
+<Indent>
+Encode all states for transmission.
+
+**Returns:** Encoded bytes
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+store.set("user", { name: "Alice" });
+
+// Usage example:
+const encoded = store.encodeAll();
+// Send encoded to remote peers
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.apply">
+```typescript
+apply(data: Uint8Array): void
+```
+</Method>
+<Indent>
+Apply remote updates.
+
+**Parameters:**
+- `data` - Encoded updates from remote peer
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+
+// Usage example:
+declare const remoteData: Uint8Array;
+store.apply(remoteData);
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.removeOutdated">
+```typescript
+removeOutdated(): void
+```
+</Method>
+<Indent>
+Remove outdated states based on the timeout.
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+
+// Usage example:
+store.removeOutdated();
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.isEmpty">
+```typescript
+isEmpty(): boolean
+```
+</Method>
+<Indent>
+Check if the store is empty.
+
+**Returns:** True if empty
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+
+// Usage example:
+const empty = store.isEmpty();
+console.log(empty); // true
+```
+</Indent>
+
+<Method id="EphemeralStoreWasm.keys">
+```typescript
+keys(): string[]
+```
+</Method>
+<Indent>
+Get all keys in the store.
+
+**Returns:** Array of keys
+
+**Example:**
+```ts twoslash
+import { EphemeralStoreWasm } from "loro-crdt";
+const store = new EphemeralStoreWasm(30000);
+store.set("cursor", { line: 10 });
+store.set("user", { name: "Alice" });
+
+// Usage example:
+const allKeys = store.keys();
+console.log(allKeys); // ["cursor", "user"]
+```
+</Indent>
 
 ---
 
