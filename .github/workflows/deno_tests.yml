@@ -31,4 +31,4 @@ jobs:
           deno-version: v2.x
 
       - name: Run tests
-        run: deno run -A deno_scripts/run_code_blocks.ts
+        run: cd deno_scripts && deno run -A run_code_blocks.ts ..

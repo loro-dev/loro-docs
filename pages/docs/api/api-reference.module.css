@@ -1,0 +1,177 @@
+.apiReference {
+  /* Enhanced spacing and visual hierarchy through indentation only */
+}
+
+.apiReference .method pre {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin-left: -1rem;
+  padding: 0.75rem 0 0 0;
+}
+
+.apiReference .method pre code > span > span:first-child {
+  font-weight: 700;
+  font-size: 1.1em;
+  color: #6f42c1 !important;
+}
+
+.apiReference
+  .method
+  pre
+  code
+  > span
+  > span:first-child:is(html[class~="dark"] *) {
+  color: #b392f0 !important;
+}
+
+.apiReference h2 {
+  @apply mt-12 mb-8;
+}
+
+.apiReference h2:first-of-type {
+  @apply mt-8;
+}
+
+/* Category sections (h3) - Method groups like "Configuration Methods", "Container Management" */
+.apiReference h3 {
+  @apply mt-12 mb-6;
+}
+
+.apiReference h4 {
+  @apply mt-10 mb-4;
+}
+
+.apiReference h5 {
+  @apply mt-10 mb-4;
+}
+
+.apiReference h6 {
+  @apply mt-10 mb-4;
+}
+
+/* Content following h4 directly */
+.apiReference p,
+.apiReference ul,
+.apiReference ol,
+.apiReference .nextra-code,
+.apiReference div.nextra-code,
+.apiReference div[class*="nextra-code"] {
+  @apply mt-4 !important;
+}
+
+/* Content following h4 directly */
+.apiReference h4 + p,
+.apiReference h4 + ul,
+.apiReference h4 + ol,
+.apiReference h4 + .nextra-code,
+.apiReference h4 + div.nextra-code,
+.apiReference h4 + div[class*="nextra-code"] {
+  @apply mt-3;
+}
+
+.apiReference h4 + ul,
+.apiReference h4 + ol,
+.apiReference h4 ~ ul,
+.apiReference h4 ~ ol {
+  @apply mt-3;
+}
+
+/* Content that follows h4 (has other elements in between h4 and content) */
+.apiReference h4 ~ p,
+.apiReference h4 ~ ul,
+.apiReference h4 ~ ol,
+.apiReference h4 ~ .nextra-code,
+.apiReference h4 ~ div.nextra-code,
+.apiReference h4 ~ div[class*="nextra-code"] {
+  @apply mt-3;
+}
+
+/* Tighter spacing between consecutive elements within methods */
+.apiReference h4 ~ * + p,
+.apiReference h4 ~ * + ul,
+.apiReference h4 ~ * + ol,
+.apiReference h4 ~ * + .nextra-code,
+.apiReference h4 ~ * + div.nextra-code,
+.apiReference h4 ~ * + div[class*="nextra-code"] {
+  @apply !mt-3;
+}
+
+/* Override Nextra's default spacing for content within h4 sections */
+.apiReference h4 ~ p[class*="_mt-6"],
+.apiReference h4 ~ ul[class*="_mt-6"],
+.apiReference h4 ~ ol[class*="_mt-6"],
+.apiReference h4 ~ div[class*="_mt-6"] {
+  @apply !mt-3;
+}
+
+/* Content following h3 directly (no h4 in between) */
+.apiReference h3 + p,
+.apiReference h3 + ul,
+.apiReference h3 + ol,
+.apiReference h3 + .nextra-code,
+.apiReference h3 + div.nextra-code,
+.apiReference h3 + div[class*="nextra-code"] {
+  @apply mt-3;
+}
+
+/* Content that follows h3, but not h4 (has other elements in between h3 and content, but no h4) */
+.apiReference h3 ~ p:not(h4 ~ *),
+.apiReference h3 ~ ul:not(h4 ~ *),
+.apiReference h3 ~ ol:not(h4 ~ *),
+.apiReference h3 ~ .nextra-code:not(h4 ~ *),
+.apiReference h3 ~ div.nextra-code:not(h4 ~ *),
+.apiReference h3 ~ div[class*="nextra-code"]:not(h4 ~ *) {
+  @apply mt-3;
+}
+
+/* Special handling for lists to use padding instead of margin for proper bullet alignment */
+.apiReference h3 + ul,
+.apiReference h3 + ol,
+.apiReference h3 ~ ul:not(h4 ~ *),
+.apiReference h3 ~ ol:not(h4 ~ *) {
+  @apply mt-3;
+}
+
+/* Content that follows h2, but not immediately (has other elements in between, but no h3/h4) */
+.apiReference h2 ~ p:not(h3 ~ *, h4 ~ *),
+.apiReference h2 ~ ul:not(h3 ~ *, h4 ~ *),
+.apiReference h2 ~ ol:not(h3 ~ *, h4 ~ *),
+.apiReference h2 ~ .nextra-code:not(h3 ~ *, h4 ~ *),
+.apiReference h2 ~ div.nextra-code:not(h3 ~ *, h4 ~ *),
+.apiReference h2 ~ div[class*="nextra-code"]:not(h3 ~ *, h4 ~ *) {
+  @apply mt-3;
+}
+
+/* Content following h2 directly (no h3/h4 in between) */
+.apiReference h2 + p,
+.apiReference h2 + ul,
+.apiReference h2 + ol,
+.apiReference h2 + .nextra-code,
+.apiReference h2 + div.nextra-code,
+.apiReference h2 + div[class*="nextra-code"] {
+  @apply mt-3;
+}
+
+/* Improve spacing between major sections */
+.apiReference > h2 + * {
+  @apply mt-6;
+}
+
+.apiReference > h3 + * {
+  @apply mt-4;
+}
+
+/* Add space between method groups */
+.apiReference h3 + h4 {
+  @apply mt-6;
+}
+
+.apiReference h4 + h4 {
+  @apply mt-12;
+}
+
+/* Nested list indentation */
+.apiReference ul li ul {
+  @apply mt-2 ml-4 space-y-1;
+}

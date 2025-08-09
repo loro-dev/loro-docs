@@ -10,7 +10,7 @@ export default function Footer(): JSX.Element {
           href="https://twitter.com/loro_dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="nx-p-2 nx-text-current"
+          className="nx-p-2 nx-text-current mr-4"
           onClick={() => {
             // deno-lint-ignore no-window
             window.clarity?.("event", "twitter-click");
