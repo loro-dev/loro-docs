@@ -481,6 +481,8 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("tasks");
 movableList.push("Task 1");
+movableList.push("Task 2");
+movableList.push("Task 3");
 movableList.move(0, 2); // Move first item to third position
 ```
 </Indent>
@@ -1900,8 +1902,9 @@ import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "hello");
-const frontiers = doc.frontiers();
-const change = doc.getChangeAt(frontiers[0]);
+doc.commit()
+const changes = doc.getAllChanges();
+const change = changes.get(doc.peerIdStr)?.[0];
 ```
 </Indent>
 
@@ -1924,7 +1927,8 @@ Gets a change by peer ID and Lamport timestamp.
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-const change = doc.getChangeAtLamport(doc.peerIdStr, 0);
+doc.getText("text").insert(0, "hello");
+const change = doc.getChangeAtLamport(doc.peerIdStr, 1);
 ```
 </Indent>
 
@@ -1942,13 +1946,13 @@ Gets all operations in a specific change.
 **Returns:** Array of operations
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "hello");
-const frontiers = doc.frontiers();
-const ops = doc.getOpsInChange(frontiers[0]);
+const changes = doc.getAllChanges();
+const ops = doc.getOpsInChange(changes[0].id);
 ```
 </Indent>
 
@@ -2140,8 +2144,8 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello World");
+doc.configTextStyle({ bold: { expand: "after" } });
 text.mark({ start: 0, end: 5 }, "bold", true);
-text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 ```
 </Indent>
 
@@ -2322,11 +2326,6 @@ const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello");
 const char = text.charAt(1); // "e"
-
-// Be careful with emoji
-text.insert(0, "😀");
-const invalid = text.charAt(0); // First half of emoji (invalid)
-const valid = text.charAt(2);   // "H" from "Hello"
 ```
 </Indent>
 
@@ -2676,7 +2675,7 @@ readonly length: number
 Gets the length of the text in UTF-16 code units (same as JavaScript's `string.length`).
 
 **⚠️ Important:** Emoji and other characters outside the Basic Multilingual Plane count as 2 UTF-16 units. This affects all index-based operations:
-```typescript
+```typescript no_run
 text.insert(0, "👨‍👩‍👧‍👦"); // Family emoji
 console.log(text.length); // 11 (not 1!) - complex emoji with ZWJ sequences
 ```
@@ -2701,7 +2700,7 @@ by replaying only the necessary portion of history (Eg-walker-inspired). See [Li
 [Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
 
 **⚠️ Important: List vs Map for Coordinates**
-```typescript
+```typescript no_run
 // ❌ WRONG - Don't use List for coordinates
 const coord = doc.getList("coord");
 coord.push(10); // x
@@ -2778,7 +2777,11 @@ Deletes elements from the list.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
-list.push("a", "b", "c", "d");
+list.push("a");
+list.push("b");
+list.push("c");
+list.push("d");
+
 list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
 </Indent>
@@ -2962,6 +2965,12 @@ Gets the number of elements in the list.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push("a");
+list.push("b");
+list.push("c");
 console.log(`List has ${list.length} items`);
 ```
 </Indent>
@@ -4349,11 +4358,15 @@ Moves an element from one position to another.
 - `to` - Target index
 
 **Example:**
-```ts twoslash
+```typescript
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
-movableList.push("a", "b", "c", "d", "e");
+movableList.push("a");
+movableList.push("b");
+movableList.push("c");
+movableList.push("d");
+movableList.push("e");
 
 movableList.move(0, 3); // Move first element to fourth position
 ```
