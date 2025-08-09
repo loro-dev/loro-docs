@@ -6,83 +6,98 @@ import Method from './method';
 
 # API Reference
 
+> *Last updated: 2025-08-09 loro-crdt@1.5.10*
+
 ## Overview
 
 Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enables real-time collaboration. If CRDTs are new to you, start with [What are CRDTs](/docs/concepts/crdt) for a gentle intro. This API reference provides comprehensive documentation for all classes, methods, and types available in the JavaScript/TypeScript binding.
 
 Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspired techniques that use simple index operations and replay only the divergent history when merging. This yields fast local edits, efficient merges, and low overhead without permanent tombstones. See the primer [Event Graph Walker (Eg-walker)](/docs/advanced/event_graph_walker) and performance notes in the v1.0 blog (import/export speedups, shallow snapshots): https://loro.dev/blog/v1.0
 
-## 🚨 Critical Pitfalls & Best Practices
+## Pitfalls & Best Practices
 
-### Peer ID Management
+**Peer ID Management**
+
 - **Never share PeerIDs** between concurrent sessions (tabs/devices) - causes document divergence
 - Use random PeerIDs (default) unless you have strict single-ownership locking
 - Don't assign fixed PeerIDs to users or devices
 
-### UTF-16 Text Encoding
+**UTF-16 Text Encoding**
+
 - All text operations use UTF-16 indices by default in JS API
 - Slicing in the middle of multi-unit codepoints corrupts them
 - Use `insertUtf8()`/`deleteUtf8()` for UTF-8 systems
 
-### Container Creation
+**Container Creation**
+
 - Concurrent child container creation inside the same LoroMap at same key causes overwrites
 - Initialize all child containers for a LoroMap upfront when possible
 - Operations on the root containers will not override each other  
 
-### Events & Transactions
+**Events & Transactions**
+
 - Events emit asynchronously after a microtask in JS API
 - Import/export/checkout trigger automatic commits
 - Loro transactions are NOT ACID - no rollback/isolation
 
-### Version Control
+**Version Control**
+
 - After `checkout()`, document enters read-only "detached" mode, unless `setDetachedEditing(true)` is called
 - [Frontiers](/docs/concepts/frontiers) can't determine complete operation sets without history
 
-### Data Structure Choice
+**Data Structure Choice**
+
 - Use strings in Map for URLs/IDs (LWW), LoroText for collaborative editing
 
-## Common Tasks
+## Common Tasks & Examples
 
-### Getting Started
+**Getting Started**
+
 - **Create a document**: [`new LoroDoc()`](#LoroDoc.constructor) - Initialize a new collaborative document
 - **Add containers**: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap), [`getTree`](#LoroDoc.getTree)
 - **Listen to changes**: [`subscribe`](#LoroDoc.subscribe) - React to document modifications
 - **Export/Import state**: [`export`](#LoroDoc.export) and [`import`](#LoroDoc.import) - Save and load documents
 
-### Real-time Collaboration
+**Real-time Collaboration**
+
 - **Sync between peers**: [`export`](#LoroDoc.export) with `mode: "update"` + [`import`](#LoroDoc.import)/[`importBatch`](#LoroDoc.importBatch) - Exchange incremental updates
 - **Stream updates**: [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) - Send changes over WebSocket/WebRTC
 - **Set unique peer ID**: [`setPeerId`](#LoroDoc.setPeerId) - Ensure each client has a unique identifier
 - **Handle conflicts**: Automatic - All Loro data types are CRDTs that merge concurrent edits
 
-### Rich Text Editing
+**Rich Text Editing**
+
 - **Create rich text**: [`getText`](#LoroDoc.getText) - Initialize a collaborative text container
 - **Edit text**: [`insert`](#LoroText.insert), [`delete`](#LoroText.delete), [`applyDelta`](#LoroText.applyDelta)
 - **Apply formatting**: [`mark`](#LoroText.mark) - Add bold, italic, links, custom styles
 - **Track cursor positions**: [`getCursor`](#LoroText.getCursor) + [`getCursorPos`](#LoroDoc.getCursorPos) - Stable positions across edits
 - **Configure styles**: [`configTextStyle`](#LoroDoc.configTextStyle) - Define expand behavior for marks
 
-### Data Structures
+**Data Structures**
+
 - **Ordered lists**: [`getList`](#LoroDoc.getList) - Arrays with [`push`](#LoroList.push), [`insert`](#LoroList.insert), [`delete`](#LoroList.delete)
 - **Key-value maps**: [`getMap`](#LoroDoc.getMap) - Objects with [`set`](#LoroMap.set), [`get`](#LoroMap.get), [`delete`](#LoroMap.delete)
 - **Hierarchical trees**: [`getTree`](#LoroDoc.getTree) - File systems, nested comments with [`createNode`](#LoroTree.createNode), [`move`](#LoroTree.move)
 - **Reorderable lists**: [`getMovableList`](#LoroDoc.getMovableList) - Drag-and-drop with [`move`](#LoroMovableList.move), [`set`](#LoroMovableList.set)
 - **Counters**: [`getCounter`](#LoroDoc.getCounter) - Distributed counters with [`increment`](#LoroCounter.increment)
 
-### Ephemeral State & Presence
+**Ephemeral State & Presence**
+
 - **User presence**: [`EphemeralStore`](#ephemeralstore) - Share cursor positions, selections, user status (not persisted)
 - **Cursor syncing**: Use [`EphemeralStore.set`](#EphemeralStore.set) with cursor data from [`getCursor`](#LoroText.getCursor)
 - **Live indicators**: Track who's online, typing indicators, mouse positions
 - **Important**: EphemeralStore is a separate CRDT without history - perfect for temporary state that shouldn't persist
 
-### Version Control & History
+**Version Control & History**
+
 - **Undo/redo**: [`UndoManager`](#undomanager) - Local undo of user's own edits
 - **Time travel**: [`checkout`](#LoroDoc.checkout) to any [`frontiers`](#LoroDoc.frontiers) - Debug or review history
 - **Version tracking**: [`version`](#LoroDoc.version), [`frontiers`](#LoroDoc.frontiers), [`versionVector`](#LoroDoc.versionVector)
 - **Fork documents**: [`fork`](#LoroDoc.fork) or [`forkAt`](#LoroDoc.forkAt) - Create branches for experimentation
 - **Merge branches**: [`import`](#LoroDoc.import) - Combine changes from forked documents
 
-### Performance & Storage
+**Performance & Storage**
+
 - **Incremental updates**: [`export`](#LoroDoc.export) from specific [`version`](#LoroDoc.version) - Send only changes
 - **Compact history**: [`export`](#LoroDoc.export) with `mode: "snapshot"` - Full state with compressed history
 - **Shallow snapshots**: [`export`](#LoroDoc.export) with `mode: "shallow-snapshot"` - State without partial history (see [Shallow Snapshots](/docs/concepts/shallow_snapshots))
@@ -105,13 +120,11 @@ const unsubscribe = doc.subscribe((event) => {
 const updates = doc.export({ mode: "update" });
 ```
 
----
-
 ## LoroDoc
 
 The `LoroDoc` class manages containers, sync, versions, and events.
 
-### Constructor
+**Constructor**
 
 ```typescript no_run
 new LoroDoc()
@@ -126,7 +139,7 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 ```
 
-### Static Methods
+**Static Methods**
 
 <Method id="LoroDoc.fromSnapshot">
 ```typescript no_run
@@ -142,7 +155,7 @@ Creates a new LoroDoc from a snapshot. This is useful for loading a document fro
 **Returns:** A new LoroDoc instance
 
 **Example:**
-```ts twoslash
+```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have a snapshot from a previous export
@@ -154,7 +167,7 @@ const doc = LoroDoc.fromSnapshot(snapshot);
 ```
 </Indent>
 
-### Properties
+**Properties**
 
 <Method id="LoroDoc.peerId">
 ```typescript no_run
@@ -4135,23 +4148,90 @@ const position = node.index();
 <Method id="LoroTreeNode.fractionalIndex">
 ```typescript no_run
 fractionalIndex(): string | undefined
+```
+</Method>
+<Indent>
+Returns the node's fractional index used to sort siblings deterministically.
+It is a hex string representation of the Fractional Index and is stable for ordering.
+Returns `undefined` for the root node. Note: the tree must be attached to the document.
+
+**Returns:** Hex string or `undefined` for root
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+const parent = tree.createNode();
+const a = parent.createNode(0);
+const b = parent.createNode(1);
+
+const aFi = a.fractionalIndex();
+const bFi = b.fractionalIndex();
+// aFi < bFi, because b is inserted after a
+```
+</Indent>
+
+<Method id="LoroTreeNode.creationId">
+```typescript no_run
 creationId(): { peer: PeerID, counter: number }
+```
+</Method>
+<Indent>
+Returns the OpID that created this node.
+
+**Returns:** `{ peer: PeerID, counter: number }` creation identifier
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+const node = tree.createNode();
+
+const { peer, counter } = node.creationId();
+```
+</Indent>
+
+<Method id="LoroTreeNode.creator">
+```typescript no_run
 creator(): PeerID
+```
+</Method>
+<Indent>
+Returns the peer ID that created this node (equivalent to `creationId().peer`).
+
+**Returns:** `PeerID`
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+const node = tree.createNode();
+
+const author = node.creator();
+// author == doc.peerIdStr
+```
+</Indent>
+
+<Method id="LoroTreeNode.getLastMoveId">
+```typescript no_run
 getLastMoveId(): { peer: PeerID, counter: number } | undefined
 ```
 </Method>
 <Indent>
-```typescript no_run
+Returns the OpID of the most recent move operation for this node, or `undefined` if the node has never been moved.
+
+**Returns:** Creation/move OpID or `undefined`
+
+**Example:**
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-const root = tree.createNode();
-const node = root.createNode();
+const node = tree.createNode();
 
-// Usage example:
-const fi = node.fractionalIndex();
-const create = node.creationId();
-const author = node.creator();
 const lastMove = node.getLastMoveId();
 ```
 </Indent>
