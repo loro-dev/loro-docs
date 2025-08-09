@@ -8,7 +8,7 @@ import Method from './method';
 
 ## Overview
 
-Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enables real-time collaboration. This API reference provides comprehensive documentation for all classes, methods, and types available in the JavaScript/TypeScript binding.
+Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enables real-time collaboration. If CRDTs are new to you, start with [What are CRDTs](/docs/concepts/crdt) for a gentle intro. This API reference provides comprehensive documentation for all classes, methods, and types available in the JavaScript/TypeScript binding.
 
 ## Quick Navigation
 
@@ -42,7 +42,7 @@ const updates = doc.export({ mode: "update" });
 
 ## LoroDoc
 
-The `LoroDoc` class is the central document that manages all CRDT containers and provides synchronization capabilities.
+The `LoroDoc` class is the central document that manages all CRDT containers and provides synchronization capabilities. For a guided introduction, see [Loro Document](/docs/tutorial/loro_doc) and the [Container](/docs/concepts/container) concept.
 
 ### Constructor
 
@@ -67,7 +67,7 @@ setPeerId(peer: number | bigint | `${number}`): void
 ```
 </Method>
 <Indent>
-Sets the peer ID for this document. It must be a number, a BigInt, or a decimal string that fits into an unsigned 64-bit integer.
+Sets the peer ID for this document. It must be a number, a BigInt, or a decimal string that fits into an unsigned 64-bit integer. New to Peer IDs? See [PeerID Management](/docs/concepts/peerid_management) for why uniqueness matters in distributed systems.
 
 **Parameters:**
 - `peer` - Peer ID as number, bigint, or decimal string
@@ -87,7 +87,7 @@ setRecordTimestamp(auto_record: boolean): void
 ```
 </Method>
 <Indent>
-Configures whether to automatically record timestamps for changes. Timestamps use Unix time (seconds since epoch).
+Configures whether to automatically record timestamps for changes. Timestamps use Unix time (seconds since epoch). Learn more about storing timestamps and typical use cases in [Storing Timestamps](/docs/advanced/timestamp).
 
 **Parameters:**
 - `auto_record` - Whether to automatically record timestamps
@@ -107,7 +107,7 @@ setChangeMergeInterval(interval: number): void
 ```
 </Method>
 <Indent>
-Sets the interval in seconds for merging continuous local changes into a single change record.
+Sets the interval in seconds for merging continuous local changes into a single change record. In Loro, multiple low-level operations are grouped into higher-level Changes for readability and syncing. See [Operations and Changes](/docs/concepts/operations_changes).
 
 **Parameters:**
 - `interval` - Merge interval in seconds
@@ -127,7 +127,7 @@ configTextStyle(styles: StyleConfig): void
 ```
 </Method>
 <Indent>
-Configures the behavior of text styles (marks) in rich text containers.
+Configures the behavior of text styles (marks) in rich text containers. Marks can expand when edits happen at their edges (before/after/both/none). For a primer on rich text and marks in Loro, see [Text](/docs/tutorial/text).
 
 **Parameters:**
 - `styles` - Configuration object mapping style names to their config
@@ -160,7 +160,7 @@ getText(name: string): LoroText
 ```
 </Method>
 <Indent>
-Gets or creates a text container with the given name.
+Gets or creates a text container with the given name. New to LoroText and marks? See [Text](/docs/tutorial/text).
 
 **Parameters:**
 - `name` - The container name
@@ -183,7 +183,7 @@ getList(name: string): LoroList
 ```
 </Method>
 <Indent>
-Gets or creates a list container with the given name.
+Gets or creates a list container with the given name. Unsure whether to use List or MovableList? See [List and Movable List](/docs/tutorial/list) and the type selection guide [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 **Parameters:**
 - `name` - The container name  
@@ -206,7 +206,7 @@ getMap(name: string): LoroMap
 ```
 </Method>
 <Indent>
-Gets or creates a map container with the given name.
+Gets or creates a map container with the given name. See [Map](/docs/tutorial/map) for basics and patterns.
 
 **Parameters:**
 - `name` - The container name
@@ -229,7 +229,7 @@ getTree(name: string): LoroTree
 ```
 </Method>
 <Indent>
-Gets or creates a tree container with the given name.
+Gets or creates a tree container with the given name. Learn about hierarchical editing and moves in [Tree](/docs/tutorial/tree).
 
 **Parameters:**
 - `name` - The container name
@@ -252,7 +252,7 @@ getCounter(name: string): LoroCounter
 ```
 </Method>
 <Indent>
-Gets or creates a counter container with the given name.
+Gets or creates a counter container with the given name. Counters are special CRDTs that sum concurrent increments; see [Counter](/docs/tutorial/counter).
 
 **Parameters:**
 - `name` - The container name
@@ -275,7 +275,7 @@ getMovableList(name: string): LoroMovableList
 ```
 </Method>
 <Indent>
-Gets or creates a movable list container with the given name.
+Gets or creates a movable list container with the given name. MovableList is designed for reordering with concurrent moves. See [List and Movable List](/docs/tutorial/list) and [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 **Parameters:**
 - `name` - The container name
@@ -299,7 +299,7 @@ getContainerById(id: ContainerID): Container | undefined
 ```
 </Method>
 <Indent>
-Gets a container by its unique ID.
+Gets a container by its unique ID. Container IDs (CID) uniquely reference containers across updates; see [Container ID](/docs/advanced/cid) and [Container](/docs/concepts/container).
 
 **Parameters:**
 - `id` - The container ID
@@ -325,7 +325,7 @@ export(mode?: ExportMode): Uint8Array
 ```
 </Method>
 <Indent>
-Exports the document in various formats for synchronization or persistence.
+Exports the document in various formats for synchronization or persistence. For a walkthrough of export modes—snapshot, update, shallow-snapshot, and updates-in-range—see [Export Mode](/docs/tutorial/encoding). Shallow snapshots remove history while keeping current state; see [Shallow Snapshots](/docs/concepts/shallow_snapshots). VersionVector and Frontiers are two ways to represent versions; see [Version Vector](/docs/concepts/version_vector) and [Frontiers](/docs/concepts/frontiers).
 
 **Parameters:**
 - `mode` - Export configuration (optional)
@@ -370,7 +370,7 @@ import(data: Uint8Array): ImportStatus
 ```
 </Method>
 <Indent>
-Imports updates or snapshots into the document. Returns an `ImportStatus` describing which peer ranges were applied or are pending.
+Imports updates or snapshots into the document. Returns an `ImportStatus` describing which peer ranges were applied or are pending. See [Sync](/docs/tutorial/sync) and [Import Status](/docs/concepts/import_status) for how Loro handles out-of-order and partial updates.
 
 **Parameters:**
 - `data` - Binary data or another LoroDoc to import from
@@ -393,7 +393,7 @@ importBatch(data: Uint8Array[]): ImportStatus
 ```
 </Method>
 <Indent>
-Efficiently imports multiple updates in a single batch operation.
+Efficiently imports multiple updates in a single batch operation. See [Batch Import](/docs/advanced/import_batch) for performance considerations and usage.
 
 **Parameters:**
 - `data` - Array of binary updates
@@ -417,7 +417,7 @@ exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompressio
 ```
 </Method>
 <Indent>
-Exports updates in JSON format for debugging or alternative storage.
+Exports updates in JSON format for debugging or alternative storage. See [Export Mode](/docs/tutorial/encoding) for format details and trade-offs.
 
 **Parameters:**
 - `start` - Starting version (optional)
@@ -441,7 +441,7 @@ importJsonUpdates(json: string | JsonSchema): void
 ```
 </Method>
 <Indent>
-Imports updates from JSON format.
+Imports updates from JSON format. Useful for debugging, migration, or custom storage layers; see [Export Mode](/docs/tutorial/encoding).
 
 **Parameters:**
 - `json` - JSON string or object containing updates
@@ -464,7 +464,7 @@ checkout(frontiers: Frontiers): void
 ```
 </Method>
 <Indent>
-Checks out the document to a specific version, making it read-only at that point in history.
+Checks out the document to a specific version, making it read-only at that point in history. This is the core of time travel; see [Time Travel](/docs/tutorial/time_travel) and [Version](/docs/tutorial/version).
 
 **Parameters:**
 - `frontiers` - Array of OpIds representing the target version
@@ -486,7 +486,7 @@ checkoutToLatest(): void
 ```
 </Method>
 <Indent>
-Returns the document to the latest version after a checkout.
+Returns the document to the latest version after a checkout. Related concepts: [Frontiers](/docs/concepts/frontiers) and [Version Vector](/docs/concepts/version_vector).
 
 **Example:**
 ```ts twoslash
@@ -503,7 +503,7 @@ attach(): void
 ```
 </Method>
 <Indent>
-Attaches the document to track latest changes after being detached.
+Attaches the document to track latest changes after being detached. See [Attached vs Detached States](/docs/concepts/attached_detached) for how Loro separates current state from history.
 
 **Example:**
 ```ts twoslash
@@ -520,7 +520,7 @@ detach(): void
 ```
 </Method>
 <Indent>
-Detaches the document from tracking latest changes, freezing it at current version.
+Detaches the document from tracking latest changes, freezing it at current version. See [Attached vs Detached States](/docs/concepts/attached_detached).
 
 **Example:**
 ```ts twoslash
@@ -537,7 +537,7 @@ fork(): LoroDoc
 ```
 </Method>
 <Indent>
-Creates a new document that is a fork of the current one with a new peer ID.
+Creates a new document that is a fork of the current one with a new peer ID. Forking is useful for branching workflows; see [Version](/docs/tutorial/version).
 
 **Returns:** A new LoroDoc instance
 
@@ -556,7 +556,7 @@ forkAt(frontiers: Frontiers): LoroDoc
 ```
 </Method>
 <Indent>
-Creates a fork at a specific version in history.
+Creates a fork at a specific version in history. Learn more about versions, DAG history, and heads in [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 **Parameters:**
 - `frontiers` - The version to fork from
@@ -581,7 +581,7 @@ subscribe(listener: (event: LoroEventBatch) => void): () => void
 ```
 </Method>
 <Indent>
-Subscribes to all document changes.
+Subscribes to all document changes. See [Event Handling](/docs/tutorial/event) for the event model and best practices.
 
 **Parameters:**
 - `listener` - Callback function that receives change events
@@ -623,7 +623,7 @@ subscribeLocalUpdates(f: (bytes: Uint8Array) => void): () => void
 ```
 </Method>
 <Indent>
-Subscribes only to local changes, useful for syncing with remote peers.
+Subscribes only to local changes, useful for syncing with remote peers. This is typically wired to your transport layer; see [Sync](/docs/tutorial/sync).
 
 **Parameters:**
 - `f` - Callback that receives binary updates
@@ -679,7 +679,9 @@ commit(options?: { origin?: string, message?: string, timestamp?: number }): voi
 ```
 </Method>
 <Indent>
-Commits pending changes as a single transaction.
+Commits pending changes as a single transaction. A transaction groups operations into a Change; see [Operations and Changes](/docs/concepts/operations_changes). You can tag commits with origin and message for debugging; timestamps are Unix seconds (see [Storing Timestamps](/docs/advanced/timestamp)).
+
+Note: Loro transactions are not ACID database transactions. They bundle local operations for event batching and history grouping; there is no rollback or isolation guarantee like a DB transaction. See [Transaction Model](/docs/concepts/transaction_model).
 
 **Parameters:**
 - `options` - Optional commit configuration
@@ -708,7 +710,7 @@ toJSON(): Value
 ```
 </Method>
 <Indent>
-Converts the entire document to a JSON-compatible value.
+Converts the entire document to a JSON-compatible value. If you prefer a structure where sub-containers are referenced by ID (for privacy or streaming), use getShallowValue(); see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
 **Returns:** JSON representation of the document
 
@@ -728,7 +730,7 @@ getShallowValue(): Record<string, ContainerID>
 ```
 </Method>
 <Indent>
-Gets a shallow representation where sub-containers are represented by their IDs.
+Gets a shallow representation where sub-containers are represented by their IDs. This is helpful when you want to share structure without history; see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
 **Returns:** Shallow JSON value
 
@@ -748,7 +750,7 @@ version(): VersionVector
 ```
 </Method>
 <Indent>
-Gets the current version vector of the document.
+Gets the current version vector of the document. Version vectors track how much data from each peer you’ve seen; see [Version Vector](/docs/concepts/version_vector).
 
 **Returns:** Map from PeerID to counter
 
@@ -768,7 +770,9 @@ frontiers(): Frontiers
 ```
 </Method>
 <Indent>
-Gets the current frontiers (heads) of the document.
+Gets the current frontiers (heads) of the document. Frontiers are a compact representation of a version; see [Frontiers](/docs/concepts/frontiers) for when to use them instead of version vectors.
+
+Note: Frontiers are compact version representation. For trade-offs versus Version Vectors and when to use each, see [Frontiers](/docs/concepts/frontiers).
 
 **Returns:** Array of OpIds
 
@@ -788,7 +792,7 @@ diff(from: Frontiers, to: Frontiers, for_json?: boolean): [ContainerID, Diff | J
 ```
 </Method>
 <Indent>
-Calculates differences between two versions.
+Calculates differences between two versions. Understanding how Loro computes diffs benefits from the history DAG model; see [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 **Parameters:**
 - `from` - Starting frontiers
@@ -821,7 +825,7 @@ subscribePreCommit(f: (e: { changeMeta: Change, origin: string, modifier: Change
 ```
 </Method>
 <Indent>
-Subscribe to the pre-commit event. You can modify the message and timestamp of the next change.
+Subscribe to the pre-commit event. You can modify the message and timestamp of the next change. This hook runs right before a Change is recorded; see [Transaction Model](/docs/concepts/transaction_model) and [Operations and Changes](/docs/concepts/operations_changes).
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -846,7 +850,7 @@ getCursorPos(cursor: Cursor): { update?: Cursor, offset: number, side: Side }
 ```
 </Method>
 <Indent>
-Resolve a stable `Cursor` to an absolute position.
+Resolve a stable `Cursor` to an absolute position. Cursors remain valid across concurrent edits; see [Cursor and Stable Positions](/docs/concepts/cursor_stable_positions) and [Cursor tutorial](/docs/tutorial/cursor). The side controls affinity when the cursor sits at an insertion boundary.
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -868,7 +872,7 @@ getUncommittedOpsAsJson(): JsonSchema | undefined
 ```
 </Method>
 <Indent>
-Get pending operations from the current transaction in JSON format.
+Get pending operations from the current transaction in JSON format. Useful for debugging what will be included in the next Change; see [Transaction Model](/docs/concepts/transaction_model).
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -883,6 +887,7 @@ const none = doc.getUncommittedOpsAsJson(); // undefined after commit
 </Indent>
 
 ### Change Graph & History
+These APIs traverse the history DAG of changes (ancestors/descendants, spans). If this sounds unfamiliar, start with Loro's [Versioning Deep Dive](/docs/advanced/version_deep_dive) and the [Event Graph Walker](/docs/concepts/event_graph_walker).
 
 <Method>
 ```typescript
@@ -1007,7 +1012,7 @@ setDetachedEditing(enable: boolean): void
 ```
 </Method>
 <Indent>
-Enables or disables detached editing mode.
+Enables or disables detached editing mode. Detached editing lets you stage edits separate from the latest head; see [Attached vs Detached States](/docs/concepts/attached_detached).
 
 **Parameters:**
 - `enable` - Whether to enable detached editing
@@ -1295,6 +1300,7 @@ const cmp = doc.cmpFrontiers(f1, f2);
 </Indent>
 
 ### JSONPath & Path Queries
+Use simple path strings and JSONPath to fetch nested values and containers. Paths are formed from root container names and keys (e.g., map/key or list/0). For container IDs, see [Container ID](/docs/advanced/cid).
 
 <Method>
 ```typescript
@@ -1368,6 +1374,7 @@ const results = doc.JSONPath("$.map");
 </Indent>
 
 ### Shallow Doc Utilities
+These helpers relate to shallow snapshots and redaction. If you need a refresher on what “shallow” means, see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
 <Method>
 ```typescript
@@ -1744,7 +1751,7 @@ const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
 
 ### LoroText
 
-A rich text container supporting collaborative text editing with formatting.
+A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and stable cursors. See [Text](/docs/tutorial/text) for concepts and editor integrations.
 
 
 <Method>
@@ -1797,7 +1804,7 @@ mark(range: { start: number, end: number }, key: string, value: Value): void
 </Method>
 
 <Indent>
-Applies formatting to a text range.
+Applies formatting to a text range. Marks can be configured to expand/stop at edges via configTextStyle(); see [Text](/docs/tutorial/text) for mark behavior.
 
 **Parameters:**
 - `range` - The range to format
@@ -1817,7 +1824,7 @@ unmark(range: { start: number, end: number }, key: string): void
 ```
 </Method>
 <Indent>
-Removes formatting from a text range.
+Removes formatting from a text range. For how conflicting edits on marks resolve, see [Text](/docs/tutorial/text).
 
 **Parameters:**
 - `range` - The range to unformat
@@ -1952,7 +1959,7 @@ const plainText = text.toString();
 
 ### LoroList
 
-An ordered list container for collaborative arrays.
+An ordered list container for collaborative arrays. See [List and Movable List](/docs/tutorial/list) and [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 <Method>
 ```typescript
@@ -2178,7 +2185,7 @@ console.log(`List has ${list.length} items`);
 
 ### LoroMap
 
-A key-value map container for collaborative objects.
+A key-value map container for collaborative objects. See [Map](/docs/tutorial/map).
 
 <Method>
 ```typescript
@@ -2415,7 +2422,7 @@ console.log(`Map has ${map.size} entries`);
 
 ### LoroTree
 
-A hierarchical tree container for nested structures.
+A hierarchical tree container for nested structures. Supports moving subtrees while handling concurrent edits. See [Tree](/docs/tutorial/tree).
 
 <Method>
 ```typescript
@@ -2900,7 +2907,7 @@ console.log(`Counter value: ${counter.value}`);
 
 ### LoroMovableList
 
-A list optimized for move operations.
+A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under concurrent moves. See [List and Movable List](/docs/tutorial/list).
 
 Extends `LoroList` with additional methods for efficient element reordering.
 
@@ -3358,6 +3365,8 @@ doc.subscribe((event) => {
 
 ## Undo/Redo
 
+Local undo operates on your own changes without breaking collaboration. See [Undo/Redo](/docs/advanced/undo) for design details and caveats in collaborative settings.
+
 ### UndoManager
 
 Provides local undo/redo functionality:
@@ -3473,6 +3482,7 @@ type Value =
 ```
 
 ### Version Types
+Loro uses two complementary version representations: Version Vectors (per-peer counters) and Frontiers (a compact set of heads). See [Version Vector](/docs/concepts/version_vector) and [Frontiers](/docs/concepts/frontiers). For the full DAG model, see [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 ```typescript
 // Version vector class
@@ -3523,6 +3533,7 @@ interface ChangeModifier {
 ```
 
 ### Cursor Types
+Stable cursors survive concurrent edits and resolve to absolute positions on demand. See [Cursor and Stable Positions](/docs/concepts/cursor_stable_positions) and [Cursor tutorial](/docs/tutorial/cursor).
 
 ```typescript
 // Stable position in containers
@@ -3539,6 +3550,7 @@ type Side = -1 | 0 | 1
 ```
 
 ### Delta Type
+Delta is a popular rich-text operation format (e.g., Quill). LoroText can export/import Delta; see [Text](/docs/tutorial/text).
 
 ```typescript
 // Rich text delta operations
@@ -3629,7 +3641,7 @@ const decoded = decodeFrontiers(encoded);
 
 ## EphemeralStore
 
-Manages ephemeral state like cursor positions and user presence:
+Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns:
 
 ```ts no_run twoslash
 import { EphemeralStore } from "loro-crdt";

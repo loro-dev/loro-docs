@@ -9,11 +9,12 @@ import React from 'react';
  * @param {number} [props.level=1] - Indentation level (multiplier)
  * @param {string} [props.className] - Additional CSS classes
  */
-export default function Method({ children, className = '' }) {
+export default function Method({ children, className = '', ...props }) {
   return (
     <div 
         className={className ? `${styles.method} ${className}` : styles.method}
         style={{ paddingTop: "0.5rem" }}
+        {...props}
     >
       {children}
     </div>
