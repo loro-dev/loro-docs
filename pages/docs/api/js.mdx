@@ -3591,6 +3591,224 @@ if (tree.isNodeDeleted(nodeId)) {
 }
 ```
 </Indent>
+<Method id="LoroTree.enableFractionalIndex">
+```typescript
+enableFractionalIndex(jitter: number): void
+```
+</Method>
+<Indent>
+Enables fractional indexing for better concurrent move performance.
+
+**Parameters:**
+- `jitter` - Jitter amount for fractional indices
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+tree.enableFractionalIndex(0.001);
+```
+</Indent>
+
+<Method id="LoroTree.disableFractionalIndex">
+```typescript
+disableFractionalIndex(): void
+```
+</Method>
+<Indent>
+Disables fractional indexing.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+tree.disableFractionalIndex();
+```
+</Indent>
+
+<Method id="LoroTree.isFractionalIndexEnabled">
+```typescript
+isFractionalIndexEnabled(): boolean
+```
+</Method>
+<Indent>
+Checks if fractional indexing is enabled.
+
+**Returns:** True if enabled
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const enabled = tree.isFractionalIndexEnabled();
+```
+</Indent>
+
+<Method id="LoroTree.kind">
+```typescript
+kind(): "Tree"
+```
+</Method>
+<Indent>
+Returns the container type.
+
+**Returns:** "Tree"
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const type = tree.kind(); // "Tree"
+```
+</Indent>
+
+<Method id="LoroTree.toJSON">
+```typescript
+toJSON(): any
+```
+</Method>
+<Indent>
+Converts the tree to JSON representation.
+
+**Returns:** JSON tree structure
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const json = tree.toJSON();
+```
+</Indent>
+
+<Method id="LoroTree.parent">
+```typescript
+parent(): Container | undefined
+```
+</Method>
+<Indent>
+Gets the parent container if this tree is nested.
+
+**Returns:** Parent container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+const tree = map.setContainer("tree", doc.getTree("nested"));
+// ---cut---
+const parent = tree.parent();
+```
+</Indent>
+
+<Method id="LoroTree.isAttached">
+```typescript
+isAttached(): boolean
+```
+</Method>
+<Indent>
+Checks if the container is attached to a document.
+
+**Returns:** True if attached
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroTree } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = new LoroTree();
+// ---cut---
+const attached = tree.isAttached();
+```
+</Indent>
+
+<Method id="LoroTree.getAttached">
+```typescript
+getAttached(): LoroTree | undefined
+```
+</Method>
+<Indent>
+Gets the attached version of this container.
+
+**Returns:** Attached container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroTree } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = new LoroTree();
+// ---cut---
+const attached = tree.getAttached();
+```
+</Indent>
+
+<Method id="LoroTree.isDeleted">
+```typescript
+isDeleted(): boolean
+```
+</Method>
+<Indent>
+Checks if the container has been deleted.
+
+**Returns:** True if deleted
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const deleted = tree.isDeleted();
+```
+</Indent>
+
+<Method id="LoroTree.getShallowValue">
+```typescript
+getShallowValue(): TreeNodeShallowValue[]
+```
+</Method>
+<Indent>
+Gets the tree values with sub-containers as IDs.
+
+**Returns:** Array of tree node values
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const values = tree.getShallowValue();
+```
+</Indent>
+
+<Method id="LoroTree.id">
+```typescript
+readonly id: ContainerID
+```
+</Method>
+<Indent>
+Gets the unique container ID.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+// ---cut---
+const containerId = tree.id;
+```
+</Indent>
+
 ### LoroTreeNode
 
 Represents a single node in the tree.
