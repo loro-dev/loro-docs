@@ -106,6 +106,66 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 ```
 
+### Static Methods
+
+<Method id="LoroDoc.fromSnapshot">
+```typescript
+static fromSnapshot(snapshot: Uint8Array): LoroDoc
+```
+</Method>
+<Indent>
+Creates a new LoroDoc from a snapshot. This is useful for loading a document from a previously exported snapshot.
+
+**Parameters:**
+- `snapshot` - Binary snapshot data
+
+**Returns:** A new LoroDoc instance
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+declare const snapshot: Uint8Array;
+// ---cut---
+const doc = LoroDoc.fromSnapshot(snapshot);
+```
+</Indent>
+
+### Properties
+
+<Method id="LoroDoc.peerId">
+```typescript
+readonly peerId: bigint
+```
+</Method>
+<Indent>
+Gets the peer ID of the current writer as a bigint.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const id = doc.peerId;
+```
+</Indent>
+
+<Method id="LoroDoc.peerIdStr">
+```typescript
+readonly peerIdStr: PeerID
+```
+</Method>
+<Indent>
+Gets the peer ID as a decimal string.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const idStr = doc.peerIdStr;
+```
+</Indent>
+
 ### Configuration Methods
 
 <Method id="LoroDoc.setPeerId">
@@ -198,6 +258,26 @@ doc.configTextStyle({
   italic: { expand: "none" },
   link: { expand: "none" }
 });
+```
+</Indent>
+
+<Method id="LoroDoc.configDefaultTextStyle">
+```typescript
+configDefaultTextStyle(style?: { expand: "after" | "before" | "both" | "none" }): void
+```
+</Method>
+<Indent>
+Configures the default text style for the document when using LoroText. If undefined is provided, the default style is reset.
+
+**Parameters:**
+- `style` - Default style configuration (optional)
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.configDefaultTextStyle({ expand: "after" });
 ```
 </Indent>
 
@@ -843,6 +923,25 @@ const doc = new LoroDoc();
 // ---cut---
 const shallow = doc.getShallowValue();
 // Sub-containers appear as: "cid:..."
+```
+</Indent>
+
+<Method id="LoroDoc.getDeepValueWithID">
+```typescript
+getDeepValueWithID(): any
+```
+</Method>
+<Indent>
+Gets the deep value of the document with container IDs preserved. This is useful when you need to traverse the document structure while maintaining references to container IDs.
+
+**Returns:** Document value with container IDs
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const deepValue = doc.getDeepValueWithID();
 ```
 </Indent>
 
@@ -2085,6 +2184,81 @@ Converts to plain text string.
 **Example:**
 ```typescript
 const plainText = text.toString();
+```
+</Indent>
+
+<Method id="LoroText.charAt">
+```typescript
+charAt(pos: number): string
+```
+</Method>
+<Indent>
+Gets the character at a specific position.
+
+**Parameters:**
+- `pos` - Position index
+
+**Returns:** Character at position
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const char = text.charAt(1); // "e"
+```
+</Indent>
+
+<Method id="LoroText.slice">
+```typescript
+slice(start: number, end: number): string
+```
+</Method>
+<Indent>
+Extracts a section of the text.
+
+**Parameters:**
+- `start` - Start index
+- `end` - End index (exclusive)
+
+**Returns:** Sliced text
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+// ---cut---
+const slice = text.slice(0, 5); // "Hello"
+```
+</Indent>
+
+<Method id="LoroText.splice">
+```typescript
+splice(pos: number, len: number, s: string): string
+```
+</Method>
+<Indent>
+Replaces text at a position with new content.
+
+**Parameters:**
+- `pos` - Start position
+- `len` - Length to delete
+- `s` - String to insert
+
+**Returns:** Deleted text
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+// ---cut---
+const deleted = text.splice(6, 5, "Loro"); // returns "World"
 ```
 </Indent>
 
