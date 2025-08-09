@@ -14,16 +14,16 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 
 ## Common Tasks
 
-- Stream updates over WebSocket: see `subscribeLocalUpdates` and `import` under [Synchronization](#synchronization).
-- Redact leaked secrets from history: see `redactJsonUpdates` in [Synchronization](#synchronization).
+- Stream updates over WebSocket: see [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) and [`import`](#LoroDoc.import) under [Synchronization](#synchronization).
+- Redact leaked secrets from history: see [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates) in [Synchronization](#synchronization).
 - Undo/redo only my edits: see [Undo/Redo](#undoredo) and `UndoManager`.
-- Fork a branch and merge later: see [Versioning](#versioning) and `fork`/`forkAt` + `export`/`import`.
-- Time travel and view older versions: see [Versioning](#versioning) and `checkout`/`checkoutToLatest`.
+- Fork a branch and merge later: see [Versioning](#versioning) and [`fork`](#LoroDoc.fork)/[`forkAt`](#LoroDoc.forkAt) + [`export`](#LoroDoc.export)/[`import`](#LoroDoc.import).
+- Time travel and view older versions: see [Versioning](#versioning) and [`checkout`](#LoroDoc.checkout)/[`checkoutToLatest`](#LoroDoc.checkoutToLatest).
 - Fast load with current state only: export a [shallow snapshot](#synchronization) and import it.
-- Track peer metadata when first seen: use `subscribeFirstCommitFromPeer` in [Events & Transactions](#events--transactions).
-- Tag implicit commits (import/export/checkout): use `subscribePreCommit` in [Events & Transactions](#events--transactions).
-- Find containers changed in a change range: see `getChangedContainersIn` in [LoroDoc](#lorodoc).
-- Diff two versions: see `diff` in [LoroDoc](#lorodoc) and [Versioning](#versioning).
+- Track peer metadata when first seen: use [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer) in [Events & Transactions](#events--transactions).
+- Tag implicit commits (import/export/checkout): use [`subscribePreCommit`](#LoroDoc.subscribePreCommit) in [Events & Transactions](#events--transactions).
+- Find containers changed in a change range: see [`getChangedContainersIn`](#LoroDoc.getChangedContainersIn) in [LoroDoc](#lorodoc).
+- Diff two versions: see [`diff`](#LoroDoc.diff) in [LoroDoc](#lorodoc) and [Versioning](#versioning).
 
 ## Basic Usage
 
@@ -53,12 +53,12 @@ The `LoroDoc` class manages containers, sync, versions, and events. Start here t
 
 **Quick Index**
 
-- Configuration: [`setPeerId`](#method-setPeerId), [`setChangeMergeInterval`](#method-setChangeMergeInterval), [`configTextStyle`](#method-configTextStyle)
-- Containers: [`getText`](#method-getText), [`getList`](#method-getList), [`getMap`](#method-getMap), [`getTree`](#method-getTree), [`getCounter`](#method-getCounter), [`getMovableList`](#method-getMovableList)
-- Sync: [`export`](#method-export), [`import`](#method-import), [`importBatch`](#method-importBatch), [`exportJsonUpdates`](#method-exportJsonUpdates), [`importJsonUpdates`](#method-importJsonUpdates), metadata: [`decodeImportBlobMeta`](#method-decodeImportBlobMeta), [`redactJsonUpdates`](#method-redactJsonUpdates)
-- Versioning: [`checkout`](#method-checkout), [`checkoutToLatest`](#method-checkoutToLatest), [`fork`](#method-fork), [`forkAt`](#method-forkAt), convert: [`frontiersToVV`](#method-frontiersToVV), [`vvToFrontiers`](#method-vvToFrontiers)
-- Events & Transactions: [`subscribe`](#method-subscribe), [`subscribeLocalUpdates`](#method-subscribeLocalUpdates), [`subscribeFirstCommitFromPeer`](#method-subscribeFirstCommitFromPeer), [`commit`](#method-commit), helpers: [`setNextCommitMessage`](#method-setNextCommitMessage), [`setNextCommitOrigin`](#method-setNextCommitOrigin), [`setNextCommitTimestamp`](#method-setNextCommitTimestamp), [`setNextCommitOptions`](#method-setNextCommitOptions), [`clearNextCommitOptions`](#method-clearNextCommitOptions), [`subscribePreCommit`](#method-subscribePreCommit)
-- Query/Introspection: [`toJSON`](#method-toJSON), [`getShallowValue`](#method-getShallowValue), [`getAllChanges`](#method-getAllChanges), [`getChangeAt`](#method-getChangeAt), [`getOpsInChange`](#method-getOpsInChange), [`getPendingTxnLength`](#method-getPendingTxnLength), [`changeCount`](#method-changeCount), [`opCount`](#method-opCount)
+- Configuration: [`setPeerId`](#LoroDoc.setPeerId), [`setChangeMergeInterval`](#LoroDoc.setChangeMergeInterval), [`configTextStyle`](#LoroDoc.configTextStyle)
+- Containers: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap), [`getTree`](#LoroDoc.getTree), [`getCounter`](#LoroDoc.getCounter), [`getMovableList`](#LoroDoc.getMovableList)
+- Sync: [`export`](#LoroDoc.export), [`import`](#LoroDoc.import), [`importBatch`](#LoroDoc.importBatch), [`exportJsonUpdates`](#LoroDoc.exportJsonUpdates), [`importJsonUpdates`](#LoroDoc.importJsonUpdates), metadata: [`decodeImportBlobMeta`](#LoroDoc.decodeImportBlobMeta), [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates)
+- Versioning: [`checkout`](#LoroDoc.checkout), [`checkoutToLatest`](#LoroDoc.checkoutToLatest), [`fork`](#LoroDoc.fork), [`forkAt`](#LoroDoc.forkAt), convert: [`frontiersToVV`](#LoroDoc.frontiersToVV), [`vvToFrontiers`](#LoroDoc.vvToFrontiers)
+- Events & Transactions: [`subscribe`](#LoroDoc.subscribe), [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates), [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer), [`commit`](#LoroDoc.commit), helpers: [`setNextCommitMessage`](#LoroDoc.setNextCommitMessage), [`setNextCommitOrigin`](#LoroDoc.setNextCommitOrigin), [`setNextCommitTimestamp`](#LoroDoc.setNextCommitTimestamp), [`setNextCommitOptions`](#LoroDoc.setNextCommitOptions), [`clearNextCommitOptions`](#LoroDoc.clearNextCommitOptions), [`subscribePreCommit`](#LoroDoc.subscribePreCommit)
+- Query/Introspection: [`toJSON`](#LoroDoc.toJSON), [`getShallowValue`](#LoroDoc.getShallowValue), [`getAllChanges`](#LoroDoc.getAllChanges), [`getChangeAt`](#LoroDoc.getChangeAt), [`getOpsInChange`](#LoroDoc.getOpsInChange), [`getPendingTxnLength`](#LoroDoc.getPendingTxnLength), [`changeCount`](#LoroDoc.changeCount), [`opCount`](#LoroDoc.opCount)
 
 **Gotchas**
 
@@ -494,10 +494,10 @@ Work with the history DAG using frontiers (heads) and version vectors. Switch, b
 
 **Quick Index**
 
-- Switch: `checkout`, `checkoutToLatest`
-- Branch: `fork`, `forkAt`
-- Convert: `frontiersToVV`, `vvToFrontiers`
-- Inspect: `diff`, `revertTo`, `applyDiff`
+- Switch: [`checkout`](#LoroDoc.checkout), [`checkoutToLatest`](#LoroDoc.checkoutToLatest)
+- Branch: [`fork`](#LoroDoc.fork), [`forkAt`](#LoroDoc.forkAt)
+- Convert: [`frontiersToVV`](#LoroDoc.frontiersToVV), [`vvToFrontiers`](#LoroDoc.vvToFrontiers)
+- Inspect: [`diff`](#LoroDoc.diff), [`revertTo`](#LoroDoc.revertTo), [`applyDiff`](#LoroDoc.applyDiff)
 
 **Gotchas**
 
@@ -637,9 +637,9 @@ React to changes and group local operations into transactions. Events are delive
 
 **Quick Index**
 
-- Subscribe: `subscribe`, `subscribeLocalUpdates`, `subscribeFirstCommitFromPeer`
-- Commit: `commit` with `origin`, `message`, `timestamp`, and next-commit helpers
-- Hooks: Pre-Commit Hook `subscribePreCommit`
+- Subscribe: [`subscribe`](#LoroDoc.subscribe), [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates), [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer)
+- Commit: [`commit`](#LoroDoc.commit) with `origin`, `message`, `timestamp`, and next-commit helpers
+- Hooks: Pre-Commit Hook [`subscribePreCommit`](#LoroDoc.subscribePreCommit)
 
 **Gotchas**
 
@@ -929,7 +929,7 @@ unsubscribe();
 
 ### Cursor Utilities
 
-<Method>
+<Method id="LoroDoc.getCursorPos">
 ```typescript
 getCursorPos(cursor: Cursor): { update?: Cursor, offset: number, side: Side }
 ```
@@ -951,7 +951,7 @@ console.log(pos.offset); // 1
 
 ### Pending Operations
 
-<Method>
+<Method id="LoroDoc.getUncommittedOpsAsJson">
 ```typescript
 getUncommittedOpsAsJson(): JsonSchema | undefined
 ```
@@ -974,7 +974,7 @@ const none = doc.getUncommittedOpsAsJson(); // undefined after commit
 ### Change Graph & History
 These APIs traverse the history DAG of changes (ancestors/descendants, spans). If this sounds unfamiliar, start with Loro's [Versioning Deep Dive](/docs/advanced/version_deep_dive) and the [Event Graph Walker](/docs/concepts/event_graph_walker).
 
-<Method>
+<Method id="LoroDoc.travelChangeAncestors">
 ```typescript
 travelChangeAncestors(ids: OpId[], f: (change: Change) => boolean): void
 ```
@@ -996,7 +996,7 @@ doc.travelChangeAncestors(head, (change) => {
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.findIdSpansBetween">
 ```typescript
 findIdSpansBetween(from: Frontiers, to: Frontiers): VersionVectorDiff
 ```
@@ -1005,7 +1005,7 @@ findIdSpansBetween(from: Frontiers, to: Frontiers): VersionVectorDiff
 Find the op id spans that lie between two versions.
 </Indent>
 
-<Method>
+<Method id="LoroDoc.exportJsonInIdSpan">
 ```typescript
 exportJsonInIdSpan(idSpan: { peer: PeerID, counter: number, length: number }): JsonChange[]
 ```
@@ -1029,7 +1029,7 @@ b.import(snapshot);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.getChangedContainersIn">
 ```typescript
 getChangedContainersIn(id: OpId, len: number): ContainerID[]
 ```
@@ -1091,7 +1091,7 @@ doc2.applyDiff(diff);
 
 ### Detached Editing
 
-<Method>
+<Method id="LoroDoc.setDetachedEditing">
 ```typescript
 setDetachedEditing(enable: boolean): void
 ```
@@ -1111,7 +1111,7 @@ doc.setDetachedEditing(true);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.isDetachedEditingEnabled">
 ```typescript
 isDetachedEditingEnabled(): boolean
 ```
@@ -1130,7 +1130,7 @@ const enabled = doc.isDetachedEditingEnabled();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.isDetached">
 ```typescript
 isDetached(): boolean
 ```
@@ -1298,7 +1298,7 @@ const frontiers = doc.vvToFrontiers(vv);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.oplogVersion">
 ```typescript
 oplogVersion(): VersionVector
 ```
@@ -1317,7 +1317,7 @@ const vv = doc.oplogVersion();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.oplogFrontiers">
 ```typescript
 oplogFrontiers(): Frontiers
 ```
@@ -1336,7 +1336,7 @@ const frontiers = doc.oplogFrontiers();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.cmpWithFrontiers">
 ```typescript
 cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
 ```
@@ -1359,7 +1359,7 @@ const cmp = doc.cmpWithFrontiers(frontiers);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.cmpFrontiers">
 ```typescript
 cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
 ```
@@ -1387,7 +1387,7 @@ const cmp = doc.cmpFrontiers(f1, f2);
 ### JSONPath & Path Queries
 Use simple path strings and JSONPath to fetch nested values and containers. Paths are formed from root container names and keys (e.g., map/key or list/0). For container IDs, see [Container ID](/docs/advanced/cid).
 
-<Method>
+<Method id="LoroDoc.getByPath">
 ```typescript
 getByPath(path: string): Value | Container | undefined
 ```
@@ -1411,7 +1411,7 @@ const value = doc.getByPath("map/key");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.getPathToContainer">
 ```typescript
 getPathToContainer(id: ContainerID): (string | number)[] | undefined
 ```
@@ -1434,7 +1434,7 @@ const path = doc.getPathToContainer(map.id);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.JSONPath">
 ```typescript
 JSONPath(jsonpath: string): any[]
 ```
@@ -1461,7 +1461,7 @@ const results = doc.JSONPath("$.map");
 ### Shallow Doc Utilities
 These helpers relate to shallow snapshots and redaction. If you need a refresher on what “shallow” means, see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
-<Method>
+<Method id="LoroDoc.shallowSinceVV">
 ```typescript
 shallowSinceVV(): VersionVector
 ```
@@ -1480,7 +1480,7 @@ const vv = doc.shallowSinceVV();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.shallowSinceFrontiers">
 ```typescript
 shallowSinceFrontiers(): Frontiers
 ```
@@ -1499,7 +1499,7 @@ const frontiers = doc.shallowSinceFrontiers();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.isShallow">
 ```typescript
 isShallow(): boolean
 ```
@@ -1518,7 +1518,7 @@ const shallow = doc.isShallow();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.setHideEmptyRootContainers">
 ```typescript
 setHideEmptyRootContainers(hide: boolean): void
 ```
@@ -1539,7 +1539,7 @@ doc.setHideEmptyRootContainers(true);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.deleteRootContainer">
 ```typescript
 deleteRootContainer(cid: ContainerID): void
 ```
@@ -1560,7 +1560,7 @@ doc.deleteRootContainer(map.id);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.hasContainer">
 ```typescript
 hasContainer(id: ContainerID): boolean
 ```
@@ -1585,7 +1585,7 @@ const exists = doc.hasContainer(map.id);
 
 ### JSON Serialization with Replacer
 
-<Method>
+<Method id="LoroDoc.toJsonWithReplacer">
 ```typescript
 toJsonWithReplacer(replacer: (key: string | number, value: Value | Container) => Value | Container | undefined): Value
 ```
@@ -1713,7 +1713,7 @@ const change = doc.getChangeAt(frontiers[0]);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroDoc.getChangeAtLamport">
 ```typescript
 getChangeAtLamport(peer_id: string, lamport: number): Change | undefined
 ```
@@ -1866,7 +1866,7 @@ APIs and Loro handles index transformation.
 See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
 
-<Method>
+<Method id="LoroText.insert">
 ```typescript
 insert(index: number, text: string): void
 ```
@@ -1890,7 +1890,7 @@ text.insert(6, "World");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.delete">
 ```typescript
 delete(index: number, len: number): void
 ```
@@ -1909,7 +1909,7 @@ text.delete(5, 1); // Delete one character at position 5
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.mark">
 ```typescript
 mark(range: { start: number, end: number }, key: string, value: Value): void
 ```
@@ -1930,7 +1930,7 @@ text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.unmark">
 ```typescript
 unmark(range: { start: number, end: number }, key: string): void
 ```
@@ -1948,7 +1948,7 @@ text.unmark({ start: 0, end: 5 }, "bold");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.toDelta">
 ```typescript
 toDelta(): Delta<string>[]
 ```
@@ -1965,7 +1965,7 @@ const delta = text.toDelta();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.applyDelta">
 ```typescript
 applyDelta(delta: Delta<string>[]): void
 ```
@@ -1985,7 +1985,7 @@ text.applyDelta([
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.update">
 ```typescript
 update(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
 ```
@@ -2010,7 +2010,7 @@ text.update("Hello World", { timeoutMs: 100 });
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.updateByLine">
 ```typescript
 updateByLine(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
 ```
@@ -2028,7 +2028,7 @@ text.updateByLine("Line A\nLine B\nLine C");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.getCursor">
 ```typescript
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
@@ -2053,7 +2053,7 @@ const cursor = text.getCursor(5);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroText.toString">
 ```typescript
 toString(): string
 ```
@@ -2075,7 +2075,7 @@ An ordered list container for collaborative arrays. Uses index-based APIs; under
 by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list), 
 [Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
 
-<Method>
+<Method id="LoroList.insert">
 ```typescript
 insert(pos: number, value: Value | Container): void
 ```
@@ -2094,7 +2094,7 @@ list.insert(1, { type: "object" });
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.insertContainer">
 ```typescript
 insertContainer<T extends Container>(pos: number, container: T): T
 ```
@@ -2115,7 +2115,7 @@ subText.insert(0, "Nested text");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.delete">
 ```typescript
 delete(pos: number, len: number): void
 ```
@@ -2133,7 +2133,7 @@ list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.push">
 ```typescript
 push(value: Value | Container): void
 ```
@@ -2150,7 +2150,7 @@ list.push("Last item");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.getIdAt">
 ```typescript
 getIdAt(pos: number): { peer: PeerID, counter: number } | undefined
 ```
@@ -2166,7 +2166,7 @@ const id0 = list.getIdAt(0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.pushContainer">
 ```typescript
 pushContainer<T extends Container>(container: T): T
 ```
@@ -2186,7 +2186,7 @@ map.set("key", "value");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.pop">
 ```typescript
 pop(): Value | Container | undefined
 ```
@@ -2205,7 +2205,7 @@ const lastItem = list.pop();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.get">
 ```typescript
 get(index: number): Value | Container | undefined
 ```
@@ -2227,7 +2227,7 @@ const item = list.get(0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.getCursor">
 ```typescript
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
@@ -2251,7 +2251,7 @@ const cursor = list.getCursor(2);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.toArray">
 ```typescript
 toArray(): (Value | Container)[]
 ```
@@ -2267,7 +2267,7 @@ const array = list.toArray();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.clear">
 ```typescript
 clear(): void
 ```
@@ -2281,7 +2281,7 @@ list.clear();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroList.length">
 ```typescript
 length: number
 ```
@@ -2301,7 +2301,7 @@ console.log(`List has ${list.length} items`);
 
 A key-value map container for collaborative objects. See [Map](/docs/tutorial/map).
 
-<Method>
+<Method id="LoroMap.set">
 ```typescript
 set(key: string, value: Value | Container): void
 ```
@@ -2326,7 +2326,7 @@ map.set("age", 30);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.setContainer">
 ```typescript
 setContainer<T extends Container>(key: string, container: T): T
 ```
@@ -2353,7 +2353,7 @@ list.push("item1");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.get">
 ```typescript
 get(key: string): Value | Container | undefined
 ```
@@ -2376,7 +2376,7 @@ const name = map.get("name");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.getOrCreateContainer">
 ```typescript
 getOrCreateContainer<T extends Container>(key: string, container: T): T
 ```
@@ -2402,7 +2402,7 @@ const text = map.getOrCreateContainer("description", new LoroText());
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.delete">
 ```typescript
 delete(key: string): void
 ```
@@ -2423,7 +2423,7 @@ map.delete("obsoleteKey");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.clear">
 ```typescript
 clear(): void
 ```
@@ -2441,7 +2441,7 @@ map.clear();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.keys">
 ```typescript
 keys(): string[]
 ```
@@ -2461,7 +2461,7 @@ const allKeys = map.keys();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.values">
 ```typescript
 values(): (Value | Container)[]
 ```
@@ -2481,7 +2481,7 @@ const allValues = map.values();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.entries">
 ```typescript
 entries(): [string, Value | Container][]
 ```
@@ -2503,7 +2503,7 @@ for (const [key, value] of map.entries()) {
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.getLastEditor">
 ```typescript
 getLastEditor(key: string): PeerID | undefined
 ```
@@ -2520,7 +2520,7 @@ const who = map.getLastEditor("k");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMap.size">
 ```typescript
 size: number
 ```
@@ -2544,7 +2544,7 @@ console.log(`Map has ${map.size} entries`);
 
 A hierarchical tree container for nested structures. Supports moving subtrees while handling concurrent edits. See [Tree](/docs/tutorial/tree).
 
-<Method>
+<Method id="LoroTree.createNode">
 ```typescript
 createNode(parent?: TreeID, index?: number): LoroTreeNode
 ```
@@ -2569,7 +2569,7 @@ const child = root.createNode(0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.move">
 ```typescript
 move(target: TreeID, parent?: TreeID, index?: number): void
 ```
@@ -2594,7 +2594,7 @@ tree.move(nodeId, newParentId, 0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.delete">
 ```typescript
 delete(target: TreeID): void
 ```
@@ -2616,7 +2616,7 @@ tree.delete(nodeId);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.getNodeByID">
 ```typescript
 getNodeByID(id: TreeID): LoroTreeNode | undefined
 ```
@@ -2643,7 +2643,7 @@ if (node) {
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.nodes">
 ```typescript
 nodes(): LoroTreeNode[]
 ```
@@ -2663,7 +2663,7 @@ const allNodes = tree.nodes();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.roots">
 ```typescript
 roots(): LoroTreeNode[]
 ```
@@ -2683,7 +2683,7 @@ const rootNodes = tree.roots();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.has">
 ```typescript
 has(target: TreeID): boolean
 ```
@@ -2709,7 +2709,7 @@ if (tree.has(nodeId)) {
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTree.isNodeDeleted">
 ```typescript
 isNodeDeleted(target: TreeID): boolean
 ```
@@ -2738,7 +2738,7 @@ if (tree.isNodeDeleted(nodeId)) {
 
 Represents a single node in the tree.
 
-<Method>
+<Method id="LoroTreeNode.data">
 ```typescript
 data: LoroMap
 ```
@@ -2757,7 +2757,7 @@ node.data.set("expanded", true);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.createNode">
 ```typescript
 createNode(index?: number): LoroTreeNode
 ```
@@ -2780,7 +2780,7 @@ const childId = node.createNode(0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.move">
 ```typescript
 move(parent?: LoroTreeNode, index?: number): void
 ```
@@ -2804,7 +2804,7 @@ node.move(parent, 0);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.moveAfter">
 ```typescript
 moveAfter(target: LoroTreeNode): void
 ```
@@ -2827,7 +2827,7 @@ node.moveAfter(sibling);
 ```
 </Indent> 
 
-<Method>
+<Method id="LoroTreeNode.moveBefore">
 ```typescript
 moveBefore(target: LoroTreeNode): void
 ```
@@ -2850,7 +2850,7 @@ node.moveBefore(sibling);
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.parent">
 ```typescript
 parent(): LoroTreeNode | undefined
 ```
@@ -2871,7 +2871,7 @@ const parentNode = node.parent();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.children">
 ```typescript
 children(): LoroTreeNode[]
 ```
@@ -2892,7 +2892,7 @@ const childNodes = node.children();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.index">
 ```typescript
 index(): number | undefined
 ```
@@ -2913,7 +2913,7 @@ const position = node.index();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.fractionalIndex">
 ```typescript
 fractionalIndex(): string | undefined
 creationId(): { peer: PeerID, counter: number }
@@ -2936,7 +2936,7 @@ const lastMove = node.getLastMoveId();
 ```
 </Indent>
 
-<Method>
+<Method id="LoroTreeNode.isDeleted">
 ```typescript
 isDeleted(): boolean
 ```
@@ -2963,7 +2963,7 @@ if (node.isDeleted()) {
 
 A counter CRDT for collaborative numeric values.
 
-<Method>
+<Method id="LoroCounter.increment">
 ```typescript
 increment(value: number): void
 ```
@@ -2984,7 +2984,7 @@ counter.increment(5);   // +5
 ```
 </Indent>
 
-<Method>
+<Method id="LoroCounter.decrement">
 ```typescript
 decrement(value: number): void
 ```
@@ -3005,7 +3005,7 @@ counter.decrement(3);   // -3
 ```
 </Indent>
 
-<Method>
+<Method id="LoroCounter.value">
 ```typescript
 value: number
 ```
@@ -3032,7 +3032,7 @@ concurrent moves (concurrent moves resolve to one final position). See [List and
 
 Extends `LoroList` with additional methods for efficient element reordering.
 
-<Method>
+<Method id="LoroMovableList.move">
 ```typescript
 move(from: number, to: number): void
 ```
@@ -3054,7 +3054,7 @@ movableList.move(0, 3); // Move first element to fourth position
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMovableList.set">
 ```typescript
 set(pos: number, value: Value | Container): void
 ```
@@ -3076,7 +3076,7 @@ movableList.set(0, "Updated value");
 ```
 </Indent>
 
-<Method>
+<Method id="LoroMovableList.setContainer">
 ```typescript
 setContainer<T extends Container>(pos: number, container: T): T
 ```
@@ -3106,10 +3106,10 @@ Import/export updates over any transport and choose the right encoding for speed
 
 **Quick Index**
 
-- Export modes: `export({ mode: ... })` — snapshot, update, shallow-snapshot, updates-in-range
-- Import variants: `import`, `importBatch`
-- JSON tools: `exportJsonUpdates`, `importJsonUpdates`, `redactJsonUpdates`
-- Metadata: `decodeImportBlobMeta`
+- Export modes: [`export({ mode: ... })`](#LoroDoc.export) — snapshot, update, shallow-snapshot, updates-in-range
+- Import variants: [`import`](#LoroDoc.import), [`importBatch`](#LoroDoc.importBatch)
+- JSON tools: [`exportJsonUpdates`](#LoroDoc.exportJsonUpdates), [`importJsonUpdates`](#LoroDoc.importJsonUpdates), [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates)
+- Metadata: [`decodeImportBlobMeta`](#LoroDoc.decodeImportBlobMeta)
 
 **Gotchas**
 
