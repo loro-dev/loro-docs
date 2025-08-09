@@ -1246,7 +1246,7 @@ revertTo(frontiers: Frontiers): void
 <Indent>
 Revert the document to a given version by generating inverse operations.
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1266,7 +1266,7 @@ applyDiff(diff: [ContainerID, Diff | JsonDiff][]): void
 <Indent>
 Apply a batch of diffs to the document.
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
@@ -3351,7 +3351,7 @@ getLastEditor(key: string): PeerID | undefined
 ```
 </Method>
 <Indent>
-```typescript no_run
+```ts twoslash  
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3359,6 +3359,7 @@ const map = doc.getMap("map");
 map.set("k", 1);
 doc.commit();
 const who = map.getLastEditor("k");
+// who = doc.peerIdStr
 ```
 </Indent>
 
@@ -3594,7 +3595,7 @@ Moves a node to a new position.
 - `index` - Position among siblings
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3618,11 +3619,12 @@ Deletes a node and its descendants.
 - `target` - Node to delete
 
 **Example:**
-```typescript no_run
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-declare const nodeId: TreeID;
+const node = tree.createNode();
+const nodeId = node.id;
 
 // Usage example:
 tree.delete(nodeId);
@@ -3643,11 +3645,12 @@ Gets a node handler by its ID.
 **Returns:** Node handler or undefined
 
 **Example:**
-```typescript no_run
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
-declare const nodeId: TreeID;
+const _node = tree.createNode();
+const nodeId = _node.id;
 
 // Usage example:
 const node = tree.getNodeByID(nodeId);
@@ -3711,7 +3714,7 @@ Checks if a node exists.
 **Returns:** Boolean indicating existence
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3738,7 +3741,7 @@ Checks if a node has been deleted.
 **Returns:** Boolean indicating deletion status
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -4431,7 +4434,7 @@ Import/export updates over any transport and choose the right encoding for speed
 
 #### Basic Synchronization
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 // Peer A: Export updates
@@ -4442,11 +4445,12 @@ const updates = doc1.export({ mode: "update" });
 // Peer B: Import updates
 const doc2 = new LoroDoc();
 doc2.import(updates);
+// now doc2.getText("text").toString() === "Hello"
 ```
 
 #### Continuous Sync
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
@@ -4497,7 +4501,7 @@ ws.on('message', (data) => {
 
 Shallow snapshots allow for efficient storage by garbage collecting deleted operations.
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4521,7 +4525,7 @@ newDoc.import(shallowSnapshot);
 
 Navigate through document history:
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4550,7 +4554,7 @@ doc.checkoutToLatest();
 
 Create document branches:
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4570,7 +4574,7 @@ fork2.getText("text").insert(0, "Fork 2 changes");
 
 Track document versions:
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const vv = doc.version();
@@ -4794,7 +4798,7 @@ tree.subscribe((e) => {
 
 Subscribe to nested changes:
 
-```typescript no_run
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -5069,7 +5073,7 @@ undo.clear();
 
 Handle cursor restoration and side effects:
 
-```typescript no_run
+```typescript no_run twoslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
 declare function saveCursorPositions(): any;
@@ -5275,7 +5279,7 @@ Decode frontiers from bytes.
 **Returns:** Array of operation IDs
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { decodeFrontiers } from "loro-crdt";
 
 declare const encodedData: Uint8Array;
@@ -5339,7 +5343,7 @@ Decode metadata from an import blob.
 **Returns:** Import blob metadata
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { decodeImportBlobMeta } from "loro-crdt";
 
 declare const blob: Uint8Array;
@@ -5536,7 +5540,7 @@ Apply remote updates.
 - `bytes` - Encoded updates from remote peer
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
 
@@ -5611,7 +5615,7 @@ Subscribe to local ephemeral updates for syncing to remote peers.
 **Returns:** Unsubscribe function
 
 **Example:**
-```typescript no_run
+```typescript no_run twoslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
 
@@ -5648,7 +5652,7 @@ store.destroy();
 
 ### Complete Example
 
-```typescript no_run
+```typescript no_run twoslash
 import { EphemeralStore } from "loro-crdt";
 
 // Assume we have:
