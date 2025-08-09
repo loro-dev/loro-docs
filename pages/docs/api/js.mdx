@@ -5065,33 +5065,33 @@ console.log("Blob metadata:", metadata);
 
 ## EphemeralStore
 
-Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns.
+Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns. Each entry uses timestamp-based LWW (Last-Write-Wins) for conflict resolution.
 
-### EphemeralStoreWasm
+### EphemeralStore
 
-<Method id="EphemeralStoreWasm.constructor">
+<Method id="EphemeralStore.constructor">
 ```typescript
-constructor(timeout: number)
+constructor(timeout?: number)
 ```
 </Method>
 <Indent>
 Creates a new EphemeralStore instance.
 
 **Parameters:**
-- `timeout` - Duration in milliseconds. A peer's state is considered outdated if its last update is older than this timeout.
+- `timeout` - Duration in milliseconds. A peer's state is considered outdated if its last update is older than this timeout. Default is 30000ms (30 seconds).
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
+import { EphemeralStore } from "loro-crdt";
 
 // Create ephemeral store with 30 second timeout
-const store = new EphemeralStoreWasm(30000);
+const store = new EphemeralStore(30000);
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.set">
+<Method id="EphemeralStore.set">
 ```typescript
-set(key: string, value: any): void
+set<K extends keyof T>(key: K, value: T[K]): void
 ```
 </Method>
 <Indent>
@@ -5103,8 +5103,8 @@ Set an ephemeral value.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 
 // Usage example:
 store.set("cursor", { line: 10, column: 5 });
@@ -5113,9 +5113,9 @@ store.set("user", { name: "Alice", color: "#ff0000" });
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.get">
+<Method id="EphemeralStore.get">
 ```typescript
-get(key: string): any
+get<K extends keyof T>(key: K): T[K] | undefined
 ```
 </Method>
 <Indent>
@@ -5128,8 +5128,8 @@ Get an ephemeral value.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 
 // Usage example:
@@ -5138,9 +5138,9 @@ console.log(cursor); // { line: 10 }
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.delete">
+<Method id="EphemeralStore.delete">
 ```typescript
-delete(key: string): void
+delete<K extends keyof T>(key: K): void
 ```
 </Method>
 <Indent>
@@ -5151,8 +5151,8 @@ Delete an ephemeral value.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 
 // Usage example:
@@ -5160,9 +5160,9 @@ store.delete("cursor");
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.getAllStates">
+<Method id="EphemeralStore.getAllStates">
 ```typescript
-getAllStates(): any
+getAllStates(): Partial<T>
 ```
 </Method>
 <Indent>
@@ -5172,8 +5172,8 @@ Get all ephemeral states.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 store.set("user", { name: "Alice" });
 
@@ -5183,9 +5183,9 @@ console.log(allStates);
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.encode">
+<Method id="EphemeralStore.encode">
 ```typescript
-encode(key: string): Uint8Array
+encode<K extends keyof T>(key: K): Uint8Array
 ```
 </Method>
 <Indent>
@@ -5198,8 +5198,8 @@ Encode a specific key's state for transmission.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 
 // Usage example:
@@ -5208,7 +5208,7 @@ const encoded = store.encode("cursor");
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.encodeAll">
+<Method id="EphemeralStore.encodeAll">
 ```typescript
 encodeAll(): Uint8Array
 ```
@@ -5220,8 +5220,8 @@ Encode all states for transmission.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 store.set("user", { name: "Alice" });
 
@@ -5231,21 +5231,21 @@ const encoded = store.encodeAll();
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.apply">
+<Method id="EphemeralStore.apply">
 ```typescript
-apply(data: Uint8Array): void
+apply(bytes: Uint8Array): void
 ```
 </Method>
 <Indent>
 Apply remote updates.
 
 **Parameters:**
-- `data` - Encoded updates from remote peer
+- `bytes` - Encoded updates from remote peer
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 
 // Usage example:
 declare const remoteData: Uint8Array;
@@ -5253,46 +5253,7 @@ store.apply(remoteData);
 ```
 </Indent>
 
-<Method id="EphemeralStoreWasm.removeOutdated">
-```typescript
-removeOutdated(): void
-```
-</Method>
-<Indent>
-Remove outdated states based on the timeout.
-
-**Example:**
-```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
-
-// Usage example:
-store.removeOutdated();
-```
-</Indent>
-
-<Method id="EphemeralStoreWasm.isEmpty">
-```typescript
-isEmpty(): boolean
-```
-</Method>
-<Indent>
-Check if the store is empty.
-
-**Returns:** True if empty
-
-**Example:**
-```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
-
-// Usage example:
-const empty = store.isEmpty();
-console.log(empty); // true
-```
-</Indent>
-
-<Method id="EphemeralStoreWasm.keys">
+<Method id="EphemeralStore.keys">
 ```typescript
 keys(): string[]
 ```
@@ -5304,8 +5265,8 @@ Get all keys in the store.
 
 **Example:**
 ```ts twoslash
-import { EphemeralStoreWasm } from "loro-crdt";
-const store = new EphemeralStoreWasm(30000);
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
 store.set("cursor", { line: 10 });
 store.set("user", { name: "Alice" });
 
@@ -5314,6 +5275,117 @@ const allKeys = store.keys();
 console.log(allKeys); // ["cursor", "user"]
 ```
 </Indent>
+
+<Method id="EphemeralStore.subscribe">
+```typescript
+subscribe(listener: EphemeralListener): () => void
+```
+</Method>
+<Indent>
+Subscribe to all ephemeral state changes.
+
+**Parameters:**
+- `listener` - Callback function for state changes
+
+**Returns:** Unsubscribe function
+
+**Example:**
+```ts twoslash
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
+
+// Usage example:
+const unsubscribe = store.subscribe((event) => {
+  console.log("Ephemeral state changed:", event);
+});
+
+// Later, unsubscribe
+unsubscribe();
+```
+</Indent>
+
+<Method id="EphemeralStore.subscribeLocalUpdates">
+```typescript
+subscribeLocalUpdates(listener: EphemeralLocalListener): () => void
+```
+</Method>
+<Indent>
+Subscribe to local ephemeral updates for syncing to remote peers.
+
+**Parameters:**
+- `listener` - Callback function that receives encoded updates
+
+**Returns:** Unsubscribe function
+
+**Example:**
+```ts twoslash
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
+
+// Usage example:
+declare const websocket: { send: (data: Uint8Array) => void };
+
+const unsubscribe = store.subscribeLocalUpdates((data) => {
+  // Send to remote peers
+  websocket.send(data);
+});
+
+// Later, unsubscribe
+unsubscribe();
+```
+</Indent>
+
+<Method id="EphemeralStore.destroy">
+```typescript
+destroy(): void
+```
+</Method>
+<Indent>
+Clean up and destroy the ephemeral store.
+
+**Example:**
+```ts twoslash
+import { EphemeralStore } from "loro-crdt";
+const store = new EphemeralStore(30000);
+
+// Usage example:
+store.destroy();
+```
+</Indent>
+
+### Complete Example
+
+```ts twoslash
+import { EphemeralStore } from "loro-crdt";
+
+// Assume we have:
+declare const websocket: {
+  send: (data: Uint8Array) => void;
+  on: (event: string, handler: (data: any) => void) => void;
+};
+
+const store = new EphemeralStore(30000);
+const store2 = new EphemeralStore(30000);
+
+// Subscribe to local updates
+store.subscribeLocalUpdates((data) => {
+  store2.apply(data);
+});
+
+// Subscribe to all updates
+store2.subscribe((event) => {
+  console.log("event:", event);
+});
+
+// Set a value
+store.set("key", "value");
+
+// Encode the value
+const encoded = store.encode("key");
+
+// Apply the encoded value
+store2.apply(encoded);
+```
 
 ---
 
