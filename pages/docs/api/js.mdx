@@ -35,8 +35,8 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 ### Data Structures
 - Ordered lists: [`getList`](#LoroDoc.getList) with [`push`](#LoroList.push), [`insert`](#LoroList.insert)
 - Key-value maps: [`getMap`](#LoroDoc.getMap) with [`set`](#LoroMap.set), [`get`](#LoroMap.get)
-- Hierarchical trees: [`getTree`](#LoroDoc.getTree) for file systems, nested comments
-- Reorderable lists: [`getMovableList`](#LoroDoc.getMovableList) with [`move`](#LoroMovableList.move)
+- Movable trees: [`getTree`](#LoroDoc.getTree) with [`move`](#LoroTree.move) for file systems, nested comments
+- Movable lists: [`getMovableList`](#LoroDoc.getMovableList) with [`move`](#LoroMovableList.move) for reorderable items
 
 ### Advanced Features
 - Undo/redo user edits: see [Undo/Redo](#undoredo) with `UndoManager`
