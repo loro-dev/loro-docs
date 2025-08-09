@@ -79,7 +79,7 @@ new LoroDoc()
 Creates a new Loro document with a randomly generated peer ID.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -101,7 +101,7 @@ Creates a new LoroDoc from a snapshot. This is useful for loading a document fro
 **Returns:** A new LoroDoc instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have a snapshot from a previous export
@@ -122,7 +122,7 @@ readonly peerId: bigint
 Gets the peer ID of the current writer as a bigint.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -139,7 +139,7 @@ readonly peerIdStr: PeerID
 Gets the peer ID as a decimal string.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -161,7 +161,7 @@ Sets the peer ID for this document. It must be a number, a BigInt, or a decimal 
 - `peer` - Peer ID as number, bigint, or decimal string
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -183,7 +183,7 @@ Configures whether to automatically record timestamps for changes. Timestamps us
 - `auto_record` - Whether to automatically record timestamps
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -203,7 +203,7 @@ Sets the interval in milliseconds for merging continuous local changes into a si
 - `interval` - Merge interval in milliseconds
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -230,7 +230,7 @@ type StyleConfig = Record<string, {
 ```
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -254,7 +254,7 @@ Configures the default text style for the document when using LoroText. If undef
 - `style` - Default style configuration (optional)
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -280,7 +280,7 @@ Note: Creating root containers (e.g., `doc.getText("...")`) does not record oper
 **Returns:** A `LoroText` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -303,7 +303,7 @@ Gets or creates a list container with the given name. Unsure whether to use List
 **Returns:** A `LoroList` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -326,7 +326,7 @@ Gets or creates a map container with the given name. See [Map](/docs/tutorial/ma
 **Returns:** A `LoroMap` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -349,7 +349,7 @@ Gets or creates a tree container with the given name. Learn about hierarchical e
 **Returns:** A `LoroTree` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -372,7 +372,7 @@ Gets or creates a counter container with the given name. Counters are special CR
 **Returns:** A `LoroCounter` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -395,7 +395,7 @@ Gets or creates a movable list container with the given name. MovableList is des
 **Returns:** A `LoroMovableList` instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -419,7 +419,7 @@ Gets a container by its unique ID. Container IDs (CID) uniquely reference contai
 **Returns:** The container instance or undefined if not found
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -491,7 +491,7 @@ Imports updates or snapshots into the document. Returns an `ImportStatus` descri
 - `data` - Binary data or another LoroDoc to import from
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -516,7 +516,7 @@ Efficiently imports multiple updates in a single batch operation. See [Batch Imp
 - `data` - Array of binary updates
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 declare const update1: Uint8Array;
@@ -544,7 +544,7 @@ Exports updates in JSON format for debugging or alternative storage. See [Export
 **Returns:** JSON representation of updates
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -565,7 +565,7 @@ Imports updates from JSON format. Useful for debugging, migration, or custom sto
 - `json` - JSON string or object containing updates
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -592,7 +592,7 @@ Checks out the document to a specific version, making it read-only at that point
 - `frontiers` - Array of OpIds representing the target version
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -615,7 +615,7 @@ checkoutToLatest(): void
 Returns the document to the latest version after a checkout. Related concepts: [Frontiers](/docs/concepts/frontiers) and [Version Vector](/docs/concepts/version_vector).
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -632,7 +632,7 @@ attach(): void
 Attaches the document to track latest changes after being detached. See [Attached vs Detached States](/docs/concepts/attached_detached) for how Loro separates current state from history.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -649,7 +649,7 @@ detach(): void
 Detaches the document from tracking latest changes, freezing it at current version. See [Attached vs Detached States](/docs/concepts/attached_detached).
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -668,7 +668,7 @@ Creates a new document that is a fork of the current one with a new peer ID. For
 **Returns:** A new LoroDoc instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -690,7 +690,7 @@ Creates a fork at a specific version in history. Learn more about versions, DAG 
 **Returns:** A new LoroDoc instance
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -731,7 +731,7 @@ interface LoroEventBatch {
 ```
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -790,7 +790,7 @@ Subscribes to the first commit from each peer, useful for tracking peer metadata
 **Returns:** Unsubscribe function
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -825,7 +825,7 @@ Note: Loro transactions are not ACID database transactions. They bundle local op
   - `timestamp` - Unix timestamp in seconds
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -850,7 +850,7 @@ Converts the entire document to a JSON-compatible value. If you prefer a structu
 **Returns:** JSON representation of the document
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -870,7 +870,7 @@ Gets a shallow representation where sub-containers are represented by their IDs.
 **Returns:** Shallow JSON value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -890,7 +890,7 @@ Gets the deep value of the document with container IDs preserved. This is useful
 **Returns:** Document value with container IDs
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -909,7 +909,7 @@ Gets the current version vector of the document. Version vectors track how much 
 **Returns:** Map from PeerID to counter
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -931,7 +931,7 @@ Note: Frontiers are compact version representation. For trade-offs versus Versio
 **Returns:** Array of OpIds
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -956,7 +956,7 @@ Calculates differences between two versions. Understanding how Loro computes dif
 **Returns:** Array of container IDs and their diffs
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1178,7 +1178,7 @@ Enables or disables detached editing mode. Detached editing lets you stage edits
 - `enable` - Whether to enable detached editing
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1197,7 +1197,7 @@ Checks if detached editing mode is enabled.
 **Returns:** True if detached editing is enabled
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1216,7 +1216,7 @@ Checks if the document is currently detached.
 **Returns:** True if document is detached
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1238,7 +1238,7 @@ Sets the message for the next commit.
 - `msg` - Commit message
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1258,7 +1258,7 @@ Sets the origin for the next commit.
 - `origin` - Origin identifier
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1278,7 +1278,7 @@ Sets the timestamp for the next commit.
 - `timestamp` - Unix timestamp in seconds
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1298,7 +1298,7 @@ Sets multiple options for the next commit.
 - `options` - Commit options object
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1317,7 +1317,7 @@ clearNextCommitOptions(): void
 Clears all pending commit options.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1341,7 +1341,7 @@ Converts frontiers to a version vector.
 **Returns:** Version vector representation
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1364,7 +1364,7 @@ Converts a version vector to frontiers.
 **Returns:** Frontiers representation
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1384,7 +1384,7 @@ Gets the oplog version vector.
 **Returns:** Oplog version vector
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1403,7 +1403,7 @@ Gets the oplog frontiers.
 **Returns:** Oplog frontiers
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1425,7 +1425,7 @@ Compares current document state with given frontiers.
 **Returns:** -1 if behind, 0 if equal, 1 if ahead
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1449,7 +1449,7 @@ Compares two frontiers.
 **Returns:** -1 if a < b, 0 if equal, 1 if a > b, undefined if incomparable
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1476,7 +1476,7 @@ Gets a value or container by its path.
 **Returns:** Value or container at the path, or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -1501,7 +1501,7 @@ Gets the path to a container by its ID.
 **Returns:** Array representing the path, or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -1524,7 +1524,7 @@ Queries the document using JSONPath syntax.
 **Returns:** Array of matching values
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -1549,7 +1549,7 @@ Gets the version vector since which the document is shallow.
 **Returns:** Version vector
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1568,7 +1568,7 @@ Gets the frontiers since which the document is shallow.
 **Returns:** Frontiers
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1587,7 +1587,7 @@ Checks if the document is shallow.
 **Returns:** True if document is shallow
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1607,7 +1607,7 @@ Controls whether empty root containers are hidden in JSON output.
 - `hide` - Whether to hide empty root containers
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1628,7 +1628,7 @@ Deletes a root container.
 - `cid` - Container ID to delete
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -1652,7 +1652,7 @@ Checks if a container exists in the document.
 **Returns:** True if container exists
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -1677,7 +1677,7 @@ Customize JSON serialization of containers and values.
 **Returns:** Customized JSON value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -1704,7 +1704,7 @@ debugHistory(): void
 Prints debug information about the document history.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1723,7 +1723,7 @@ Gets the total number of changes in the document.
 **Returns:** Number of changes
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1742,7 +1742,7 @@ Gets the total number of operations in the document.
 **Returns:** Number of operations
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1761,7 +1761,7 @@ Gets all changes grouped by peer ID.
 **Returns:** Map of peer ID to changes
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1783,7 +1783,7 @@ Gets a specific change by operation ID.
 **Returns:** Change object
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1807,7 +1807,7 @@ Gets a change by peer ID and Lamport timestamp.
 **Returns:** Change object or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1829,7 +1829,7 @@ Gets all operations in a specific change.
 **Returns:** Array of operations
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1849,7 +1849,7 @@ Gets the number of pending operations in the current transaction.
 **Returns:** Number of pending operations
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1876,7 +1876,7 @@ Decodes metadata from an import blob.
 **Returns:** Import blob metadata
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, decodeImportBlobMeta } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1902,7 +1902,7 @@ Use this to safely remove accidentally leaked sensitive content from history whi
 **Returns:** Redacted JSON schema
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, redactJsonUpdates } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1956,7 +1956,7 @@ Inserts text at the specified position using UTF-16 code unit indices (same as J
 - `text` - Text to insert
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -1981,7 +1981,7 @@ Deletes text from the specified position using UTF-16 code units.
 - `len` - Number of UTF-16 code units to delete
 
 **Example:**
-```typescript
+```ts twoslash
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
 text.delete(6, 2); // Delete emoji (2 UTF-16 units)
@@ -2004,7 +2004,7 @@ Applies formatting to a text range. Marks can be configured to expand/stop at ed
 - `value` - Style value
 
 **Example:**
-```typescript
+```ts twoslash
 text.mark({ start: 0, end: 5 }, "bold", true);
 text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 ```
@@ -2023,7 +2023,7 @@ Removes formatting from a text range. For how conflicting edits on marks resolve
 - `key` - Style attribute to remove
 
 **Example:**
-```typescript
+```ts twoslash
 text.unmark({ start: 0, end: 5 }, "bold");
 ```
 </Indent>
@@ -2039,7 +2039,7 @@ Converts text to Delta format (Quill-compatible).
 **Returns:** Array of Delta operations
 
 **Example:**
-```typescript
+```ts twoslash
 const delta = text.toDelta();
 // [{ insert: "Hello", attributes: { bold: true } }, { insert: " World" }]
 ```
@@ -2057,7 +2057,7 @@ Applies Delta operations to the text.
 - `delta` - Array of Delta operations
 
 **Example:**
-```typescript
+```ts twoslash
 text.applyDelta([
   { insert: "Hello", attributes: { bold: true } },
   { insert: " World" }
@@ -2080,7 +2080,7 @@ Updates the current text to the target text using Myers' diff algorithm.
   - `useRefinedDiff` - Use refined diff for better quality on long texts
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2123,7 +2123,7 @@ Gets a stable cursor position that survives edits.
 **Returns:** Cursor object or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2144,7 +2144,7 @@ Converts to plain text string.
 **Returns:** Plain text content
 
 **Example:**
-```typescript
+```ts twoslash
 const plainText = text.toString();
 ```
 </Indent>
@@ -2165,7 +2165,7 @@ Gets the character at a specific UTF-16 code unit position.
 **Returns:** Character at position
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2196,7 +2196,7 @@ Extracts a section of the text using UTF-16 code unit positions.
 **Returns:** Sliced text
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2224,7 +2224,7 @@ Replaces text at a position with new content.
 **Returns:** Deleted text
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2247,7 +2247,7 @@ Appends text to the end of the document.
 - `s` - String to append
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2269,7 +2269,7 @@ Iterates over each character in the text.
 - `callback` - Function called for each character. Return false to stop iteration.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2296,7 +2296,7 @@ Inserts text at a UTF-8 byte index position.
 - `content` - Text to insert
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2318,7 +2318,7 @@ Deletes text at a UTF-8 byte index position.
 - `len` - Number of UTF-8 bytes to delete
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2343,7 +2343,7 @@ Gets the peer ID of who last edited the character at a position.
 **Returns:** PeerID of last editor or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2365,7 +2365,7 @@ Returns the container type.
 **Returns:** "Text"
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2385,7 +2385,7 @@ Gets the parent container if this text is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2407,7 +2407,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const text = new LoroText();
@@ -2427,7 +2427,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const text = new LoroText();
@@ -2447,7 +2447,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2467,7 +2467,7 @@ Gets the text content without marks.
 **Returns:** Plain text string
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2489,7 +2489,7 @@ Converts the text to JSON representation.
 **Returns:** JSON value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2509,7 +2509,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2529,7 +2529,7 @@ Gets the length of the text in UTF-16 code units (same as JavaScript's `string.l
 **Note:** Emoji and other characters outside the Basic Multilingual Plane count as 2 units.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2560,7 +2560,7 @@ Inserts a value at the specified position.
 - `value` - Value to insert
 
 **Example:**
-```typescript
+```ts twoslash
 list.insert(0, "First");
 list.insert(1, { type: "object" });
 ```
@@ -2581,7 +2581,7 @@ Inserts a new container at the position.
 **Returns:** The inserted container
 
 **Example:**
-```typescript
+```ts twoslash
 const subText = list.insertContainer(0, new LoroText());
 subText.insert(0, "Nested text");
 ```
@@ -2600,7 +2600,7 @@ Deletes elements from the list.
 - `len` - Number of elements to delete
 
 **Example:**
-```typescript
+```ts twoslash
 list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
 </Indent>
@@ -2617,7 +2617,7 @@ Appends a value to the end of the list.
 - `value` - Value to append
 
 **Example:**
-```typescript
+```ts twoslash
 list.push("Last item");
 ```
 </Indent>
@@ -2652,7 +2652,7 @@ Appends a container to the end of the list.
 **Returns:** The appended container
 
 **Example:**
-```typescript
+```ts twoslash
 const map = list.pushContainer(new LoroMap());
 map.set("key", "value");
 ```
@@ -2691,7 +2691,7 @@ Gets the value at the specified index.
 **Returns:** The value or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -2717,7 +2717,7 @@ Gets a stable cursor for the position.
 **Returns:** Cursor object or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -2739,7 +2739,7 @@ Converts the list to a JavaScript array.
 **Returns:** Array of values
 
 **Example:**
-```typescript
+```ts twoslash
 const array = list.toArray();
 ```
 </Indent>
@@ -2753,7 +2753,7 @@ clear(): void
 Removes all elements from the list.
 
 **Example:**
-```typescript
+```ts twoslash
 list.clear();
 ```
 </Indent>
@@ -2769,7 +2769,7 @@ Gets the number of elements in the list.
 **Returns:** List length
 
 **Example:**
-```typescript
+```ts twoslash
 console.log(`List has ${list.length} items`);
 ```
 </Indent>
@@ -2785,7 +2785,7 @@ Returns the container type.
 **Returns:** "List"
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2805,7 +2805,7 @@ Converts the list to JSON representation.
 **Returns:** JSON array
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2827,7 +2827,7 @@ Gets the parent container if this list is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -2849,7 +2849,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
 const list = new LoroList();
@@ -2869,7 +2869,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
 const list = new LoroList();
@@ -2889,7 +2889,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2909,7 +2909,7 @@ Gets the list values with sub-containers as IDs.
 **Returns:** Array of values
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2929,7 +2929,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2957,7 +2957,7 @@ Note: Setting a key to the same value is a no-op (no operation recorded). See [M
 - `value` - The value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -2984,7 +2984,7 @@ Pitfall: Concurrently creating child containers at the same key from multiple pe
 **Returns:** The set container
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3008,7 +3008,7 @@ Gets the value for a key.
 **Returns:** The value or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3034,7 +3034,7 @@ Pitfall: Avoid parallel creation for the same key across peers; prefer a single 
 **Returns:** The container
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3055,7 +3055,7 @@ Removes a key-value pair.
 - `key` - The key to remove
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3073,7 +3073,7 @@ clear(): void
 Removes all key-value pairs.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3093,7 +3093,7 @@ Gets all keys in the map.
 **Returns:** Array of keys
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3113,7 +3113,7 @@ Gets all values in the map.
 **Returns:** Array of values
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3133,7 +3133,7 @@ Gets all key-value pairs.
 **Returns:** Array of entries
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3172,7 +3172,7 @@ Gets the number of key-value pairs.
 **Returns:** Map size
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3192,7 +3192,7 @@ Returns the container type.
 **Returns:** "Map"
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3212,7 +3212,7 @@ Converts the map to JSON representation.
 **Returns:** JSON object
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3234,7 +3234,7 @@ Gets the parent container if this map is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -3256,7 +3256,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroMap } from "loro-crdt";
 const doc = new LoroDoc();
 const map = new LoroMap();
@@ -3276,7 +3276,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroMap } from "loro-crdt";
 const doc = new LoroDoc();
 const map = new LoroMap();
@@ -3296,7 +3296,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3316,7 +3316,7 @@ Gets the map values with sub-containers as IDs.
 **Returns:** Object with values
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3336,7 +3336,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3364,7 +3364,7 @@ Creates a new tree node.
 **Returns:** The new node's handler
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3388,7 +3388,7 @@ Moves a node to a new position.
 - `index` - Position among siblings
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3412,7 +3412,7 @@ Deletes a node and its descendants.
 - `target` - Node to delete
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3437,7 +3437,7 @@ Gets a node handler by its ID.
 **Returns:** Node handler or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3462,7 +3462,7 @@ Gets all nodes in the tree.
 **Returns:** Array of all nodes
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3482,7 +3482,7 @@ Gets all root nodes.
 **Returns:** Array of root nodes
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3505,7 +3505,7 @@ Checks if a node exists.
 **Returns:** Boolean indicating existence
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3532,7 +3532,7 @@ Checks if a node has been deleted.
 **Returns:** Boolean indicating deletion status
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3556,7 +3556,7 @@ Enables fractional indexing for better concurrent move performance.
 - `jitter` - Jitter amount for fractional indices
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3574,7 +3574,7 @@ disableFractionalIndex(): void
 Disables fractional indexing.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3594,7 +3594,7 @@ Checks if fractional indexing is enabled.
 **Returns:** True if enabled
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3614,7 +3614,7 @@ Returns the container type.
 **Returns:** "Tree"
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3634,7 +3634,7 @@ Converts the tree to JSON representation.
 **Returns:** JSON tree structure
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3654,7 +3654,7 @@ Gets the parent container if this tree is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3676,7 +3676,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroTree } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = new LoroTree();
@@ -3696,7 +3696,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroTree } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = new LoroTree();
@@ -3716,7 +3716,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3736,7 +3736,7 @@ Gets the tree values with sub-containers as IDs.
 **Returns:** Array of tree node values
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3754,7 +3754,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3776,7 +3776,7 @@ data: LoroMap
 A map container for storing node metadata.
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3846,7 +3846,7 @@ Moves this node after a sibling.
 - `target` - Sibling node
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3870,7 +3870,7 @@ Moves this node before a sibling.
 - `target` - Sibling node
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3893,7 +3893,7 @@ Gets the parent node.
 **Returns:** Parent node or undefined
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3915,7 +3915,7 @@ Gets all child nodes.
 **Returns:** Array of children
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3937,7 +3937,7 @@ Gets the position among siblings.
 **Returns:** Index or undefined if root
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3983,7 +3983,7 @@ Checks if this node has been deleted.
 **Returns:** Boolean deletion status
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -4012,7 +4012,7 @@ Increments the counter.
 - `value` - Amount to increment (default: 1)
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
@@ -4033,7 +4033,7 @@ Decrements the counter.
 - `value` - Amount to decrement (default: 1)
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
@@ -4053,7 +4053,7 @@ Gets the current counter value.
 **Returns:** Current numeric value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
@@ -4082,7 +4082,7 @@ Moves an element from one position to another.
 - `to` - Target index
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
@@ -4104,7 +4104,7 @@ Replaces the value at a position.
 - `value` - New value
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
@@ -4128,7 +4128,7 @@ Replaces the value with a container.
 **Returns:** The set container
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
@@ -4334,7 +4334,7 @@ Represents changes to text content using Delta format.
 - `diff` - Array of Delta operations (insert, delete, retain)
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -4373,7 +4373,7 @@ Represents changes to list content using Delta format.
 - `diff` - Array of Delta operations on list items
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -4409,7 +4409,7 @@ Represents changes to map content.
 - `updated` - Record of key-value changes (undefined means deleted)
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -4476,7 +4476,7 @@ Represents changes to tree structure.
 - `move` - Node movement with old and new positions
 
 **Example:**
-```typescript
+```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
