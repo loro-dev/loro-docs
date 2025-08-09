@@ -2,6 +2,18 @@
   /* Enhanced spacing and visual hierarchy through indentation only */
 }
 
+.apiReference .method pre {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin-left: -1rem;
+  padding: 0.75rem 0;
+}
+
+.apiReference .method pre code > span > span:first-child {
+  font-weight: 700;
+}
+
 .apiReference h2 {
   @apply mt-16 mb-8;
 }
@@ -28,32 +40,14 @@
 }
 
 /* Content following h4 directly */
-.apiReference h5 + p,
-.apiReference h5 + ul,
-.apiReference h5 + ol,
-.apiReference h5 + .nextra-code,
-.apiReference h5 + div.nextra-code,
-.apiReference h5 + div[class*="nextra-code"] {
+.apiReference p,
+.apiReference ul,
+.apiReference ol,
+.apiReference .nextra-code,
+.apiReference div.nextra-code,
+.apiReference div[class*="nextra-code"] {
   @apply mt-3;
 }
-
-.apiReference h5 + ul,
-.apiReference h5 + ol,
-.apiReference h5 ~ ul,
-.apiReference h5 ~ ol {
-  @apply mt-3;
-}
-
-/* Content that follows h4 (has other elements in between h4 and content) */
-.apiReference h5 ~ p,
-.apiReference h5 ~ ul,
-.apiReference h5 ~ ol,
-.apiReference h5 ~ .nextra-code,
-.apiReference h5 ~ div.nextra-code,
-.apiReference h5 ~ div[class*="nextra-code"] {
-  @apply mt-3;
-}
-
 
 /* Content following h4 directly */
 .apiReference h4 + p,

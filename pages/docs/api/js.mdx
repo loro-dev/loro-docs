@@ -1,4 +1,6 @@
 import styles from './api-reference.module.css'
+import Indent from './indent';
+import Method from './method';
 
 <div className={styles.apiReference}>
 
@@ -59,16 +61,16 @@ const doc = new LoroDoc();
 
 ### Configuration Methods
 
-#### setPeerId
-
+<Method>
 ```typescript
-setPeerId(peer: PeerID): void
+setPeerId(peer: number | bigint | `${number}`): void
 ```
-
-Sets the peer ID for this document. The peer ID must be a number between 0 and 2^53-1.
+</Method>
+<Indent>
+Sets the peer ID for this document. It must be a number, a BigInt, or a decimal string that fits into an unsigned 64-bit integer.
 
 **Parameters:**
-- `peer` - A numeric peer ID as a string (e.g., "0", "1", "100")
+- `peer` - Peer ID as number, bigint, or decimal string
 
 **Example:**
 ```ts twoslash
@@ -77,13 +79,14 @@ const doc = new LoroDoc();
 // ---cut---
 doc.setPeerId("42");
 ```
+</Indent>
 
-#### setRecordTimestamp
-
+<Method>
 ```typescript
 setRecordTimestamp(auto_record: boolean): void
 ```
-
+</Method>
+<Indent>
 Configures whether to automatically record timestamps for changes. Timestamps use Unix time (seconds since epoch).
 
 **Parameters:**
@@ -96,17 +99,18 @@ const doc = new LoroDoc();
 // ---cut---
 doc.setRecordTimestamp(true);
 ```
+</Indent>
 
-#### setChangeMergeInterval
-
+<Method>
 ```typescript
 setChangeMergeInterval(interval: number): void
 ```
-
-Sets the interval in milliseconds for merging continuous changes into a single change record. This helps reduce the number of change events.
+</Method>
+<Indent>
+Sets the interval in seconds for merging continuous local changes into a single change record.
 
 **Parameters:**
-- `interval` - Merge interval in milliseconds
+- `interval` - Merge interval in seconds
 
 **Example:**
 ```ts twoslash
@@ -115,13 +119,14 @@ const doc = new LoroDoc();
 // ---cut---
 doc.setChangeMergeInterval(1000); // Merge changes within 1 second
 ```
+</Indent>
 
-#### configTextStyle
-
+<Method>
 ```typescript
 configTextStyle(styles: StyleConfig): void
 ```
-
+</Method>
+<Indent>
 Configures the behavior of text styles (marks) in rich text containers.
 
 **Parameters:**
@@ -145,15 +150,16 @@ doc.configTextStyle({
   link: { expand: "none" }
 });
 ```
+</Indent>
 
 ### Container Access Methods
 
-#### getText
-
+<Method>
 ```typescript
 getText(name: string): LoroText
 ```
-
+</Method>
+<Indent>
 Gets or creates a text container with the given name.
 
 **Parameters:**
@@ -169,13 +175,14 @@ const doc = new LoroDoc();
 const text = doc.getText("content");
 text.insert(0, "Hello");
 ```
+</Indent>
 
-#### getList
-
+<Method>
 ```typescript
 getList(name: string): LoroList
 ```
-
+</Method>
+<Indent>
 Gets or creates a list container with the given name.
 
 **Parameters:**
@@ -191,13 +198,14 @@ const doc = new LoroDoc();
 const list = doc.getList("items");
 list.push("Item 1");
 ```
+</Indent>
 
-#### getMap
-
+<Method>
 ```typescript
 getMap(name: string): LoroMap
 ```
-
+</Method>
+<Indent>
 Gets or creates a map container with the given name.
 
 **Parameters:**
@@ -213,13 +221,14 @@ const doc = new LoroDoc();
 const map = doc.getMap("settings");
 map.set("theme", "dark");
 ```
+</Indent>
 
-#### getTree
-
+<Method>
 ```typescript
 getTree(name: string): LoroTree
 ```
-
+</Method>
+<Indent>
 Gets or creates a tree container with the given name.
 
 **Parameters:**
@@ -235,13 +244,14 @@ const doc = new LoroDoc();
 const tree = doc.getTree("fileSystem");
 const root = tree.createNode();
 ```
+</Indent>
 
-#### getCounter
-
+<Method>
 ```typescript
 getCounter(name: string): LoroCounter
 ```
-
+</Method>
+<Indent>
 Gets or creates a counter container with the given name.
 
 **Parameters:**
@@ -257,13 +267,14 @@ const doc = new LoroDoc();
 const counter = doc.getCounter("likes");
 counter.increment(1);
 ```
+</Indent>
 
-#### getMovableList
-
+<Method>
 ```typescript
 getMovableList(name: string): LoroMovableList
 ```
-
+</Method>
+<Indent>
 Gets or creates a movable list container with the given name.
 
 **Parameters:**
@@ -280,13 +291,14 @@ const movableList = doc.getMovableList("tasks");
 movableList.push("Task 1");
 movableList.move(0, 2); // Move first item to third position
 ```
+</Indent>
 
-#### getContainerById
-
+<Method>
 ```typescript
 getContainerById(id: ContainerID): Container | undefined
 ```
-
+</Method>
+<Indent>
 Gets a container by its unique ID.
 
 **Parameters:**
@@ -303,15 +315,16 @@ const text = doc.getText("text");
 const textId = text.id;
 const sameText = doc.getContainerById(textId);
 ```
+</Indent>
 
 ### Import/Export Methods
 
-#### export
-
+<Method>
 ```typescript
 export(mode?: ExportMode): Uint8Array
 ```
-
+</Method>
+<Indent>
 Exports the document in various formats for synchronization or persistence.
 
 **Parameters:**
@@ -320,10 +333,10 @@ Exports the document in various formats for synchronization or persistence.
 **ExportMode Options:**
 ```typescript
 type ExportMode = 
-  | { mode: "snapshot" }              // Full document state
-  | { mode: "update", from?: VersionVector }  // Updates from version
-  | { mode: "shallow-snapshot", frontiers: Frontiers }  // GC'd snapshot
-  | { mode: "updates-in-range", spans: IdSpan[] }  // Specific ID ranges
+  | { mode: "snapshot" }
+  | { mode: "update", from?: VersionVector }
+  | { mode: "shallow-snapshot", frontiers: Frontiers }
+  | { mode: "updates-in-range", spans: { id: OpId; len: number }[] }
 ```
 
 **Returns:** Encoded binary data
@@ -349,14 +362,15 @@ const shallowSnapshot = doc.export({
   frontiers: doc.frontiers()
 });
 ```
+</Indent>
 
-#### import
-
+<Method>
 ```typescript
-import(data: Uint8Array | LoroDoc): void
+import(data: Uint8Array): ImportStatus
 ```
-
-Imports updates or snapshots into the document.
+</Method>
+<Indent>
+Imports updates or snapshots into the document. Returns an `ImportStatus` describing which peer ranges were applied or are pending.
 
 **Parameters:**
 - `data` - Binary data or another LoroDoc to import from
@@ -368,15 +382,17 @@ const doc = new LoroDoc();
 declare const updates: Uint8Array;
 // ---cut---
 // Import binary updates
-doc.import(updates);
+const status = doc.import(updates);
+console.log(status.success);
 ```
+</Indent>
 
-#### importBatch
-
+<Method>
 ```typescript
-importBatch(data: Uint8Array[]): void
+importBatch(data: Uint8Array[]): ImportStatus
 ```
-
+</Method>
+<Indent>
 Efficiently imports multiple updates in a single batch operation.
 
 **Parameters:**
@@ -391,15 +407,16 @@ declare const update2: Uint8Array;
 declare const update3: Uint8Array;
 // ---cut---
 const updates = [update1, update2, update3];
-doc.importBatch(updates);
+const status = doc.importBatch(updates);
 ```
+</Indent>
 
-#### exportJsonUpdates
-
+<Method>
 ```typescript
-exportJsonUpdates(start?: VersionVector, end?: VersionVector): JsonSchema
+exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompression?: boolean): JsonSchema
 ```
-
+</Method>
+<Indent>
 Exports updates in JSON format for debugging or alternative storage.
 
 **Parameters:**
@@ -416,13 +433,14 @@ const doc = new LoroDoc();
 const jsonUpdates = doc.exportJsonUpdates();
 console.log(JSON.stringify(jsonUpdates, null, 2));
 ```
+</Indent>
 
-#### importJsonUpdates
-
+<Method>
 ```typescript
 importJsonUpdates(json: string | JsonSchema): void
 ```
-
+</Method>
+<Indent>
 Imports updates from JSON format.
 
 **Parameters:**
@@ -436,15 +454,16 @@ const doc = new LoroDoc();
 const jsonStr = '{"ops": [], "peer": "1"}';
 doc.importJsonUpdates(jsonStr);
 ```
+</Indent>
 
 ### Version Control Methods
 
-#### checkout
-
+<Method>
 ```typescript
 checkout(frontiers: Frontiers): void
 ```
-
+</Method>
+<Indent>
 Checks out the document to a specific version, making it read-only at that point in history.
 
 **Parameters:**
@@ -459,13 +478,14 @@ const frontiers = doc.frontiers();
 // Make some changes...
 doc.checkout(frontiers); // Go back to previous version
 ```
+</Indent>
 
-#### checkoutToLatest
-
+<Method>
 ```typescript
 checkoutToLatest(): void
 ```
-
+</Method>
+<Indent>
 Returns the document to the latest version after a checkout.
 
 **Example:**
@@ -475,13 +495,14 @@ const doc = new LoroDoc();
 // ---cut---
 doc.checkoutToLatest();
 ```
+</Indent>
 
-#### attach
-
+<Method>
 ```typescript
 attach(): void
 ```
-
+</Method>
+<Indent>
 Attaches the document to track latest changes after being detached.
 
 **Example:**
@@ -491,13 +512,14 @@ const doc = new LoroDoc();
 // ---cut---
 doc.attach();
 ```
+</Indent>
 
-#### detach
-
+<Method>
 ```typescript
 detach(): void
 ```
-
+</Method>
+<Indent>
 Detaches the document from tracking latest changes, freezing it at current version.
 
 **Example:**
@@ -507,13 +529,14 @@ const doc = new LoroDoc();
 // ---cut---
 doc.detach();
 ```
+</Indent>
 
-#### fork
-
+<Method>
 ```typescript
 fork(): LoroDoc
 ```
-
+</Method>
+<Indent>
 Creates a new document that is a fork of the current one with a new peer ID.
 
 **Returns:** A new LoroDoc instance
@@ -525,13 +548,14 @@ const doc = new LoroDoc();
 // ---cut---
 const forkedDoc = doc.fork();
 ```
+</Indent>
 
-#### forkAt
-
+<Method>
 ```typescript
 forkAt(frontiers: Frontiers): LoroDoc
 ```
-
+</Method>
+<Indent>
 Creates a fork at a specific version in history.
 
 **Parameters:**
@@ -547,15 +571,16 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 const forkedDoc = doc.forkAt(frontiers);
 ```
+</Indent>
 
 ### Subscription Methods
 
-#### subscribe
-
+<Method>
 ```typescript
 subscribe(listener: (event: LoroEventBatch) => void): () => void
 ```
-
+</Method>
+<Indent>
 Subscribes to all document changes.
 
 **Parameters:**
@@ -590,13 +615,14 @@ const unsubscribe = doc.subscribe((event) => {
 
 // Later: unsubscribe();
 ```
+</Indent>
 
-#### subscribeLocalUpdates
-
+<Method>
 ```typescript
 subscribeLocalUpdates(f: (bytes: Uint8Array) => void): () => void
 ```
-
+</Method>
+<Indent>
 Subscribes only to local changes, useful for syncing with remote peers.
 
 **Parameters:**
@@ -615,13 +641,14 @@ const unsubscribe = doc.subscribeLocalUpdates((updates) => {
   websocket.send(updates);
 });
 ```
+</Indent>
 
-#### subscribeFirstCommitFromPeer
-
+<Method>
 ```typescript
 subscribeFirstCommitFromPeer(f: (e: { peer: PeerID }) => void): () => void
 ```
-
+</Method>
+<Indent>
 Subscribes to the first commit from each peer, useful for tracking peer metadata.
 
 **Parameters:**
@@ -642,6 +669,7 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
   });
 });
 ```
+</Indent>
 
 ### Transaction Methods
 
@@ -695,7 +723,7 @@ console.log(JSON.stringify(json, null, 2));
 #### getShallowValue
 
 ```typescript
-getShallowValue(): Value
+getShallowValue(): Record<string, ContainerID>
 ```
 
 Gets a shallow representation where sub-containers are represented by their IDs.
@@ -708,7 +736,7 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
 const shallow = doc.getShallowValue();
-// Sub-containers appear as: "loro:cid:..."
+// Sub-containers appear as: "cid:..."
 ```
 
 #### version
@@ -779,6 +807,356 @@ diffs.forEach(([containerId, diff]) => {
 });
 ```
 
+### Pre-Commit Hook
+
+<Method>
+```typescript
+subscribePreCommit(f: (e: { changeMeta: Change, origin: string, modifier: ChangeModifier }) => void): () => void
+```
+</Method>
+<Indent>
+Subscribe to the pre-commit event. You can modify the message and timestamp of the next change.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const unsubscribe = doc.subscribePreCommit(({ modifier }) => {
+  modifier
+    .setMessage("Tagged by pre-commit")
+    .setTimestamp(Math.floor(Date.now() / 1000));
+});
+doc.getText("text").insert(0, "Hello");
+doc.commit();
+unsubscribe();
+```
+</Indent>
+
+### Cursor Utilities
+
+<Method>
+```typescript
+getCursorPos(cursor: Cursor): { update?: Cursor, offset: number, side: Side }
+```
+</Method>
+<Indent>
+Resolve a stable `Cursor` to an absolute position.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.insert(0, "abc");
+const c0 = text.getCursor(1);
+const pos = doc.getCursorPos(c0!);
+console.log(pos.offset); // 1
+```
+</Indent>
+
+### Pending Operations
+
+<Method>
+```typescript
+getUncommittedOpsAsJson(): JsonSchema | undefined
+```
+</Method>
+<Indent>
+Get pending operations from the current transaction in JSON format.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.insert(0, "Hello");
+const pending = doc.getUncommittedOpsAsJson();
+doc.commit();
+const none = doc.getUncommittedOpsAsJson(); // undefined after commit
+```
+</Indent>
+
+### Change Graph & History
+
+<Method>
+```typescript
+travelChangeAncestors(ids: OpId[], f: (change: Change) => boolean): void
+```
+</Method>
+<Indent>
+Visit ancestors of the given changes in causal order.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.getText("text").insert(0, "Hello");
+doc.commit();
+const head = doc.frontiers();
+doc.travelChangeAncestors(head, (change) => {
+  console.log(change.peer, change.counter);
+  return true; // continue
+});
+```
+</Indent>
+
+<Method>
+```typescript
+findIdSpansBetween(from: Frontiers, to: Frontiers): VersionVectorDiff
+```
+</Method>
+<Indent>
+Find the op id spans that lie between two versions.
+</Indent>
+
+<Method>
+```typescript
+exportJsonInIdSpan(idSpan: { peer: PeerID, counter: number, length: number }): JsonChange[]
+```
+</Method>
+<Indent>
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const a = new LoroDoc();
+const b = new LoroDoc();
+// ---cut---
+a.getText("text").update("Hello");
+a.commit();
+const snapshot = a.export({ mode: "snapshot" });
+let printed: any;
+b.subscribe((e) => {
+  const spans = b.findIdSpansBetween(e.from, e.to);
+  const changes = b.exportJsonInIdSpan(spans.forward[0]);
+  printed = changes;
+});
+b.import(snapshot);
+```
+</Indent>
+
+<Method>
+```typescript
+getChangedContainersIn(id: OpId, len: number): ContainerID[]
+```
+</Method>
+<Indent>
+Get container IDs modified in the given ID range.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.getList("list").insert(0, 1);
+doc.commit();
+const head = doc.frontiers()[0];
+const containers = doc.getChangedContainersIn(head, 1);
+```
+</Indent>
+
+### Revert & Apply Diff
+
+<Method>
+```typescript
+revertTo(frontiers: Frontiers): void
+```
+</Method>
+<Indent>
+Revert the document to a given version by generating inverse operations.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setPeerId("1");
+const t = doc.getText("text");
+t.update("Hello");
+doc.commit();
+doc.revertTo([{ peer: "1", counter: 1 }]);
+```
+</Indent>
+
+<Method>
+```typescript
+applyDiff(diff: [ContainerID, Diff | JsonDiff][]): void
+```
+</Method>
+<Indent>
+Apply a batch of diffs to the document.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc1 = new LoroDoc();
+const doc2 = new LoroDoc();
+// ---cut---
+doc1.getText("text").insert(0, "Hello");
+const diff = doc1.diff([], doc1.frontiers());
+doc2.applyDiff(diff);
+```
+</Indent>
+
+### Detached Editing
+
+```typescript
+setDetachedEditing(enable: boolean): void
+isDetachedEditingEnabled(): boolean
+isDetached(): boolean
+detach(): void
+attach(): void
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setDetachedEditing(true);
+doc.detach();
+console.log(doc.isDetached());
+doc.attach();
+```
+
+### Commit Options Helpers
+
+```typescript
+setNextCommitMessage(msg: string): void
+setNextCommitOrigin(origin: string): void
+setNextCommitTimestamp(timestamp: number): void
+setNextCommitOptions(options: { origin?: string, timestamp?: number, message?: string }): void
+clearNextCommitOptions(): void
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setNextCommitOptions({ origin: "ui", message: "batch" });
+doc.getText("text").insert(0, "Hi");
+doc.commit();
+doc.clearNextCommitOptions();
+```
+
+### Version & Frontier Utilities
+
+```typescript
+frontiersToVV(frontiers: Frontiers): VersionVector
+vvToFrontiers(vv: VersionVector): Frontiers
+oplogVersion(): VersionVector
+oplogFrontiers(): Frontiers
+cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
+cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const vv = doc.oplogVersion();
+const f = doc.vvToFrontiers(vv);
+const vv2 = doc.frontiersToVV(f);
+const cmp = doc.cmpFrontiers(doc.frontiers(), f);
+```
+
+### JSONPath & Path Queries
+
+```typescript
+getByPath(path: string): Value | Container | undefined
+getPathToContainer(id: ContainerID): (string | number)[] | undefined
+JSONPath(jsonpath: string): any[]
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+map.set("key", 1);
+// ---cut---
+const value = doc.getByPath("map/key");
+const path = doc.getPathToContainer(map.id);
+const results = doc.JSONPath("$.map");
+```
+
+### Shallow Doc Utilities
+
+```typescript
+shallowSinceVV(): VersionVector
+shallowSinceFrontiers(): Frontiers
+isShallow(): boolean
+setHideEmptyRootContainers(hide: boolean): void
+deleteRootContainer(cid: ContainerID): void
+hasContainer(id: ContainerID): boolean
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.getMap("map");
+doc.setHideEmptyRootContainers(true);
+// Now empty roots are hidden in toJSON()
+```
+
+### JSON Serialization with Replacer
+
+#### toJsonWithReplacer
+
+```typescript
+toJsonWithReplacer(replacer: (key: string | number, value: Value | Container) => Value | Container | undefined): Value
+```
+
+Customize JSON serialization of containers and values.
+
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const json = doc.toJsonWithReplacer((key, value) => {
+  if (value instanceof LoroText) {
+    return value.toDelta();
+  }
+  return value;
+});
+```
+
+### Stats & Introspection
+
+```typescript
+debugHistory(): void
+changeCount(): number
+opCount(): number
+getAllChanges(): Map<PeerID, Change[]>
+getChangeAt(id: OpId): Change
+getChangeAtLamport(peer_id: string, lamport: number): Change | undefined
+getOpsInChange(id: OpId): any[]
+getPendingTxnLength(): number
+```
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.getText("text").insert(0, "x");
+console.log(doc.getPendingTxnLength());
+doc.commit();
+console.log(doc.changeCount(), doc.opCount());
+```
+
+### Import/Export Utilities
+
+```typescript
+decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata
+redactJsonUpdates(json: string | JsonSchema, version_range: any): JsonSchema
+```
+
+```ts twoslash
+import { LoroDoc, decodeImportBlobMeta, redactJsonUpdates } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const updates = doc.export({ mode: "update" });
+const meta = decodeImportBlobMeta(updates, true);
+const json = doc.exportJsonUpdates();
+const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
+```
+
 ---
 
 ## Container Types
@@ -787,14 +1165,14 @@ diffs.forEach(([containerId, diff]) => {
 
 A rich text container supporting collaborative text editing with formatting.
 
-#### Methods
 
-##### insert
-
+<Method>
 ```typescript
 insert(index: number, text: string): void
 ```
+</Method>
 
+<Indent>
 Inserts text at the specified position.
 
 **Parameters:**
@@ -802,17 +1180,23 @@ Inserts text at the specified position.
 - `text` - Text to insert
 
 **Example:**
-```typescript
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
 text.insert(0, "Hello ");
 text.insert(6, "World");
 ```
+</Indent>
 
-##### delete
-
+<Method>
 ```typescript
 delete(index: number, len: number): void
 ```
+</Method>
 
+<Indent>
 Deletes text from the specified position.
 
 **Parameters:**
@@ -823,13 +1207,15 @@ Deletes text from the specified position.
 ```typescript
 text.delete(5, 1); // Delete one character at position 5
 ```
+</Indent>
 
-##### mark
-
+<Method>
 ```typescript
 mark(range: { start: number, end: number }, key: string, value: Value): void
 ```
+</Method>
 
+<Indent>
 Applies formatting to a text range.
 
 **Parameters:**
@@ -842,13 +1228,14 @@ Applies formatting to a text range.
 text.mark({ start: 0, end: 5 }, "bold", true);
 text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 ```
+</Indent>
 
-##### unmark
-
+<Method>
 ```typescript
 unmark(range: { start: number, end: number }, key: string): void
 ```
-
+</Method>
+<Indent>
 Removes formatting from a text range.
 
 **Parameters:**
@@ -859,13 +1246,14 @@ Removes formatting from a text range.
 ```typescript
 text.unmark({ start: 0, end: 5 }, "bold");
 ```
+</Indent>
 
-##### toDelta
-
+<Method>
 ```typescript
 toDelta(): Delta<string>[]
 ```
-
+</Method>
+<Indent>
 Converts text to Delta format (Quill-compatible).
 
 **Returns:** Array of Delta operations
@@ -875,13 +1263,14 @@ Converts text to Delta format (Quill-compatible).
 const delta = text.toDelta();
 // [{ insert: "Hello", attributes: { bold: true } }, { insert: " World" }]
 ```
+</Indent>
 
-##### applyDelta
-
+<Method>
 ```typescript
 applyDelta(delta: Delta<string>[]): void
 ```
-
+</Method>
+<Indent>
 Applies Delta operations to the text.
 
 **Parameters:**
@@ -894,31 +1283,57 @@ text.applyDelta([
   { insert: " World" }
 ]);
 ```
+</Indent>
 
-##### update
-
+<Method>
 ```typescript
-update(text: string, options?: { retain?: boolean }): void
+update(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
 ```
-
-Updates text content efficiently using diff algorithm.
+</Method>
+<Indent>
+Updates the current text to the target text using Myers' diff algorithm.
 
 **Parameters:**
 - `text` - New text content
 - `options` - Update options
-  - `retain` - Whether to retain formatting (default: true)
+  - `timeoutMs` - Optional timeout for the diff computation
+  - `useRefinedDiff` - Use refined diff for better quality on long texts
 
 **Example:**
-```typescript
-text.update("New content", { retain: false });
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.insert(0, "Hello");
+text.update("Hello World", { timeoutMs: 100 });
 ```
+</Indent>
 
-##### getCursor
+<Method>
+```typescript
+updateByLine(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
+```
+</Method>
+<Indent>
+Line-based update that's faster for large texts (less precise than `update`).
 
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.insert(0, "Line A\nLine C");
+text.updateByLine("Line A\nLine B\nLine C");
+```
+</Indent>
+
+<Method>
 ```typescript
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
-
+</Method>
+<Indent>
 Gets a stable cursor position that survives edits.
 
 **Parameters:**
@@ -936,13 +1351,14 @@ const text = doc.getText("text");
 const cursor = text.getCursor(5);
 // Cursor remains valid even after edits
 ```
+</Indent>
 
-##### toString
-
+<Method>
 ```typescript
 toString(): string
 ```
-
+</Method>
+<Indent>
 Converts to plain text string.
 
 **Returns:** Plain text content
@@ -951,19 +1367,18 @@ Converts to plain text string.
 ```typescript
 const plainText = text.toString();
 ```
+</Indent>
 
 ### LoroList
 
 An ordered list container for collaborative arrays.
 
-#### Methods
-
-##### insert
-
+<Method>
 ```typescript
 insert(pos: number, value: Value | Container): void
 ```
-
+</Method>
+<Indent>
 Inserts a value at the specified position.
 
 **Parameters:**
@@ -975,13 +1390,14 @@ Inserts a value at the specified position.
 list.insert(0, "First");
 list.insert(1, { type: "object" });
 ```
+</Indent>
 
-##### insertContainer
-
+<Method>
 ```typescript
 insertContainer<T extends Container>(pos: number, container: T): T
 ```
-
+</Method>
+<Indent>
 Inserts a new container at the position.
 
 **Parameters:**
@@ -995,13 +1411,14 @@ Inserts a new container at the position.
 const subText = list.insertContainer(0, new LoroText());
 subText.insert(0, "Nested text");
 ```
+</Indent>
 
-##### delete
-
+<Method>
 ```typescript
 delete(pos: number, len: number): void
 ```
-
+</Method>
+<Indent>
 Deletes elements from the list.
 
 **Parameters:**
@@ -1012,13 +1429,14 @@ Deletes elements from the list.
 ```typescript
 list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
+</Indent>
 
-##### push
-
+<Method>
 ```typescript
 push(value: Value | Container): void
 ```
-
+</Method>
+<Indent>
 Appends a value to the end of the list.
 
 **Parameters:**
@@ -1028,13 +1446,30 @@ Appends a value to the end of the list.
 ```typescript
 list.push("Last item");
 ```
+</Indent>
 
-##### pushContainer
+<Method>
+```typescript
+getIdAt(pos: number): { peer: PeerID, counter: number } | undefined
+```
+</Method>
+<Indent>
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+// ---cut---
+list.insert(0, 1);
+const id0 = list.getIdAt(0);
+```
+</Indent>
 
+<Method>
 ```typescript
 pushContainer<T extends Container>(container: T): T
 ```
-
+</Method>
+<Indent>
 Appends a container to the end of the list.
 
 **Parameters:**
@@ -1047,13 +1482,14 @@ Appends a container to the end of the list.
 const map = list.pushContainer(new LoroMap());
 map.set("key", "value");
 ```
+</Indent>
 
-##### pop
-
+<Method>
 ```typescript
 pop(): Value | Container | undefined
 ```
-
+</Method>
+<Indent>
 Removes and returns the last element.
 
 **Returns:** The removed element or undefined
@@ -1065,13 +1501,14 @@ declare const list: LoroList;
 // ---cut---
 const lastItem = list.pop();
 ```
+</Indent>
 
-##### get
-
+<Method>
 ```typescript
 get(index: number): Value | Container | undefined
 ```
-
+</Method>
+<Indent>
 Gets the value at the specified index.
 
 **Parameters:**
@@ -1086,13 +1523,14 @@ declare const list: LoroList;
 // ---cut---
 const item = list.get(0);
 ```
+</Indent>
 
-##### getCursor
-
+<Method>
 ```typescript
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
-
+</Method>
+<Indent>
 Gets a stable cursor for the position.
 
 **Parameters:**
@@ -1109,13 +1547,14 @@ const list = doc.getList("list");
 // ---cut---
 const cursor = list.getCursor(2);
 ```
+</Indent>
 
-##### toArray
-
+<Method>
 ```typescript
 toArray(): (Value | Container)[]
 ```
-
+</Method>
+<Indent>
 Converts the list to a JavaScript array.
 
 **Returns:** Array of values
@@ -1124,26 +1563,28 @@ Converts the list to a JavaScript array.
 ```typescript
 const array = list.toArray();
 ```
+</Indent>
 
-##### clear
-
+<Method>
 ```typescript
 clear(): void
 ```
-
+</Method>
+<Indent>
 Removes all elements from the list.
 
 **Example:**
 ```typescript
 list.clear();
 ```
+</Indent>
 
-##### length
-
+<Method>
 ```typescript
 length: number
 ```
-
+</Method>
+<Indent>
 Gets the number of elements in the list.
 
 **Returns:** List length
@@ -1152,19 +1593,18 @@ Gets the number of elements in the list.
 ```typescript
 console.log(`List has ${list.length} items`);
 ```
+</Indent>
 
 ### LoroMap
 
 A key-value map container for collaborative objects.
 
-#### Methods
-
-##### set
-
+<Method>
 ```typescript
 set(key: string, value: Value | Container): void
 ```
-
+</Method>
+<Indent>
 Sets a key-value pair.
 
 **Parameters:**
@@ -1180,13 +1620,14 @@ const map = doc.getMap("map");
 map.set("name", "Alice");
 map.set("age", 30);
 ```
+</Indent>
 
-##### setContainer
-
+<Method>
 ```typescript
 setContainer<T extends Container>(key: string, container: T): T
 ```
-
+</Method>
+<Indent>
 Sets a container as the value for a key.
 
 **Parameters:**
@@ -1204,13 +1645,14 @@ const map = doc.getMap("map");
 const list = map.setContainer("items", new LoroList());
 list.push("item1");
 ```
+</Indent>
 
-##### get
-
+<Method>
 ```typescript
 get(key: string): Value | Container | undefined
 ```
-
+</Method>
+<Indent>
 Gets the value for a key.
 
 **Parameters:**
@@ -1226,13 +1668,14 @@ const map = doc.getMap("map");
 // ---cut---
 const name = map.get("name");
 ```
+</Indent>
 
-##### getOrCreateContainer
-
+<Method>
 ```typescript
 getOrCreateContainer<T extends Container>(key: string, container: T): T
 ```
-
+</Method>
+<Indent>
 Gets an existing container or creates a new one.
 
 **Parameters:**
@@ -1249,13 +1692,14 @@ const map = doc.getMap("map");
 // ---cut---
 const text = map.getOrCreateContainer("description", new LoroText());
 ```
+</Indent>
 
-##### delete
-
+<Method>
 ```typescript
 delete(key: string): void
 ```
-
+</Method>
+<Indent>
 Removes a key-value pair.
 
 **Parameters:**
@@ -1269,13 +1713,14 @@ const map = doc.getMap("map");
 // ---cut---
 map.delete("obsoleteKey");
 ```
+</Indent>
 
-##### clear
-
+<Method>
 ```typescript
 clear(): void
 ```
-
+</Method>
+<Indent>
 Removes all key-value pairs.
 
 **Example:**
@@ -1286,13 +1731,14 @@ const map = doc.getMap("map");
 // ---cut---
 map.clear();
 ```
+</Indent>
 
-##### keys
-
+<Method>
 ```typescript
 keys(): string[]
 ```
-
+</Method>
+<Indent>
 Gets all keys in the map.
 
 **Returns:** Array of keys
@@ -1305,13 +1751,14 @@ const map = doc.getMap("map");
 // ---cut---
 const allKeys = map.keys();
 ```
+</Indent>
 
-##### values
-
+<Method>
 ```typescript
 values(): (Value | Container)[]
 ```
-
+</Method>
+<Indent>
 Gets all values in the map.
 
 **Returns:** Array of values
@@ -1324,13 +1771,14 @@ const map = doc.getMap("map");
 // ---cut---
 const allValues = map.values();
 ```
+</Indent>
 
-##### entries
-
+<Method>
 ```typescript
 entries(): [string, Value | Container][]
 ```
-
+</Method>
+<Indent>
 Gets all key-value pairs.
 
 **Returns:** Array of entries
@@ -1345,13 +1793,31 @@ for (const [key, value] of map.entries()) {
   console.log(`${key}: ${value}`);
 }
 ```
+</Indent>
 
-##### size
+<Method>
+```typescript
+getLastEditor(key: string): PeerID | undefined
+```
+</Method>
+<Indent>
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+map.set("k", 1);
+doc.commit();
+const who = map.getLastEditor("k");
+```
+</Indent>
 
+<Method>
 ```typescript
 size: number
 ```
-
+</Method>
+<Indent>
 Gets the number of key-value pairs.
 
 **Returns:** Map size
@@ -1364,26 +1830,25 @@ const map = doc.getMap("map");
 // ---cut---
 console.log(`Map has ${map.size} entries`);
 ```
+</Indent>
 
 ### LoroTree
 
 A hierarchical tree container for nested structures.
 
-#### Methods
-
-##### createNode
-
+<Method>
 ```typescript
-createNode(parent?: TreeID, index?: number): TreeID
+createNode(parent?: TreeID, index?: number): LoroTreeNode
 ```
-
+</Method>
+<Indent>
 Creates a new tree node.
 
 **Parameters:**
 - `parent` - Parent node ID (optional, creates root if omitted)
 - `index` - Position among siblings (optional)
 
-**Returns:** The new node's ID
+**Returns:** The new node's handler
 
 **Example:**
 ```ts twoslash
@@ -1394,13 +1859,14 @@ const tree = doc.getTree("tree");
 const root = tree.createNode();
 const child = root.createNode(0);
 ```
+</Indent>
 
-##### move
-
+<Method>
 ```typescript
 move(target: TreeID, parent?: TreeID, index?: number): void
 ```
-
+</Method>
+<Indent>
 Moves a node to a new position.
 
 **Parameters:**
@@ -1418,13 +1884,14 @@ declare const newParentId: TreeID;
 // ---cut---
 tree.move(nodeId, newParentId, 0);
 ```
+</Indent>
 
-##### delete
-
+<Method>
 ```typescript
 delete(target: TreeID): void
 ```
-
+</Method>
+<Indent>
 Deletes a node and its descendants.
 
 **Parameters:**
@@ -1439,13 +1906,14 @@ declare const nodeId: TreeID;
 // ---cut---
 tree.delete(nodeId);
 ```
+</Indent>
 
-##### getNodeByID
-
+<Method>
 ```typescript
 getNodeByID(id: TreeID): LoroTreeNode | undefined
 ```
-
+</Method>
+<Indent>
 Gets a node handler by its ID.
 
 **Parameters:**
@@ -1465,13 +1933,14 @@ if (node) {
   node.data.set("label", "New Label");
 }
 ```
+</Indent>
 
-##### nodes
-
+<Method>
 ```typescript
 nodes(): LoroTreeNode[]
 ```
-
+</Method>
+<Indent>
 Gets all nodes in the tree.
 
 **Returns:** Array of all nodes
@@ -1484,13 +1953,14 @@ const tree = doc.getTree("tree");
 // ---cut---
 const allNodes = tree.nodes();
 ```
+</Indent>
 
-##### roots
-
+<Method>
 ```typescript
 roots(): LoroTreeNode[]
 ```
-
+</Method>
+<Indent>
 Gets all root nodes.
 
 **Returns:** Array of root nodes
@@ -1503,13 +1973,14 @@ const tree = doc.getTree("tree");
 // ---cut---
 const rootNodes = tree.roots();
 ```
+</Indent>
 
-##### has
-
+<Method>
 ```typescript
 has(target: TreeID): boolean
 ```
-
+</Method>
+<Indent>  
 Checks if a node exists.
 
 **Parameters:**
@@ -1528,13 +1999,14 @@ if (tree.has(nodeId)) {
   console.log("Node exists");
 }
 ```
+</Indent>
 
-##### isNodeDeleted
-
+<Method>
 ```typescript
 isNodeDeleted(target: TreeID): boolean
 ```
-
+</Method>
+<Indent>
 Checks if a node has been deleted.
 
 **Parameters:**
@@ -1553,19 +2025,17 @@ if (tree.isNodeDeleted(nodeId)) {
   console.log("Node was deleted");
 }
 ```
-
+</Indent>
 #### LoroTreeNode
 
 Represents a single node in the tree.
 
-##### Properties
-
-###### data
-
+<Method>
 ```typescript
 data: LoroMap
 ```
-
+</Method>
+<Indent>
 A map container for storing node metadata.
 
 **Example:**
@@ -1577,21 +2047,20 @@ const node = tree.createNode();
 node.data.set("title", "Node Title");
 node.data.set("expanded", true);
 ```
+</Indent>
 
-##### Methods
-
-###### createNode
-
+<Method>
 ```typescript
-createNode(index?: number): TreeID
+createNode(index?: number): LoroTreeNode
 ```
-
+</Method>
+<Indent>
 Creates a child node.
 
 **Parameters:**
 - `index` - Position among siblings
 
-**Returns:** New node's ID
+**Returns:** New node's handler
 
 **Example:**
 ```ts twoslash
@@ -1601,13 +2070,14 @@ const tree = doc.getTree("tree");
 const node = tree.createNode();
 const childId = node.createNode(0);
 ```
+</Indent>
 
-###### move
-
+<Method>
 ```typescript
 move(parent?: LoroTreeNode, index?: number): void
 ```
-
+</Method>
+<Indent>
 Moves this node to a new parent.
 
 **Parameters:**
@@ -1624,13 +2094,14 @@ const parent = tree.createNode();
 // ---cut---
 node.move(parent, 0);
 ```
+</Indent>
 
-###### moveAfter
-
+<Method>
 ```typescript
 moveAfter(target: LoroTreeNode): void
 ```
-
+</Method>
+<Indent>
 Moves this node after a sibling.
 
 **Parameters:**
@@ -1646,13 +2117,14 @@ const sibling = tree.createNode();
 // ---cut---
 node.moveAfter(sibling);
 ```
+</Indent> 
 
-###### moveBefore
-
+<Method>
 ```typescript
 moveBefore(target: LoroTreeNode): void
 ```
-
+</Method>
+<Indent>
 Moves this node before a sibling.
 
 **Parameters:**
@@ -1668,13 +2140,14 @@ const sibling = tree.createNode();
 // ---cut---
 node.moveBefore(sibling);
 ```
+</Indent>
 
-###### parent
-
+<Method>
 ```typescript
 parent(): LoroTreeNode | undefined
 ```
-
+</Method>
+<Indent>
 Gets the parent node.
 
 **Returns:** Parent node or undefined
@@ -1688,13 +2161,14 @@ const node = tree.createNode();
 // ---cut---
 const parentNode = node.parent();
 ```
+</Indent>
 
-###### children
-
+<Method>
 ```typescript
 children(): LoroTreeNode[]
 ```
-
+</Method>
+<Indent>
 Gets all child nodes.
 
 **Returns:** Array of children
@@ -1708,13 +2182,14 @@ const node = tree.createNode();
 // ---cut---
 const childNodes = node.children();
 ```
+</Indent>
 
-###### index
-
+<Method>
 ```typescript
 index(): number | undefined
 ```
-
+</Method>
+<Indent>
 Gets the position among siblings.
 
 **Returns:** Index or undefined if root
@@ -1728,13 +2203,37 @@ const node = tree.createNode();
 // ---cut---
 const position = node.index();
 ```
+</Indent>
 
-###### isDeleted
+<Method>
+```typescript
+fractionalIndex(): string | undefined
+creationId(): { peer: PeerID, counter: number }
+creator(): PeerID
+getLastMoveId(): { peer: PeerID, counter: number } | undefined
+```
+</Method>
+<Indent>
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const tree = doc.getTree("tree");
+const root = tree.createNode();
+const node = root.createNode();
+// ---cut---
+const fi = node.fractionalIndex();
+const create = node.creationId();
+const author = node.creator();
+const lastMove = node.getLastMoveId();
+```
+</Indent>
 
+<Method>
 ```typescript
 isDeleted(): boolean
 ```
-
+</Method>
+<Indent>  
 Checks if this node has been deleted.
 
 **Returns:** Boolean deletion status
@@ -1750,19 +2249,18 @@ if (node.isDeleted()) {
   console.log("Node is deleted");
 }
 ```
+</Indent>
 
 ### LoroCounter
 
 A counter CRDT for collaborative numeric values.
 
-#### Methods
-
-##### increment
-
+<Method>
 ```typescript
 increment(value: number): void
 ```
-
+</Method>
+<Indent>
 Increments the counter.
 
 **Parameters:**
@@ -1776,13 +2274,14 @@ const counter = doc.getCounter("counter");
 // ---cut---
 counter.increment(5);   // +5
 ```
+</Indent>
 
-##### decrement
-
+<Method>
 ```typescript
 decrement(value: number): void
 ```
-
+</Method>
+<Indent>
 Decrements the counter.
 
 **Parameters:**
@@ -1796,13 +2295,14 @@ const counter = doc.getCounter("counter");
 // ---cut---
 counter.decrement(3);   // -3
 ```
+</Indent>
 
-##### value
-
+<Method>
 ```typescript
 value: number
 ```
-
+</Method>
+<Indent>
 Gets the current counter value.
 
 **Returns:** Current numeric value
@@ -1815,6 +2315,7 @@ const counter = doc.getCounter("counter");
 // ---cut---
 console.log(`Counter value: ${counter.value}`);
 ```
+</Indent>
 
 ### LoroMovableList
 
@@ -1822,14 +2323,12 @@ A list optimized for move operations.
 
 Extends `LoroList` with additional methods for efficient element reordering.
 
-#### Additional Methods
-
-##### move
-
+<Method>
 ```typescript
 move(from: number, to: number): void
 ```
-
+</Method>
+<Indent>
 Moves an element from one position to another.
 
 **Parameters:**
@@ -1844,13 +2343,14 @@ const movableList = doc.getMovableList("list");
 // ---cut---
 movableList.move(0, 3); // Move first element to fourth position
 ```
+</Indent>
 
-##### set
-
+<Method>
 ```typescript
 set(pos: number, value: Value | Container): void
 ```
-
+</Method>
+<Indent>  
 Replaces the value at a position.
 
 **Parameters:**
@@ -1865,13 +2365,14 @@ const movableList = doc.getMovableList("list");
 // ---cut---
 movableList.set(0, "Updated value");
 ```
+</Indent>
 
-##### setContainer
-
+<Method>
 ```typescript
 setContainer<T extends Container>(pos: number, container: T): T
 ```
-
+</Method>
+<Indent>  
 Replaces the value with a container.
 
 **Parameters:**
@@ -1888,8 +2389,7 @@ const movableList = doc.getMovableList("list");
 // ---cut---
 const text = movableList.setContainer(0, new LoroText());
 ```
-
----
+</Indent> 
 
 ## Synchronization
 
@@ -2158,10 +2658,29 @@ type TreeDiff = {
   diff: TreeDiffItem[]
 }
 
-type TreeDiffItem = 
-  | { action: "create", id: TreeID, parent: TreeID | undefined, index: number }
-  | { action: "move", id: TreeID, parent: TreeID | undefined, index: number }
-  | { action: "delete", id: TreeID }
+type TreeDiffItem =
+  | {
+      target: TreeID
+      action: "create"
+      parent: TreeID | undefined
+      index: number
+      fractionalIndex: string
+    }
+  | {
+      target: TreeID
+      action: "delete"
+      oldParent: TreeID | undefined
+      oldIndex: number
+    }
+  | {
+      target: TreeID
+      action: "move"
+      parent: TreeID | undefined
+      index: number
+      fractionalIndex: string
+      oldParent: TreeID | undefined
+      oldIndex: number
+    }
 ```
 
 ```ts twoslash
@@ -2337,11 +2856,19 @@ type Value =
 ### Version Types
 
 ```typescript
-// Version vector maps peer IDs to counters
-class VersionVector extends Map<PeerID, number> {
-  get(peer: PeerID): number | undefined
-  set(peer: PeerID, counter: number): this
-  forEach(callback: (counter: number, peer: PeerID) => void): void
+// Version vector class
+class VersionVector {
+  constructor(value: Map<PeerID, number> | Uint8Array | VersionVector | undefined | null)
+  static parseJSON(version: Map<PeerID, number>): VersionVector
+  toJSON(): Map<PeerID, number>
+  encode(): Uint8Array
+  static decode(bytes: Uint8Array): VersionVector
+  get(peer_id: number | bigint | `${number}`): number | undefined
+  compare(other: VersionVector): number | undefined
+  setEnd(id: { peer: PeerID, counter: number }): void
+  setLast(id: { peer: PeerID, counter: number }): void
+  remove(peer: PeerID): void
+  length(): number
 }
 
 // Frontiers represent a specific version
@@ -2457,6 +2984,14 @@ const rootId = newRootContainerID("myMap", "Map");
 // "cid:root-myMap:Map"
 ```
 
+### ID Parsing
+
+```ts twoslash
+import { idStrToId } from "loro-crdt";
+// ---cut---
+const op = idStrToId("0@1"); // { peer: "1", counter: 0 }
+```
+
 ### Frontier Encoding
 
 ```ts twoslash
@@ -2513,6 +3048,19 @@ websocket.on('message', (data) => {
 
 // Clean up
 store.destroy();
+```
+
+---
+
+## Awareness (deprecated)
+
+The `Awareness` class is deprecated in favor of `EphemeralStore`. Prefer using `EphemeralStore` for presence and cursor synchronization.
+
+```ts no_run twoslash
+import { Awareness } from "loro-crdt";
+// ---cut---
+const awareness = new Awareness("1", 30000);
+// Use EphemeralStore instead for new code
 ```
 
 </div>
