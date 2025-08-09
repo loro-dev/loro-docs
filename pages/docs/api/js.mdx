@@ -550,52 +550,6 @@ const status = doc.importBatch(updates);
 ```
 </Indent>
 
-<Method id="LoroDoc.importUpdateBatch">
-```typescript
-importUpdateBatch(data: Uint8Array[]): ImportStatus
-```
-</Method>
-<Indent>
-**Deprecated:** Use [`importBatch`](#LoroDoc.importBatch) instead.
-
-Imports a batch of updates and snapshots. This method is deprecated in favor of `importBatch`.
-
-**Parameters:**
-- `data` - Array of binary updates
-
-**Example:**
-```typescript
-import { LoroDoc } from "loro-crdt";
-const doc = new LoroDoc();
-declare const updates: Uint8Array[];
-
-// Deprecated - use importBatch instead
-const status = doc.importUpdateBatch(updates);
-```
-</Indent>
-
-<Method id="LoroDoc.exportSnapshot">
-```typescript
-exportSnapshot(): Uint8Array
-```
-</Method>
-<Indent>
-**Deprecated:** Use [`export({ mode: "snapshot" })`](#LoroDoc.export) instead.
-
-Exports the snapshot of the current version. This method is deprecated in favor of the more flexible `export` method.
-
-**Returns:** Binary snapshot data
-
-**Example:**
-```typescript
-import { LoroDoc } from "loro-crdt";
-
-const doc = new LoroDoc();
-// Deprecated - use export({ mode: "snapshot" }) instead
-const snapshot = doc.exportSnapshot();
-```
-</Indent>
-
 <Method id="LoroDoc.exportJsonUpdates">
 ```typescript
 exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompression?: boolean): JsonSchema
@@ -5015,16 +4969,5 @@ store.destroy();
 ```
 
 ---
-
-## Awareness (deprecated)
-
-The `Awareness` class is deprecated in favor of `EphemeralStore`. Prefer using `EphemeralStore` for presence and cursor synchronization.
-
-```ts no_run twoslash
-import { Awareness } from "loro-crdt";
-
-const awareness = new Awareness("1", 30000);
-// Use EphemeralStore instead for new code
-```
 
 </div>
