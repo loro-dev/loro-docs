@@ -74,53 +74,74 @@ function queueLog(message: string) {
   setTimeout(processLogQueue, 0);
 }
 
-scanMarkdownFiles(targetDir, async (block) => {
-  let codeBlock = block.content;
-  codeBlock = replaceImportVersion(codeBlock, LORO_VERSION);
-  if (codeBlock.includes("Loro") && !codeBlock.includes("import {")) {
-    codeBlock = IMPORTS + codeBlock;
+const jobQueue: { job: () => Promise<void>; name: string }[] = [];
+async function runJob() {
+  while (jobQueue.length > 0) {
+    const job = jobQueue.pop();
+    if (job) {
+      await job.job();
+    }
   }
+}
 
-  try {
-    const command = new globalThis.Deno.Command("deno", {
-      args: ["eval", "--ext=ts", codeBlock],
-      stdout: "null",
-      stderr: "piped", // Capture stderr instead of inheriting
-    });
-    const process = command.spawn();
+await scanMarkdownFiles(targetDir, (block) => {
+  jobQueue.push({
+    name: `${block.filePath}:${block.lineNumber}`,
+    job: async () => {
+      let codeBlock = block.content;
+      codeBlock = replaceImportVersion(codeBlock, LORO_VERSION);
+      if (codeBlock.includes("Loro") && !codeBlock.includes("import {")) {
+        codeBlock = IMPORTS + codeBlock;
+      }
 
-    // Handle stderr output
-    const stderrReader = process.stderr.getReader();
-    const decoder = new TextDecoder();
-
-    // Read stderr in a separate task
-    (async () => {
       try {
-        while (true) {
-          const { done, value } = await stderrReader.read();
-          if (done) break;
-          if (value) {
-            queueLog(decoder.decode(value));
+        const command = new globalThis.Deno.Command("deno", {
+          args: ["eval", "--ext=ts", codeBlock],
+          stdout: "null",
+          stderr: "piped", // Capture stderr instead of inheriting
+        });
+        const process = command.spawn();
+
+        // Handle stderr output
+        const stderrReader = process.stderr.getReader();
+        const decoder = new TextDecoder();
+
+        // Read stderr in a separate task
+        (async () => {
+          try {
+            while (true) {
+              const { done, value } = await stderrReader.read();
+              if (done) break;
+              if (value) {
+                queueLog(decoder.decode(value));
+              }
+            }
+          } catch (error) {
+            queueLog(`Error reading stderr: ${error}\n`);
           }
+        })();
+
+        const status = await process.status;
+        testCases += 1;
+        if (status.success) {
+          passed += 1;
+        } else {
+          queueLog(
+            `\x1b[31;1mError in \x1b[4m${block.filePath}:${block.lineNumber}\x1b[0m\n\n`
+          );
+          failed += 1;
         }
       } catch (error) {
-        queueLog(`Error reading stderr: ${error}\n`);
+        queueLog(`Error: ${error}\n`);
       }
-    })();
 
-    const status = await process.status;
-    testCases += 1;
-    if (status.success) {
-      passed += 1;
-    } else {
       queueLog(
-        `\x1b[31;1mError in \x1b[4m${block.filePath}:${block.lineNumber}\x1b[0m\n\n`
+        `\r🧪 ${testCases} tests, ✅ ${passed} passed, ❌ ${failed} failed`
       );
-      failed += 1;
-    }
-  } catch (error) {
-    queueLog(`Error: ${error}\n`);
-  }
-
-  queueLog(`\r🧪 ${testCases} tests, ✅ ${passed} passed, ❌ ${failed} failed`);
+    },
+  });
 });
+
+for (let i = 0; i < 16; i++) {
+  runJob();
+}
