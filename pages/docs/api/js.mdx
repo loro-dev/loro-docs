@@ -12,6 +12,44 @@ Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enable
 
 Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspired techniques that use simple index operations and replay only the divergent history when merging. This yields fast local edits, efficient merges, and low overhead without permanent tombstones. See the primer [Event Graph Walker (Eg-walker)](/docs/advanced/event_graph_walker) and performance notes in the v1.0 blog (import/export speedups, shallow snapshots): https://loro.dev/blog/v1.0
 
+## 🚨 Critical Pitfalls & Best Practices
+
+### Peer ID Management
+- **Never share PeerIDs** between concurrent sessions (tabs/devices) - causes document divergence
+- Use random PeerIDs (default) unless you have strict single-ownership locking
+- Don't assign fixed PeerIDs to users or devices
+
+### UTF-16 Text Encoding
+- All text operations use UTF-16 indices (JavaScript native)
+- Emoji/Unicode characters outside BMP count as 2 units
+- Slicing in the middle of multi-unit characters corrupts them
+- Use `insertUtf8()`/`deleteUtf8()` for UTF-8 systems
+
+### Document Initialization
+- Don't edit immediately after `new LoroDoc()` - causes divergence
+- Initialize from the same snapshot across all peers
+- Load WASM before using LoroDoc in browser environments
+
+### Container Creation
+- Concurrent child container creation at same key causes overwrites
+- Use unique root containers: `doc.getMap("data." + userId)`
+- Initialize all child containers upfront when possible
+
+### Events & Transactions
+- Events emit asynchronously after a microtask
+- Import/export/checkout trigger automatic commits
+- Loro transactions are NOT ACID - no rollback/isolation
+
+### Version Control
+- After `checkout()`, document enters read-only "detached" mode
+- Frontiers can't determine complete operation sets without history
+- Shallow snapshots limit sync to peers with newer versions
+
+### Data Structure Choice
+- Use Map for coordinates, not List (avoids [x, y_a, y_b] problem)
+- Use MovableList for drag-and-drop, List for append-heavy ops
+- Use strings in Map for URLs/IDs (LWW), LoroText for collaborative editing
+
 ## Common Tasks
 
 ### Getting Started
@@ -62,6 +100,25 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 ## Basic Usage
 
 A quick taste of the API. For a fuller introduction, see [Getting Started with LoroDoc](/docs/tutorial/loro_doc) and the [Examples](/docs/examples) repository links.
+
+**⚠️ Critical: Document Initialization Pitfall**
+```typescript
+// ❌ WRONG - Don't edit immediately after creation
+const doc = new LoroDoc();
+doc.getText("title").insert(0, "Initial Title");
+// Each peer creates different operations - causes divergence!
+
+// ✅ CORRECT - Use the same snapshot for all peers
+const initialSnapshot = createInitialDocument(); // Create once
+const doc = LoroDoc.fromSnapshot(initialSnapshot); // Load on all peers
+```
+
+**📝 WASM Initialization Note:**
+In Vite/browser environments, ensure WASM is loaded before DOMContentLoaded:
+```typescript
+import init from "loro-crdt/wasm";
+await init(); // Must complete before using LoroDoc
+```
 
 ```typescript twoslash
 import { LoroDoc } from "loro-crdt";
@@ -183,7 +240,13 @@ const doc = new LoroDoc();
 doc.setPeerId("42");
 ```
 
-Pitfall: Do not let two parallel peers (e.g., multiple tabs/devices) share the same PeerID — it can create duplicate op IDs and cause divergence. If you must reuse PeerIDs, enforce single ownership with locking; otherwise prefer random IDs. See tips: [PeerID reuse](/docs/tutorial/tips).
+**⚠️ Critical Pitfall:** Never let two parallel peers (e.g., multiple tabs/devices) share the same PeerID — it creates duplicate op IDs and causes document divergence. Common mistakes:
+- Don't assign a fixed PeerId to a user (users have multiple devices)
+- Don't assign a fixed PeerId to a device (multiple tabs can open the same document)
+- If you must reuse PeerIDs, enforce single ownership with strict locking mechanisms
+- Best practice: Use random IDs (default behavior) unless you have a strong reason not to
+
+See [PeerID reuse](/docs/tutorial/tips) for safe reuse patterns.
 </Indent>
 
 <Method id="LoroDoc.setRecordTimestamp">
@@ -196,6 +259,8 @@ Configures whether to automatically record timestamps for changes. Timestamps us
 
 **Parameters:**
 - `auto_record` - Whether to automatically record timestamps
+
+**⚠️ Important:** This setting doesn't persist in exported Updates or Snapshots. You must reapply this configuration each time you initialize a document.
 
 **Example:**
 ```ts twoslash
@@ -287,7 +352,18 @@ getText(name: string): LoroText
 <Indent>
 Gets or creates a text container with the given name. New to LoroText and marks? See [Text](/docs/tutorial/text).
 
-Note: Creating root containers (e.g., `doc.getText("...")`) does not record operations; nested container creation (e.g., `map.setContainer(...)`) does.
+**📝 Note:** Creating root containers (e.g., `doc.getText("...")`) does not record operations; nested container creation (e.g., `map.setContainer(...)`) does.
+
+**⚠️ Pitfall:** Avoid concurrent creation of child containers with the same key in maps. Instead of:
+```ts
+// Dangerous - can cause overwrites
+doc.getMap("user").getOrCreateContainer(userId, new LoroMap())
+```
+Use:
+```ts
+// Safe - unique root container per user
+doc.getMap("user." + userId)
+```
 
 **Parameters:**
 - `name` - The container name
@@ -468,6 +544,11 @@ type ExportMode =
 
 **Returns:** Encoded binary data
 
+**⚠️ Important Notes:**
+- **Shallow snapshots**: Cannot import updates from before the shallow start point. Peers can only sync if they have versions after this point.
+- **Auto-commit**: The document automatically commits pending operations before export.
+- **Performance**: Export new snapshots periodically to reduce import times for new peers.
+
 **Examples:**
 ```typescript
 import { LoroDoc, VersionVector } from "loro-crdt";
@@ -504,6 +585,8 @@ Imports updates or snapshots into the document. Returns an `ImportStatus` descri
 
 **Parameters:**
 - `data` - Binary data or another LoroDoc to import from
+
+**⚠️ Important:** The document automatically commits pending operations before import. Operations in detached mode are recorded but not applied to document state until you call `attach()`.
 
 **Example:**
 ```ts twoslash
@@ -618,7 +701,9 @@ doc.checkout(frontiers); // Go back to previous version
 </Indent>
 
 <Indent>
-Note: In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations. If you need a stable commit boundary, call `commit()` before reading versions. See [Version Deep Dive](/docs/advanced/version_deep_dive).
+**⚠️ Important:** In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations. If you need a stable commit boundary, call `commit()` before reading versions.
+
+**📝 Note:** After `checkout()`, the document enters "detached" mode and becomes read-only by default. Use `attach()` or `checkoutToLatest()` to return to editing mode. See [Version Deep Dive](/docs/advanced/version_deep_dive) and [Attached vs Detached States](/docs/concepts/attached_detached).
 </Indent>
 
 <Method id="LoroDoc.checkoutToLatest">
@@ -761,7 +846,13 @@ const unsubscribe = doc.subscribe((event) => {
 // Later: unsubscribe();
 ```
 
-Note: Events emit after a microtask (async). If you need to react immediately after `commit()`/`import()`/`checkout()`, await a microtask first. Details: [Event Handling](/docs/tutorial/event).
+**⚠️ Important:** Events are emitted asynchronously after a microtask. If you need to handle events immediately after `commit()`/`import()`/`checkout()`, you must await a microtask:
+```ts
+await new Promise(resolve => setTimeout(resolve, 0));
+// Now events have been emitted
+```
+
+**📝 Note:** Multiple operations before a commit are batched into a single event. The Subscription object must be kept alive to avoid garbage collection. See [Event Handling](/docs/tutorial/event).
 </Indent>
 
 <Method id="LoroDoc.subscribeLocalUpdates">
@@ -831,7 +922,13 @@ commit(options?: { origin?: string, message?: string, timestamp?: number }): voi
 <Indent>
 Commits pending changes as a single transaction. A transaction groups operations into a Change; see [Operations and Changes](/docs/concepts/operations_changes).
 
-Note: Loro transactions are not ACID database transactions. They bundle local operations for event batching and history grouping; there is no rollback or isolation guarantee like a DB transaction. See [Transaction Model](/docs/concepts/transaction_model).
+**⚠️ Critical Distinction:** Loro transactions are NOT ACID database transactions:
+- No rollback capability
+- No isolation guarantees
+- Purpose: Bundle local operations for event batching and history grouping
+- Many operations (import/export/checkout) trigger implicit commits
+
+See [Transaction Model](/docs/concepts/transaction_model).
 
 **Parameters:**
 - `options` - Optional commit configuration
@@ -945,7 +1042,9 @@ frontiers(): Frontiers
 <Indent>
 Gets the current frontiers (heads) of the document. Frontiers are a compact representation of a version; see [Frontiers](/docs/concepts/frontiers) for when to use them instead of version vectors.
 
-Note: Frontiers are compact version representation. For trade-offs versus Version Vectors and when to use each, see [Frontiers](/docs/concepts/frontiers).
+**📝 Note:** Frontiers are a compact version representation.
+
+**⚠️ Limitation:** When you have a Frontier pointing to operations you don't know about, you cannot determine the complete set of operation IDs included in that version. Version Vectors don't have this limitation but are more verbose. See [Frontiers](/docs/concepts/frontiers) for trade-offs.
 
 **Returns:** Array of OpIds
 
@@ -1943,22 +2042,40 @@ stable cursors. The merge semantics avoid interleaving artifacts under concurren
 APIs and Loro handles index transformation. 
 See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
-**Important: String Encoding**
+**⚠️ Critical: UTF-16 String Encoding**
 
 LoroText uses **UTF-16** encoding, matching JavaScript's native string encoding:
-- `insert()` and `delete()` use UTF-16 code unit indices (same as JavaScript string indices)
-- `length` returns the UTF-16 code unit count (same as JavaScript `string.length`)
-- Characters outside the Basic Multilingual Plane (e.g., emoji 😀) count as 2 units
-- Use `insertUtf8()` and `deleteUtf8()` for UTF-8 byte-based operations if needed
+- All standard methods (`insert()`, `delete()`, `mark()`, `slice()`, `charAt()`) use UTF-16 code unit indices
+- `length` returns UTF-16 code units (same as JavaScript `string.length`)
+- Emoji and characters outside the Basic Multilingual Plane count as **2 units**
+- Use `insertUtf8()` and `deleteUtf8()` for UTF-8 byte-based operations when integrating with UTF-8 systems
+
+**⚠️ Common Pitfalls:**
+1. **Emoji Splitting**: Slicing or deleting in the middle of multi-unit characters corrupts them
+2. **Index Misalignment**: UTF-16 indices differ from visual character count
+3. **Cursor Positions**: Cursor positions use UTF-16 indices and may become slow when pointing to deleted text
+4. **Performance**: Cursor queries on deleted positions require history traversal - refresh cursors periodically
 
 **Example with emoji:**
 ```typescript
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
 console.log(text.length);        // 13 (emoji counts as 2)
-console.log(text.toString()[6]); // Invalid - splits the emoji
-text.delete(6, 2);               // Deletes the entire emoji
+console.log(text.toString()[6]); // ⚠️ Invalid - splits the emoji
+text.delete(6, 2);               // ✅ Correct - deletes entire emoji
+text.delete(6, 1);               // ❌ Wrong - corrupts the emoji
+
+// Safe iteration
+text.iter((char) => {
+  console.log(char); // Each character handled correctly
+  return true;
+});
 ```
+
+**📝 Text vs String in Maps:**
+- Use `LoroText` for collaborative text editing where all concurrent edits must be preserved
+- Use regular strings in `LoroMap` for atomic values (URLs, IDs, hashes) where Last-Write-Wins is preferred
+- Example: URLs should be strings in maps, not LoroText, to avoid merge conflicts
 
 
 <Method id="LoroText.insert">
@@ -2176,7 +2293,7 @@ charAt(pos: number): string
 <Indent>
 Gets the character at a specific UTF-16 code unit position.
 
-**Warning:** May return invalid results for positions inside multi-unit characters (e.g., emoji).
+**⚠️ Warning:** Returns invalid results for positions inside multi-unit characters (e.g., emoji). The result will be a partial UTF-16 code unit, not a valid character.
 
 **Parameters:**
 - `pos` - UTF-16 code unit position
@@ -2206,7 +2323,7 @@ slice(start: number, end: number): string
 <Indent>
 Extracts a section of the text using UTF-16 code unit positions.
 
-**Warning:** Be careful not to slice in the middle of multi-unit characters.
+**⚠️ Warning:** Slicing in the middle of multi-unit characters (emoji, certain Unicode) creates invalid strings. Always ensure your start/end positions align with character boundaries.
 
 **Parameters:**
 - `start` - Start UTF-16 code unit index
@@ -2545,7 +2662,11 @@ readonly length: number
 <Indent>
 Gets the length of the text in UTF-16 code units (same as JavaScript's `string.length`).
 
-**Note:** Emoji and other characters outside the Basic Multilingual Plane count as 2 units.
+**⚠️ Important:** Emoji and other characters outside the Basic Multilingual Plane count as 2 UTF-16 units. This affects all index-based operations:
+```typescript
+text.insert(0, "👨‍👩‍👧‍👦"); // Family emoji
+console.log(text.length); // 11 (not 1!) - complex emoji with ZWJ sequences
+```
 
 **Example:**
 ```ts twoslash
@@ -2565,6 +2686,21 @@ console.log(text.length); // 8 (space + emoji which counts as 2)
 An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices 
 by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list), 
 [Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
+
+**⚠️ Important: List vs Map for Coordinates**
+```typescript
+// ❌ WRONG - Don't use List for coordinates
+const coord = doc.getList("coord");
+coord.push(10); // x
+coord.push(20); // y
+// Concurrent updates can create [10, 20a, 20b] instead of [10, 20]
+
+// ✅ CORRECT - Use Map for coordinates
+const coord = doc.getMap("coord");
+coord.set("x", 10);
+coord.set("y", 20);
+// Concurrent updates properly merge to {x: 10, y: 20}
+```
 
 <Method id="LoroList.insert">
 ```typescript
@@ -2994,7 +3130,14 @@ setContainer<T extends Container>(key: string, container: T): T
 <Indent>
 Sets a container as the value for a key.
 
-Pitfall: Concurrently creating child containers at the same key from multiple peers can overwrite each other (different container IDs cannot auto-merge). Prefer initializing needed child containers up-front or at the root level. See tips: [Container initialization](/docs/tutorial/tips).
+**⚠️ Pitfall:** Concurrent child container creation at the same key from multiple peers causes overwrites (different container IDs cannot auto-merge). 
+
+**Best practices:**
+1. Initialize all child containers upfront during parent creation
+2. Use unique root containers per user: `doc.getMap("user." + userId)`
+3. Avoid: `map.getOrCreateContainer(key, new LoroMap())` in concurrent contexts
+
+See [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
 - `key` - The key
@@ -3044,7 +3187,18 @@ getOrCreateContainer<T extends Container>(key: string, container: T): T
 <Indent>
 Gets an existing container or creates a new one.
 
-Pitfall: Avoid parallel creation for the same key across peers; prefer a single creator or root-level containers to prevent overwrites. See [Tips](/docs/tutorial/tips).
+**⚠️ Pitfall:** Parallel container creation for the same key across peers causes overwrites.
+
+**Safe pattern:**
+```typescript
+// Instead of shared child containers:
+// doc.getMap("shared").getOrCreateContainer("data", new LoroMap())
+
+// Use unique root containers:
+doc.getMap(`shared.data.${userId}`)
+```
+
+See [Tips](/docs/tutorial/tips).
 
 **Parameters:**
 - `key` - The key
@@ -3367,6 +3521,13 @@ const containerId = map.id;
 ### LoroTree
 
 A hierarchical tree container for nested structures. Supports moving subtrees while handling concurrent edits. See [Tree](/docs/tutorial/tree).
+
+**⚠️ Important Tree Operation Notes:**
+- **Deletion is a move operation**: Nodes are moved to a special "deleted" location, not removed
+- **Concurrent moves can create cycles**: Loro detects and prevents these automatically
+- **Fractional indexing**: Has interleaving issues but maintains relative ordering
+- **Don't disable fractional index** if you need siblings to be sorted
+- **Network delays**: Can temporarily create invalid states (cycles) before being rejected
 
 <Method id="LoroTree.createNode">
 ```typescript
@@ -4086,6 +4247,11 @@ console.log(`Counter value: ${counter.value}`);
 A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under 
 concurrent moves (concurrent moves resolve to one final position). See [List and Movable List](/docs/tutorial/list).
 
+**📝 MovableList vs List:**
+- **Use MovableList** for: Drag-and-drop UIs, sortable lists, kanban boards
+- **Use List** for: Append-heavy operations, chat messages, logs
+- **Key difference**: MovableList handles concurrent moves better (no duplicates), List is faster for insertions
+
 Extends `LoroList` with additional methods for efficient element reordering.
 
 <Method id="LoroMovableList.move">
@@ -4159,6 +4325,12 @@ const text = movableList.setContainer(0, new LoroText());
 ## Synchronization
 
 Import/export updates over any transport and choose the right encoding for speed and size. See [Sync Tutorial](/docs/tutorial/sync) and [Encoding & Export Modes](/docs/tutorial/encoding).
+
+**⚠️ Synchronization Pitfalls:**
+- **Sanitization**: You must distribute sanitized/redacted documents to all peers - original sensitive data persists on other clients
+- **Shallow snapshots**: Peers can only sync if they have versions after the shallow snapshot point
+- **Import order**: Loro handles out-of-order updates automatically via the ImportStatus
+- **Auto-commit**: Import and export operations trigger automatic commits
 
 ### Import/Export Patterns
 
@@ -4557,6 +4729,12 @@ Local undo operates on your own changes without breaking collaboration. See [Und
 ### UndoManager
 
 Provides local undo/redo functionality.
+
+**⚠️ Important Notes:**
+- **Local-only**: UndoManager only undoes the local user's operations, not remote operations
+- **Origin filtering**: Use `excludeOriginPrefixes` to exclude certain operations (e.g., sync operations) from undo
+- **Cursor restoration**: Use `onPush`/`onPop` callbacks to save and restore cursor positions
+- **Clear after major operations**: Consider clearing undo stack after document resets or major imports
 
 <Method id="UndoManager.constructor">
 ```typescript
@@ -5081,6 +5259,12 @@ console.log("Blob metadata:", metadata);
 ## EphemeralStore
 
 Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns. Each entry uses timestamp-based LWW (Last-Write-Wins) for conflict resolution.
+
+**⚠️ Important:** 
+- EphemeralStore is a separate CRDT without history - data is NOT persisted
+- Perfect for temporary state: cursor positions, selections, typing indicators
+- Each peer's state auto-expires after the timeout period
+- Uses Last-Write-Wins, not operational transformation like main document
 
 ### EphemeralStore
 
