@@ -814,15 +814,19 @@ commit(options?: { origin?: string, message?: string, timestamp?: number }): voi
 ```
 </Method>
 <Indent>
-Commits pending changes as a single transaction. A transaction groups operations into a Change; see [Operations and Changes](/docs/concepts/operations_changes). You can tag commits with origin and message for debugging; timestamps are Unix seconds (see [Storing Timestamps](/docs/advanced/timestamp)).
+Commits pending changes as a single transaction. A transaction groups operations into a Change; see [Operations and Changes](/docs/concepts/operations_changes).
 
 Note: Loro transactions are not ACID database transactions. They bundle local operations for event batching and history grouping; there is no rollback or isolation guarantee like a DB transaction. See [Transaction Model](/docs/concepts/transaction_model).
 
 **Parameters:**
 - `options` - Optional commit configuration
-  - `origin` - Origin identifier for the commit
-  - `message` - Commit message
-  - `timestamp` - Unix timestamp in seconds
+  - `message` - Commit message (persisted in the document like a git commit message, visible to all peers after sync)
+  - `origin` - Origin identifier (local only - used for marking local events, remote peers won't see this)
+  - `timestamp` - Unix timestamp in seconds (see [Storing Timestamps](/docs/advanced/timestamp))
+
+**Important distinction:**
+- `message` is persisted in the document's history and will be synchronized to all peers, similar to git commit messages
+- `origin` is only used locally for filtering events (e.g., excluding certain origins from undo) and is NOT synchronized to remote peers
 
 **Example:**
 ```ts twoslash
@@ -830,8 +834,8 @@ import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.commit({
-  origin: "user-action",
-  message: "Updated document title",
+  message: "Updated document title", // Persisted & synced to all peers
+  origin: "user-action",             // Local only, for event filtering
   timestamp: Math.floor(Date.now() / 1000)
 });
 ```
