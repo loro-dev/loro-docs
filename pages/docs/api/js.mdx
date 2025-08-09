@@ -15,34 +15,49 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 ## Common Tasks
 
 ### Getting Started
-- Create and edit a document: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap)
-- Listen to document changes: [`subscribe`](#LoroDoc.subscribe) for all changes
-- Export document state: [`export`](#LoroDoc.export) with `mode: "snapshot"`
-- Import from another document: [`import`](#LoroDoc.import) binary data or another doc
+- **Create a document**: [`new LoroDoc()`](#LoroDoc.constructor) - Initialize a new collaborative document
+- **Add containers**: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap), [`getTree`](#LoroDoc.getTree)
+- **Listen to changes**: [`subscribe`](#LoroDoc.subscribe) - React to document modifications
+- **Export/Import state**: [`export`](#LoroDoc.export) and [`import`](#LoroDoc.import) - Save and load documents
 
 ### Real-time Collaboration
-- Sync between peers: [`export`](#LoroDoc.export) updates from a version + [`import`](#LoroDoc.import)
-- Stream updates over WebSocket: [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) for outgoing changes
-- Handle concurrent edits: automatic with all container types
-- Set unique peer ID: [`setPeerId`](#LoroDoc.setPeerId) at startup
+- **Sync between peers**: [`export`](#LoroDoc.export) with `mode: "update"` + [`import`](#LoroDoc.import) - Exchange incremental updates
+- **Stream updates**: [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) - Send changes over WebSocket/WebRTC
+- **Set unique peer ID**: [`setPeerId`](#LoroDoc.setPeerId) - Ensure each client has a unique identifier
+- **Handle conflicts**: Automatic - All Loro data types are CRDTs that merge concurrent edits
 
 ### Rich Text Editing
-- Create rich text: [`getText`](#LoroDoc.getText) with [`insert`](#LoroText.insert), [`delete`](#LoroText.delete)
-- Apply formatting: [`mark`](#LoroText.mark) for bold, italic, links
-- Track cursor positions: [`getCursor`](#LoroText.getCursor) + [`getCursorPos`](#LoroDoc.getCursorPos)
-- Configure text styles: [`configTextStyle`](#LoroDoc.configTextStyle) for expand behavior
+- **Create rich text**: [`getText`](#LoroDoc.getText) - Initialize a collaborative text container
+- **Edit text**: [`insert`](#LoroText.insert), [`delete`](#LoroText.delete), [`applyDelta`](#LoroText.applyDelta)
+- **Apply formatting**: [`mark`](#LoroText.mark) - Add bold, italic, links, custom styles
+- **Track cursor positions**: [`getCursor`](#LoroText.getCursor) + [`getCursorPos`](#LoroDoc.getCursorPos) - Stable positions across edits
+- **Configure styles**: [`configTextStyle`](#LoroDoc.configTextStyle) - Define expand behavior for marks
 
 ### Data Structures
-- Ordered lists: [`getList`](#LoroDoc.getList) with [`push`](#LoroList.push), [`insert`](#LoroList.insert)
-- Key-value maps: [`getMap`](#LoroDoc.getMap) with [`set`](#LoroMap.set), [`get`](#LoroMap.get)
-- Movable trees: [`getTree`](#LoroDoc.getTree) with [`move`](#LoroTree.move) for file systems, nested comments
-- Movable lists: [`getMovableList`](#LoroDoc.getMovableList) with [`move`](#LoroMovableList.move) for reorderable items
+- **Ordered lists**: [`getList`](#LoroDoc.getList) - Arrays with [`push`](#LoroList.push), [`insert`](#LoroList.insert), [`delete`](#LoroList.delete)
+- **Key-value maps**: [`getMap`](#LoroDoc.getMap) - Objects with [`set`](#LoroMap.set), [`get`](#LoroMap.get), [`delete`](#LoroMap.delete)
+- **Hierarchical trees**: [`getTree`](#LoroDoc.getTree) - File systems, nested comments with [`createNode`](#LoroTree.createNode), [`move`](#LoroTree.move)
+- **Reorderable lists**: [`getMovableList`](#LoroDoc.getMovableList) - Drag-and-drop with [`move`](#LoroMovableList.move), [`set`](#LoroMovableList.set)
+- **Counters**: [`getCounter`](#LoroDoc.getCounter) - Distributed counters with [`increment`](#LoroCounter.increment)
 
-### Advanced Features
-- Undo/redo user edits: see [Undo/Redo](#undoredo) with `UndoManager`
-- Time travel debugging: [`checkout`](#LoroDoc.checkout) to any version
-- Optimize storage: export [shallow snapshot](#synchronization) without history
-- Fork and merge branches: [`fork`](#LoroDoc.fork) + separate editing + [`import`](#LoroDoc.import)
+### Ephemeral State & Presence
+- **User presence**: [`EphemeralStore`](#ephemeralstore) - Share cursor positions, selections, user status (not persisted)
+- **Cursor syncing**: Use [`EphemeralStore.set`](#EphemeralStore.set) with cursor data from [`getCursor`](#LoroText.getCursor)
+- **Live indicators**: Track who's online, typing indicators, mouse positions
+- **Important**: EphemeralStore is a separate CRDT without history - perfect for temporary state that shouldn't persist
+
+### Version Control & History
+- **Undo/redo**: [`UndoManager`](#undomanager) - Local undo of user's own edits
+- **Time travel**: [`checkout`](#LoroDoc.checkout) to any [`frontiers`](#LoroDoc.frontiers) - Debug or review history
+- **Version tracking**: [`version`](#LoroDoc.version), [`frontiers`](#LoroDoc.frontiers), [`versionVector`](#LoroDoc.versionVector)
+- **Fork documents**: [`fork`](#LoroDoc.fork) or [`forkAt`](#LoroDoc.forkAt) - Create branches for experimentation
+- **Merge branches**: [`import`](#LoroDoc.import) - Combine changes from forked documents
+
+### Performance & Storage
+- **Shallow snapshots**: [`export`](#LoroDoc.export) with `mode: "shallow-snapshot"` - State without history
+- **Incremental updates**: [`export`](#LoroDoc.export) from specific [`version`](#LoroDoc.version) - Send only changes
+- **Compact history**: [`export`](#LoroDoc.export) with `mode: "snapshot"` - Full state with compressed history
+- **Detached editing**: [`setDetachedEditing`](#LoroDoc.setDetachedEditing) - Stage changes before committing
 
 ## Basic Usage
 
