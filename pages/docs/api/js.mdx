@@ -588,7 +588,7 @@ Efficiently imports multiple updates in a single batch operation. See [Batch Imp
 - `data` - Array of binary updates
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 declare const update1: Uint8Array;
@@ -3516,7 +3516,7 @@ Moves a node to a new position.
 - `index` - Position among siblings
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3540,7 +3540,7 @@ Deletes a node and its descendants.
 - `target` - Node to delete
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3565,7 +3565,7 @@ Gets a node handler by its ID.
 **Returns:** Node handler or undefined
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3633,7 +3633,7 @@ Checks if a node exists.
 **Returns:** Boolean indicating existence
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -3660,7 +3660,7 @@ Checks if a node has been deleted.
 **Returns:** Boolean indicating deletion status
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -4917,7 +4917,7 @@ undo.clear();
 
 Handle cursor restoration and side effects:
 
-```ts twoslash
+```typescript no_run
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
 declare function saveCursorPositions(): any;
@@ -5123,7 +5123,7 @@ Decode frontiers from bytes.
 **Returns:** Array of operation IDs
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { decodeFrontiers } from "loro-crdt";
 
 declare const encodedData: Uint8Array;
@@ -5187,7 +5187,7 @@ Decode metadata from an import blob.
 **Returns:** Import blob metadata
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { decodeImportBlobMeta } from "loro-crdt";
 
 declare const blob: Uint8Array;
@@ -5384,7 +5384,7 @@ Apply remote updates.
 - `bytes` - Encoded updates from remote peer
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
 
@@ -5459,7 +5459,7 @@ Subscribe to local ephemeral updates for syncing to remote peers.
 **Returns:** Unsubscribe function
 
 **Example:**
-```ts twoslash
+```typescript no_run
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
 
@@ -5496,7 +5496,7 @@ store.destroy();
 
 ### Complete Example
 
-```ts twoslash
+```typescript no_run
 import { EphemeralStore } from "loro-crdt";
 
 // Assume we have:
