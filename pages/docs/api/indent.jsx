@@ -11,7 +11,7 @@ import React from 'react';
 export default function Indent({ children, level = 1, className = '' }) {
   const indentStyle = {
     paddingLeft: `${level * 1.5}rem`,
-    paddingBottom: "0.75rem",
+    paddingBottom: "1.5rem",
   };
 
   return (

@@ -10,7 +10,11 @@ import Method from './method';
 
 Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enables real-time collaboration. If CRDTs are new to you, start with [What are CRDTs](/docs/concepts/crdt) for a gentle intro. This API reference provides comprehensive documentation for all classes, methods, and types available in the JavaScript/TypeScript binding.
 
+Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspired techniques that use simple index operations and replay only the divergent history when merging. This yields fast local edits, efficient merges, and low overhead without permanent tombstones. See the primer [Event Graph Walker (Eg-walker)](/docs/advanced/event_graph_walker) and performance notes in the v1.0 blog (import/export speedups, shallow snapshots): https://loro.dev/blog/v1.0
+
 ## Quick Navigation
+
+- Jump quickly to major sections. For a guided walkthrough and practical examples, see [Getting Started with LoroDoc](/docs/tutorial/loro_doc) and [Examples](/docs/examples).
 
 - [**LoroDoc**](#lorodoc) - The main document class for managing CRDT state
 - [**Container Types**](#container-types) - Data structures (Text, List, Map, Tree, Counter, MovableList)
@@ -21,6 +25,8 @@ Loro is a powerful Conflict-free Replicated Data Type (CRDT) library that enable
 - [**Types & Interfaces**](#types--interfaces) - TypeScript type definitions
 
 ## Basic Usage
+
+A quick taste of the API. For a fuller introduction, see [Getting Started with LoroDoc](/docs/tutorial/loro_doc) and the [Examples](/docs/examples) repository links.
 
 ```typescript twoslash
 import { LoroDoc } from "loro-crdt";
@@ -79,6 +85,8 @@ const doc = new LoroDoc();
 // ---cut---
 doc.setPeerId("42");
 ```
+
+Pitfall: Do not let two parallel peers (e.g., multiple tabs/devices) share the same PeerID — it can create duplicate op IDs and cause divergence. If you must reuse PeerIDs, enforce single ownership with locking; otherwise prefer random IDs. See tips: [PeerID reuse](/docs/tutorial/tips).
 </Indent>
 
 <Method>
@@ -107,10 +115,10 @@ setChangeMergeInterval(interval: number): void
 ```
 </Method>
 <Indent>
-Sets the interval in seconds for merging continuous local changes into a single change record. In Loro, multiple low-level operations are grouped into higher-level Changes for readability and syncing. See [Operations and Changes](/docs/concepts/operations_changes).
+Sets the interval in milliseconds for merging continuous local changes into a single change record. In Loro, multiple low-level operations are grouped into higher-level Changes for readability and syncing. See [Operations and Changes](/docs/concepts/operations_changes).
 
 **Parameters:**
-- `interval` - Merge interval in seconds
+- `interval` - Merge interval in milliseconds
 
 **Example:**
 ```ts twoslash
@@ -161,6 +169,8 @@ getText(name: string): LoroText
 </Method>
 <Indent>
 Gets or creates a text container with the given name. New to LoroText and marks? See [Text](/docs/tutorial/text).
+
+Note: Creating root containers (e.g., `doc.getText("...")`) does not record operations; nested container creation (e.g., `map.setContainer(...)`) does.
 
 **Parameters:**
 - `name` - The container name
@@ -480,6 +490,10 @@ doc.checkout(frontiers); // Go back to previous version
 ```
 </Indent>
 
+<Indent>
+Note: In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations. If you need a stable commit boundary, call `commit()` before reading versions. See [Version Deep Dive](/docs/advanced/version_deep_dive).
+</Indent>
+
 <Method>
 ```typescript
 checkoutToLatest(): void
@@ -615,6 +629,8 @@ const unsubscribe = doc.subscribe((event) => {
 
 // Later: unsubscribe();
 ```
+
+Note: Events emit after a microtask (async). If you need to react immediately after `commit()`/`import()`/`checkout()`, await a microtask first. Details: [Event Handling](/docs/tutorial/event).
 </Indent>
 
 <Method>
@@ -670,6 +686,8 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
 });
 ```
 </Indent>
+
+ 
 
 ### Transaction Methods
 
@@ -826,6 +844,8 @@ subscribePreCommit(f: (e: { changeMeta: Change, origin: string, modifier: Change
 </Method>
 <Indent>
 Subscribe to the pre-commit event. You can modify the message and timestamp of the next change. This hook runs right before a Change is recorded; see [Transaction Model](/docs/concepts/transaction_model) and [Operations and Changes](/docs/concepts/operations_changes).
+
+Pitfall: `commit()` can be triggered implicitly by `import`, `export`, and `checkout`. Use this hook to attach metadata even for those implicit commits.
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -1729,6 +1749,8 @@ redactJsonUpdates(json: string | JsonSchema, version_range: any): JsonSchema
 <Indent>
 Redacts JSON updates within a specified version range.
 
+Use this to safely remove accidentally leaked sensitive content from history while preserving structure. See [Tips: Redaction](/docs/tutorial/tips).
+
 **Parameters:**
 - `json` - JSON updates to redact
 - `version_range` - Version range for redaction
@@ -1749,9 +1771,14 @@ const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
 
 ## Container Types
 
+Common CRDT containers for modeling JSON-like structures. See [Choosing CRDT Types](/docs/concepts/choose_crdt_type) and [Composing CRDTs](/docs/tutorial/composition) for when to use each and how to nest them.
+
 ### LoroText
 
-A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and stable cursors. See [Text](/docs/tutorial/text) for concepts and editor integrations.
+A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and 
+stable cursors. The merge semantics avoid interleaving artifacts under concurrency (Fugue + Eg-walker ideas); you use simple index 
+APIs and Loro handles index transformation. 
+See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
 
 <Method>
@@ -1959,7 +1986,9 @@ const plainText = text.toString();
 
 ### LoroList
 
-An ordered list container for collaborative arrays. See [List and Movable List](/docs/tutorial/list) and [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
+An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices 
+by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list), 
+[Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
 
 <Method>
 ```typescript
@@ -2195,6 +2224,8 @@ set(key: string, value: Value | Container): void
 <Indent>
 Sets a key-value pair.
 
+Note: Setting a key to the same value is a no-op (no operation recorded). See [Map basics](/docs/tutorial/map).
+
 **Parameters:**
 - `key` - The key
 - `value` - The value
@@ -2217,6 +2248,8 @@ setContainer<T extends Container>(key: string, container: T): T
 </Method>
 <Indent>
 Sets a container as the value for a key.
+
+Pitfall: Concurrently creating child containers at the same key from multiple peers can overwrite each other (different container IDs cannot auto-merge). Prefer initializing needed child containers up-front or at the root level. See tips: [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
 - `key` - The key
@@ -2265,6 +2298,8 @@ getOrCreateContainer<T extends Container>(key: string, container: T): T
 </Method>
 <Indent>
 Gets an existing container or creates a new one.
+
+Pitfall: Avoid parallel creation for the same key across peers; prefer a single creator or root-level containers to prevent overwrites. See [Tips](/docs/tutorial/tips).
 
 **Parameters:**
 - `key` - The key
@@ -2907,7 +2942,8 @@ console.log(`Counter value: ${counter.value}`);
 
 ### LoroMovableList
 
-A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under concurrent moves. See [List and Movable List](/docs/tutorial/list).
+A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under 
+concurrent moves (concurrent moves resolve to one final position). See [List and Movable List](/docs/tutorial/list).
 
 Extends `LoroList` with additional methods for efficient element reordering.
 
@@ -2981,6 +3017,8 @@ const text = movableList.setContainer(0, new LoroText());
 
 ## Synchronization
 
+Import/export updates for sync over any transport. See [Sync Tutorial](/docs/tutorial/sync) and [Encoding & Export Modes](/docs/tutorial/encoding) for end-to-end patterns and formats.
+
 ### Import/Export Patterns
 
 #### Basic Synchronization
@@ -3014,6 +3052,12 @@ doc2.subscribeLocalUpdates((updates) => {
   doc1.import(updates);
 });
 ```
+
+Performance tips:
+- Prefer `mode: "update"` with a `VersionVector` to sync incrementally.
+- Use `mode: "shallow-snapshot"` when you only need current state; it strips history for faster import/load.
+- Loro’s LSM-based encoding and Eg-walker-inspired merge keep import/export fast, even for large histories. 
+  See [Encoding](/docs/tutorial/encoding) and v1.0 performance notes: https://loro.dev/blog/v1.0
 
 #### Network Sync with WebSocket
 
@@ -3149,15 +3193,15 @@ interface LoroEvent {
 
 Different containers produce different diff types:
 
-<Method>
+#### TextDiff
+
+<Indent>
 ```typescript
 type TextDiff = {
   type: "text"
   diff: Delta<string>[]
 }
 ```
-</Method>
-<Indent>
 Represents changes to text content using Delta format.
 
 **Properties:**
@@ -3188,15 +3232,15 @@ text.subscribe((e) => {
 ```
 </Indent>
 
-<Method>
+#### ListDiff
+
+<Indent>
 ```typescript
 type ListDiff = {
   type: "list"
   diff: Delta<(Value | Container)[]>[]
 }
 ```
-</Method>
-<Indent>
 Represents changes to list content using Delta format.
 
 **Properties:**
@@ -3224,15 +3268,15 @@ list.subscribe((e) => {
 ```
 </Indent>
 
-<Method>
+#### MapDiff
+
+<Indent>
 ```typescript
 type MapDiff = {
   type: "map"
   updated: Record<string, Value | Container | undefined>
 }
 ```
-</Method>
-<Indent>
 Represents changes to map content.
 
 **Properties:**
@@ -3262,7 +3306,9 @@ map.subscribe((e) => {
 ```
 </Indent>
 
-<Method>
+#### TreeDiff
+
+<Indent>
 ```typescript
 type TreeDiff = {
   type: "tree"
@@ -3293,8 +3339,6 @@ type TreeDiffItem =
       oldIndex: number
     }
 ```
-</Method>
-<Indent>
 Represents changes to tree structure.
 
 **Properties:**
@@ -3334,7 +3378,6 @@ tree.subscribe((e) => {
 });
 ```
 </Indent>
-```
 
 ### Deep Subscription
 
@@ -3365,7 +3408,8 @@ doc.subscribe((event) => {
 
 ## Undo/Redo
 
-Local undo operates on your own changes without breaking collaboration. See [Undo/Redo](/docs/advanced/undo) for design details and caveats in collaborative settings.
+Local undo operates on your own changes without breaking collaboration. See [Undo/Redo](/docs/advanced/undo) for design details 
+and caveats in collaborative settings.
 
 ### UndoManager
 
@@ -3444,6 +3488,8 @@ const undo = new UndoManager(doc, {
 ---
 
 ## Types & Interfaces
+
+Reference for core types used across the API. For conceptual background, see [Containers](/docs/concepts/container), [Version Vector](/docs/concepts/version_vector), [Frontiers](/docs/concepts/frontiers), and the [Versioning Deep Dive](/docs/advanced/version_deep_dive).
 
 ### Core Types
 
@@ -3579,6 +3625,8 @@ type Delta<T> =
 
 ## Utility Functions
 
+Small helpers for type checks and IDs. For more, see [Container IDs](/docs/advanced/cid) and the [Versioning Deep Dive](/docs/advanced/version_deep_dive) for frontiers/version encoding.
+
 ### Type Checking
 
 ```ts twoslash
@@ -3641,7 +3689,8 @@ const decoded = decodeFrontiers(encoded);
 
 ## EphemeralStore
 
-Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns:
+Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for 
+concepts and usage patterns:
 
 ```ts no_run twoslash
 import { EphemeralStore } from "loro-crdt";

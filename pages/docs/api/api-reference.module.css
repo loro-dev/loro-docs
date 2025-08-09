@@ -7,11 +7,22 @@
   box-shadow: none !important;
   border: none !important;
   margin-left: -1rem;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0 0 0;
 }
 
 .apiReference .method pre code > span > span:first-child {
   font-weight: 700;
+  font-size: 1.1em;
+  color: #6f42c1 !important;
+}
+
+.apiReference
+  .method
+  pre
+  code
+  > span
+  > span:first-child:is(html[class~="dark"] *) {
+  color: #b392f0 !important;
 }
 
 .apiReference h2 {
@@ -46,7 +57,7 @@
 .apiReference .nextra-code,
 .apiReference div.nextra-code,
 .apiReference div[class*="nextra-code"] {
-  @apply mt-3;
+  @apply mt-4 !important;
 }
 
 /* Content following h4 directly */
@@ -93,7 +104,6 @@
 .apiReference h4 ~ div[class*="_mt-6"] {
   @apply !mt-3;
 }
-
 
 /* Content following h3 directly (no h4 in between) */
 .apiReference h3 + p,
@@ -143,8 +153,6 @@
   @apply mt-3;
 }
 
-
-
 /* Improve spacing between major sections */
 .apiReference > h2 + * {
   @apply mt-6;
@@ -167,4 +175,3 @@
 .apiReference ul li ul {
   @apply mt-2 ml-4 space-y-1;
 }
-

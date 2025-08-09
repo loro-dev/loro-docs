@@ -13,7 +13,7 @@ export default function Method({ children, className = '', ...props }) {
   return (
     <div 
         className={className ? `${styles.method} ${className}` : styles.method}
-        style={{ paddingTop: "0.5rem" }}
+        // style={{ paddingTop: "0.5rem" }}
         {...props}
     >
       {children}
