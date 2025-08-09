@@ -70,27 +70,6 @@ const updates = doc.export({ mode: "update" });
 
 The `LoroDoc` class manages containers, sync, versions, and events. Start here to model your document and coordinate edits. See [Loro Document](/docs/tutorial/loro_doc) and [Containers](/docs/concepts/container).
 
-**Quick Index**
-
-- Configuration: [`setPeerId`](#LoroDoc.setPeerId), [`setChangeMergeInterval`](#LoroDoc.setChangeMergeInterval), [`configTextStyle`](#LoroDoc.configTextStyle)
-- Containers: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap), [`getTree`](#LoroDoc.getTree), [`getCounter`](#LoroDoc.getCounter), [`getMovableList`](#LoroDoc.getMovableList)
-- Sync: [`export`](#LoroDoc.export), [`import`](#LoroDoc.import), [`importBatch`](#LoroDoc.importBatch), [`exportJsonUpdates`](#LoroDoc.exportJsonUpdates), [`importJsonUpdates`](#LoroDoc.importJsonUpdates), metadata: [`decodeImportBlobMeta`](#LoroDoc.decodeImportBlobMeta), [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates)
-- Versioning: [`checkout`](#LoroDoc.checkout), [`checkoutToLatest`](#LoroDoc.checkoutToLatest), [`fork`](#LoroDoc.fork), [`forkAt`](#LoroDoc.forkAt), convert: [`frontiersToVV`](#LoroDoc.frontiersToVV), [`vvToFrontiers`](#LoroDoc.vvToFrontiers)
-- Events & Transactions: [`subscribe`](#LoroDoc.subscribe), [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates), [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer), [`commit`](#LoroDoc.commit), helpers: [`setNextCommitMessage`](#LoroDoc.setNextCommitMessage), [`setNextCommitOrigin`](#LoroDoc.setNextCommitOrigin), [`setNextCommitTimestamp`](#LoroDoc.setNextCommitTimestamp), [`setNextCommitOptions`](#LoroDoc.setNextCommitOptions), [`clearNextCommitOptions`](#LoroDoc.clearNextCommitOptions), [`subscribePreCommit`](#LoroDoc.subscribePreCommit)
-- Query/Introspection: [`toJSON`](#LoroDoc.toJSON), [`getShallowValue`](#LoroDoc.getShallowValue), [`getAllChanges`](#LoroDoc.getAllChanges), [`getChangeAt`](#LoroDoc.getChangeAt), [`getOpsInChange`](#LoroDoc.getOpsInChange), [`getPendingTxnLength`](#LoroDoc.getPendingTxnLength), [`changeCount`](#LoroDoc.changeCount), [`opCount`](#LoroDoc.opCount)
-
-**Gotchas**
-
-- PeerID uniqueness: don’t reuse a PeerID across parallel tabs/devices; see [Tips](/docs/tutorial/tips).
-- Versions include pending ops: call `commit()` before reading `version()`/`frontiers()`; see [Version Deep Dive](/docs/advanced/version_deep_dive).
-- Events are async: they emit after a microtask; await if you need immediate handling; see [Event Handling](/docs/tutorial/event).
-
-Performance
-
-- Prefer incremental sync (export `update` from a known `VersionVector`).
-- Use `shallow-snapshot` for current-state-only loads.
-- LSM encoding + Eg-walker-inspired merging keeps import/export fast; see [Encoding](/docs/tutorial/encoding) and v1.0 blog.
-
 ### Constructor
 
 ```typescript
@@ -599,24 +578,6 @@ doc.importJsonUpdates(jsonStr);
 
 Work with the history DAG using frontiers (heads) and version vectors. Switch, branch, and merge versions safely without manual conflict resolution. See [Versioning Deep Dive](/docs/advanced/version_deep_dive) and [Attached vs Detached States](/docs/concepts/attached_detached).
 
-**Quick Index**
-
-- Switch: [`checkout`](#LoroDoc.checkout), [`checkoutToLatest`](#LoroDoc.checkoutToLatest)
-- Branch: [`fork`](#LoroDoc.fork), [`forkAt`](#LoroDoc.forkAt)
-- Convert: [`frontiersToVV`](#LoroDoc.frontiersToVV), [`vvToFrontiers`](#LoroDoc.vvToFrontiers)
-- Inspect: [`diff`](#LoroDoc.diff), [`revertTo`](#LoroDoc.revertTo), [`applyDiff`](#LoroDoc.applyDiff)
-
-**Gotchas**
-
-- `version()`/`frontiers()` include pending local ops; call `commit()` for a stable boundary.
-- Detached editing is off by default; enable explicitly when needed.
-- Don’t mix peer IDs across devices/tabs when forking/merging.
-
-Performance
-
-- Frontier encoding is compact for transport; prefer vs full version vectors where possible.
-- Diffs and JSON diffs have different trade-offs; pick based on UI vs data sync.
-
 ### Version Control Methods
 
 <Method id="LoroDoc.checkout">
@@ -741,23 +702,6 @@ const forkedDoc = doc.forkAt(frontiers);
 ## Events & Transactions
 
 React to changes and group local operations into transactions. Events are delivered asynchronously after a microtask. See [Event Handling](/docs/tutorial/event) and [Transaction Model](/docs/concepts/transaction_model).
-
-**Quick Index**
-
-- Subscribe: [`subscribe`](#LoroDoc.subscribe), [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates), [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer)
-- Commit: [`commit`](#LoroDoc.commit) with `origin`, `message`, `timestamp`, and next-commit helpers
-- Hooks: Pre-Commit Hook [`subscribePreCommit`](#LoroDoc.subscribePreCommit)
-
-**Gotchas**
-
-- Events are batched and async; await a microtask to observe them immediately after commit.
-- `subscribePreCommit` is essential for implicit commits in `import`/`export`/`checkout`.
-- Use `origin` to filter out sync/system changes from user-facing logic.
-
-Performance
-
-- Batch UI updates in response to event batches.
-- Use `excludeOriginPrefixes` and merge intervals in UndoManager to control granularity.
 
 ### Subscription Methods
 
@@ -1973,26 +1917,6 @@ const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
 
 Common CRDT containers for modeling JSON-like structures. See [Choosing CRDT Types](/docs/concepts/choose_crdt_type) and [Composing CRDTs](/docs/tutorial/composition) for when to use each and how to nest them.
 
-**Quick Index**
-
-- [`LoroText`](#lorotext) — rich text with marks and stable cursors
-- [`LoroList`](#lorolist) — ordered arrays
-- [`LoroMovableList`](#loromovablelist) — lists with efficient concurrent moves
-- [`LoroMap`](#loromap) — key-value objects
-- [`LoroTree`](#lorotree) — hierarchical nodes and moves
-- [`LoroCounter`](#lorocounter) — numeric counters
-
-**Gotchas**
-
-- Map set same value is a no-op; parallel child `setContainer` may overwrite — initialize centrally or at root. See [Tips](/docs/tutorial/tips).
-- Stable cursors exist for Text and List; resolve with `doc.getCursorPos` before rendering.
-- Tree fractional indices can be toggled; disable if sibling order doesn’t matter.
-
-Performance
-
-- Text/List use index-based APIs with Eg-walker-inspired replay of divergent history; merges avoid interleaving; see [Eg-walker](/docs/advanced/event_graph_walker).
-- Prefer `toArray()`/`getNodes()` when you need flattened reads.
-
 ### LoroText
 
 A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and 
@@ -2747,10 +2671,8 @@ Removes and returns the last element.
 **Example:**
 ```ts no_run twoslash
 import { LoroList } from "loro-crdt";
-
-// Assume we have:
-// declare const list: LoroList;
-
+declare const list: LoroList;
+// ---cut---
 const lastItem = list.pop();
 ```
 </Indent>
@@ -4219,25 +4141,6 @@ const text = movableList.setContainer(0, new LoroText());
 
 Import/export updates over any transport and choose the right encoding for speed and size. See [Sync Tutorial](/docs/tutorial/sync) and [Encoding & Export Modes](/docs/tutorial/encoding).
 
-**Quick Index**
-
-- Export modes: [`export({ mode: ... })`](#LoroDoc.export) — snapshot, update, shallow-snapshot, updates-in-range
-- Import variants: [`import`](#LoroDoc.import), [`importBatch`](#LoroDoc.importBatch)
-- JSON tools: [`exportJsonUpdates`](#LoroDoc.exportJsonUpdates), [`importJsonUpdates`](#LoroDoc.importJsonUpdates), [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates)
-- Metadata: [`decodeImportBlobMeta`](#LoroDoc.decodeImportBlobMeta)
-
-**Gotchas**
-
-- Use `ImportStatus` to detect partial imports; apply missing ranges later.
-- Verify checksum only when necessary (`decodeImportBlobMeta(..., true)` may add cost).
-- Batch import preserves order; group related updates together.
-
-Performance
-
-- Prefer `mode: "update"` with a `VersionVector` for incremental sync.
-- Use `mode: "shallow-snapshot"` for current-state-only persistence and fast loads.
-- LSM encoding + Eg-walker-inspired merge keeps IO and import time low; see v1.0 blog.
-
 ### Import/Export Patterns
 
 #### Basic Synchronization
@@ -4285,7 +4188,7 @@ Performance tips:
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have:
-// declare const ws: { 
+declare const ws: { 
   send: (data: Uint8Array) => void;
   on: (event: string, handler: (data: any) => void) => void;
 };
@@ -4632,19 +4535,6 @@ doc.subscribe((event) => {
 
 Local undo operates on your own changes without breaking collaboration. See [Undo/Redo](/docs/advanced/undo) for design details and caveats.
 
-**Quick Index**
-
-- Manager: `UndoManager` (undo/redo, canUndo/canRedo)
-- Grouping: `groupStart`/`groupEnd`
-- Callbacks: `onPush`/`onPop` (restore cursors, etc.)
-- Config: `mergeInterval`, `maxUndoSteps`, `excludeOriginPrefixes`
-
-**Gotchas**
-
-- Undo never undoes remote inserts; design UI to reflect that behavior.
-- `mergeInterval` merges within time windows but `onPush` still fires per operation.
-- Store/restore cursor positions in callbacks for best UX.
-
 ### UndoManager
 
 Provides local undo/redo functionality:
@@ -4932,7 +4822,7 @@ concepts and usage patterns:
 import { EphemeralStore } from "loro-crdt";
 
 // Assume we have:
-// declare const websocket: {
+declare const websocket: {
   send: (data: Uint8Array) => void;
   on: (event: string, handler: (data: any) => void) => void;
 };
