@@ -144,7 +144,7 @@ The `LoroDoc` class manages containers, sync, versions, and events. Start here t
 
 ### Constructor
 
-```typescript
+```typescript no_run
 new LoroDoc()
 ```
 
@@ -160,7 +160,7 @@ const doc = new LoroDoc();
 ### Static Methods
 
 <Method id="LoroDoc.fromSnapshot">
-```typescript
+```typescript no_run
 static fromSnapshot(snapshot: Uint8Array): LoroDoc
 ```
 </Method>
@@ -186,7 +186,7 @@ const doc = LoroDoc.fromSnapshot(snapshot);
 ### Properties
 
 <Method id="LoroDoc.peerId">
-```typescript
+```typescript no_run
 readonly peerId: bigint
 ```
 </Method>
@@ -203,7 +203,7 @@ const id = doc.peerId;
 </Indent>
 
 <Method id="LoroDoc.peerIdStr">
-```typescript
+```typescript no_run
 readonly peerIdStr: PeerID
 ```
 </Method>
@@ -222,7 +222,7 @@ const idStr = doc.peerIdStr;
 ### Configuration Methods
 
 <Method id="LoroDoc.setPeerId">
-```typescript
+```typescript no_run
 setPeerId(peer: number | bigint | `${number}`): void
 ```
 </Method>
@@ -250,7 +250,7 @@ See [PeerID reuse](/docs/tutorial/tips) for safe reuse patterns.
 </Indent>
 
 <Method id="LoroDoc.setRecordTimestamp">
-```typescript
+```typescript no_run
 setRecordTimestamp(auto_record: boolean): void
 ```
 </Method>
@@ -272,7 +272,7 @@ doc.setRecordTimestamp(true);
 </Indent>
 
 <Method id="LoroDoc.setChangeMergeInterval">
-```typescript
+```typescript no_run
 setChangeMergeInterval(interval: number): void
 ```
 </Method>
@@ -292,7 +292,7 @@ doc.setChangeMergeInterval(1000); // Merge changes within 1 second
 </Indent>
 
 <Method id="LoroDoc.configTextStyle">
-```typescript
+```typescript no_run
 configTextStyle(styles: StyleConfig): void
 ```
 </Method>
@@ -303,7 +303,7 @@ Configures the behavior of text styles (marks) in rich text containers. Marks ca
 - `styles` - Configuration object mapping style names to their config
 
 **StyleConfig Type:**
-```typescript
+```typescript no_run
 type StyleConfig = Record<string, {
   expand?: "after" | "before" | "both" | "none"
 }>
@@ -323,7 +323,7 @@ doc.configTextStyle({
 </Indent>
 
 <Method id="LoroDoc.configDefaultTextStyle">
-```typescript
+```typescript no_run
 configDefaultTextStyle(style?: { expand: "after" | "before" | "both" | "none" }): void
 ```
 </Method>
@@ -345,7 +345,7 @@ doc.configDefaultTextStyle({ expand: "after" });
 ### Container Access Methods
 
 <Method id="LoroDoc.getText">
-```typescript
+```typescript no_run
 getText(name: string): LoroText
 ```
 </Method>
@@ -381,7 +381,7 @@ text.insert(0, "Hello");
 </Indent>
 
 <Method id="LoroDoc.getList">
-```typescript
+```typescript no_run
 getList(name: string): LoroList
 ```
 </Method>
@@ -404,7 +404,7 @@ list.push("Item 1");
 </Indent>
 
 <Method id="LoroDoc.getMap">
-```typescript
+```typescript no_run
 getMap(name: string): LoroMap
 ```
 </Method>
@@ -427,7 +427,7 @@ map.set("theme", "dark");
 </Indent>
 
 <Method id="LoroDoc.getTree">
-```typescript
+```typescript no_run
 getTree(name: string): LoroTree
 ```
 </Method>
@@ -450,7 +450,7 @@ const root = tree.createNode();
 </Indent>
 
 <Method id="LoroDoc.getCounter">
-```typescript
+```typescript no_run
 getCounter(name: string): LoroCounter
 ```
 </Method>
@@ -473,7 +473,7 @@ counter.increment(1);
 </Indent>
 
 <Method id="LoroDoc.getMovableList">
-```typescript
+```typescript no_run
 getMovableList(name: string): LoroMovableList
 ```
 </Method>
@@ -497,7 +497,7 @@ movableList.move(0, 2); // Move first item to third position
 </Indent>
 
 <Method id="LoroDoc.getContainerById">
-```typescript
+```typescript no_run
 getContainerById(id: ContainerID): Container | undefined
 ```
 </Method>
@@ -523,7 +523,7 @@ const sameText = doc.getContainerById(textId);
 ### Import/Export Methods
 
 <Method id="LoroDoc.export">
-```typescript
+```typescript no_run
 export(mode?: ExportMode): Uint8Array
 ```
 </Method>
@@ -534,7 +534,7 @@ Exports the document in various formats for synchronization or persistence. For 
 - `mode` - Export configuration (optional)
 
 **ExportMode Options:**
-```typescript
+```typescript no_run
 type ExportMode = 
   | { mode: "snapshot" }
   | { mode: "update", from?: VersionVector }
@@ -550,7 +550,7 @@ type ExportMode =
 - **Performance**: Export new snapshots periodically to reduce import times for new peers.
 
 **Examples:**
-```typescript
+```typescript no_run
 import { LoroDoc, VersionVector } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -576,7 +576,7 @@ const shallowSnapshot = doc.export({
 </Indent>
 
 <Method id="LoroDoc.import">
-```typescript
+```typescript no_run
 import(data: Uint8Array): ImportStatus
 ```
 </Method>
@@ -603,7 +603,7 @@ console.log(status.success);
 </Indent>
 
 <Method id="LoroDoc.importBatch">
-```typescript
+```typescript no_run
 importBatch(data: Uint8Array[]): ImportStatus
 ```
 </Method>
@@ -628,7 +628,7 @@ const status = doc.importBatch(updates);
 </Indent>
 
 <Method id="LoroDoc.exportJsonUpdates">
-```typescript
+```typescript no_run
 exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompression?: boolean): JsonSchema
 ```
 </Method>
@@ -652,7 +652,7 @@ console.log(JSON.stringify(jsonUpdates, null, 2));
 </Indent>
 
 <Method id="LoroDoc.importJsonUpdates">
-```typescript
+```typescript no_run
 importJsonUpdates(json: string | JsonSchema): void
 ```
 </Method>
@@ -679,7 +679,7 @@ Work with the history DAG using frontiers (heads) and version vectors. Switch, b
 ### Version Control Methods
 
 <Method id="LoroDoc.checkout">
-```typescript
+```typescript no_run
 checkout(frontiers: Frontiers): void
 ```
 </Method>
@@ -707,7 +707,7 @@ doc.checkout(frontiers); // Go back to previous version
 </Indent>
 
 <Method id="LoroDoc.checkoutToLatest">
-```typescript
+```typescript no_run
 checkoutToLatest(): void
 ```
 </Method>
@@ -724,7 +724,7 @@ doc.checkoutToLatest();
 </Indent>
 
 <Method id="LoroDoc.attach">
-```typescript
+```typescript no_run
 attach(): void
 ```
 </Method>
@@ -741,7 +741,7 @@ doc.attach();
 </Indent>
 
 <Method id="LoroDoc.detach">
-```typescript
+```typescript no_run
 detach(): void
 ```
 </Method>
@@ -758,7 +758,7 @@ doc.detach();
 </Indent>
 
 <Method id="LoroDoc.fork">
-```typescript
+```typescript no_run
 fork(): LoroDoc
 ```
 </Method>
@@ -777,7 +777,7 @@ const forkedDoc = doc.fork();
 </Indent>
 
 <Method id="LoroDoc.forkAt">
-```typescript
+```typescript no_run
 forkAt(frontiers: Frontiers): LoroDoc
 ```
 </Method>
@@ -806,7 +806,7 @@ React to changes and group local operations into transactions. Events are delive
 ### Subscription Methods
 
 <Method id="LoroDoc.subscribe">
-```typescript
+```typescript no_run
 subscribe(listener: (event: LoroEventBatch) => void): () => void
 ```
 </Method>
@@ -819,7 +819,7 @@ Subscribes to all document changes. See [Event Handling](/docs/tutorial/event) f
 **Returns:** Unsubscribe function
 
 **Event Structure:**
-```typescript
+```typescript no_run
 interface LoroEventBatch {
   by: "local" | "import" | "checkout"
   origin?: string
@@ -856,7 +856,7 @@ await new Promise(resolve => setTimeout(resolve, 0));
 </Indent>
 
 <Method id="LoroDoc.subscribeLocalUpdates">
-```typescript
+```typescript no_run
 subscribeLocalUpdates(f: (bytes: Uint8Array) => void): () => void
 ```
 </Method>
@@ -883,7 +883,7 @@ const unsubscribe = doc.subscribeLocalUpdates((updates) => {
 </Indent>
 
 <Method id="LoroDoc.subscribeFirstCommitFromPeer">
-```typescript
+```typescript no_run
 subscribeFirstCommitFromPeer(f: (e: { peer: PeerID }) => void): () => void
 ```
 </Method>
@@ -915,7 +915,7 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
 ### Transaction Methods
 
 <Method id="LoroDoc.commit">
-```typescript
+```typescript no_run
 commit(options?: { origin?: string, message?: string, timestamp?: number }): void
 ```
 </Method>
@@ -956,7 +956,7 @@ doc.commit({
 ### Query Methods
 
 <Method id="LoroDoc.toJSON">
-```typescript
+```typescript no_run
 toJSON(): Value
 ```
 </Method>
@@ -976,7 +976,7 @@ console.log(JSON.stringify(json, null, 2));
 </Indent>
 
 <Method id="LoroDoc.getShallowValue">
-```typescript
+```typescript no_run
 getShallowValue(): Record<string, ContainerID>
 ```
 </Method>
@@ -996,7 +996,7 @@ const shallow = doc.getShallowValue();
 </Indent>
 
 <Method id="LoroDoc.getDeepValueWithID">
-```typescript
+```typescript no_run
 getDeepValueWithID(): any
 ```
 </Method>
@@ -1015,7 +1015,7 @@ const deepValue = doc.getDeepValueWithID();
 </Indent>
 
 <Method id="LoroDoc.version">
-```typescript
+```typescript no_run
 version(): VersionVector
 ```
 </Method>
@@ -1035,7 +1035,7 @@ console.log(vv.toJSON());
 </Indent>
 
 <Method id="LoroDoc.frontiers">
-```typescript
+```typescript no_run
 frontiers(): Frontiers
 ```
 </Method>
@@ -1059,7 +1059,7 @@ const frontiers = doc.frontiers();
 </Indent>
 
 <Method id="LoroDoc.diff">
-```typescript
+```typescript no_run
 diff(from: Frontiers, to: Frontiers, for_json?: boolean): [ContainerID, Diff | JsonDiff][]
 ```
 </Method>
@@ -1092,7 +1092,7 @@ diffs.forEach(([containerId, diff]) => {
 ### Pre-Commit Hook
 
 <Method id="LoroDoc.subscribePreCommit">
-```typescript
+```typescript no_run
 subscribePreCommit(f: (e: { changeMeta: Change, origin: string, modifier: ChangeModifier }) => void): () => void
 ```
 </Method>
@@ -1101,7 +1101,7 @@ Subscribe to the pre-commit event. You can modify the message and timestamp of t
 
 Pitfall: `commit()` can be triggered implicitly by `import`, `export`, and `checkout`. Use this hook to attach metadata even for those implicit commits.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1119,14 +1119,14 @@ unsubscribe();
 ### Cursor Utilities
 
 <Method id="LoroDoc.getCursorPos">
-```typescript
+```typescript no_run
 getCursorPos(cursor: Cursor): { update?: Cursor, offset: number, side: Side }
 ```
 </Method>
 <Indent>
 Resolve a stable `Cursor` to an absolute position. Cursors remain valid across concurrent edits; see [Cursor and Stable Positions](/docs/concepts/cursor_stable_positions) and [Cursor tutorial](/docs/tutorial/cursor). The side controls affinity when the cursor sits at an insertion boundary.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1143,14 +1143,14 @@ console.log(pos.offset); // 1
 ### Pending Operations
 
 <Method id="LoroDoc.getUncommittedOpsAsJson">
-```typescript
+```typescript no_run
 getUncommittedOpsAsJson(): JsonSchema | undefined
 ```
 </Method>
 <Indent>
 Get pending operations from the current transaction in JSON format. Useful for debugging what will be included in the next Change; see [Transaction Model](/docs/concepts/transaction_model).
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -1166,14 +1166,14 @@ const none = doc.getUncommittedOpsAsJson(); // undefined after commit
 These APIs traverse the history DAG of changes (ancestors/descendants, spans). If this sounds unfamiliar, start with Loro's [Versioning Deep Dive](/docs/advanced/version_deep_dive) and the [Event Graph Walker](/docs/concepts/event_graph_walker).
 
 <Method id="LoroDoc.travelChangeAncestors">
-```typescript
+```typescript no_run
 travelChangeAncestors(ids: OpId[], f: (change: Change) => boolean): void
 ```
 </Method>
 <Indent>
 Visit ancestors of the given changes in causal order.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1188,7 +1188,7 @@ doc.travelChangeAncestors(head, (change) => {
 </Indent>
 
 <Method id="LoroDoc.findIdSpansBetween">
-```typescript
+```typescript no_run
 findIdSpansBetween(from: Frontiers, to: Frontiers): VersionVectorDiff
 ```
 </Method>
@@ -1197,12 +1197,12 @@ Find the op id spans that lie between two versions.
 </Indent>
 
 <Method id="LoroDoc.exportJsonInIdSpan">
-```typescript
+```typescript no_run
 exportJsonInIdSpan(idSpan: { peer: PeerID, counter: number, length: number }): JsonChange[]
 ```
 </Method>
 <Indent>
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const a = new LoroDoc();
 const b = new LoroDoc();
@@ -1222,14 +1222,14 @@ b.import(snapshot);
 </Indent>
 
 <Method id="LoroDoc.getChangedContainersIn">
-```typescript
+```typescript no_run
 getChangedContainersIn(id: OpId, len: number): ContainerID[]
 ```
 </Method>
 <Indent>
 Get container IDs modified in the given ID range.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1243,14 +1243,14 @@ const containers = doc.getChangedContainersIn(head, 1);
 ### Revert & Apply Diff
 
 <Method id="LoroDoc.revertTo">
-```typescript
+```typescript no_run
 revertTo(frontiers: Frontiers): void
 ```
 </Method>
 <Indent>
 Revert the document to a given version by generating inverse operations.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -1263,14 +1263,14 @@ doc.revertTo([{ peer: "1", counter: 1 }]);
 </Indent>
 
 <Method id="LoroDoc.applyDiff">
-```typescript
+```typescript no_run
 applyDiff(diff: [ContainerID, Diff | JsonDiff][]): void
 ```
 </Method>
 <Indent>
 Apply a batch of diffs to the document.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
@@ -1285,7 +1285,7 @@ doc2.applyDiff(diff);
 ### Detached Editing
 
 <Method id="LoroDoc.setDetachedEditing">
-```typescript
+```typescript no_run
 setDetachedEditing(enable: boolean): void
 ```
 </Method>
@@ -1305,7 +1305,7 @@ doc.setDetachedEditing(true);
 </Indent>
 
 <Method id="LoroDoc.isDetachedEditingEnabled">
-```typescript
+```typescript no_run
 isDetachedEditingEnabled(): boolean
 ```
 </Method>
@@ -1324,7 +1324,7 @@ const enabled = doc.isDetachedEditingEnabled();
 </Indent>
 
 <Method id="LoroDoc.isDetached">
-```typescript
+```typescript no_run
 isDetached(): boolean
 ```
 </Method>
@@ -1345,7 +1345,7 @@ console.log(doc.isDetached());
 ### Commit Options Helpers
 
 <Method id="LoroDoc.setNextCommitMessage">
-```typescript
+```typescript no_run
 setNextCommitMessage(msg: string): void
 ```
 </Method>
@@ -1365,7 +1365,7 @@ doc.setNextCommitMessage("User action");
 </Indent>
 
 <Method id="LoroDoc.setNextCommitOrigin">
-```typescript
+```typescript no_run
 setNextCommitOrigin(origin: string): void
 ```
 </Method>
@@ -1385,7 +1385,7 @@ doc.setNextCommitOrigin("ui");
 </Indent>
 
 <Method id="LoroDoc.setNextCommitTimestamp">
-```typescript
+```typescript no_run
 setNextCommitTimestamp(timestamp: number): void
 ```
 </Method>
@@ -1405,7 +1405,7 @@ doc.setNextCommitTimestamp(Math.floor(Date.now() / 1000));
 </Indent>
 
 <Method id="LoroDoc.setNextCommitOptions">
-```typescript
+```typescript no_run
 setNextCommitOptions(options: { origin?: string, timestamp?: number, message?: string }): void
 ```
 </Method>
@@ -1427,7 +1427,7 @@ doc.commit();
 </Indent>
 
 <Method id="LoroDoc.clearNextCommitOptions">
-```typescript
+```typescript no_run
 clearNextCommitOptions(): void
 ```
 </Method>
@@ -1446,7 +1446,7 @@ doc.clearNextCommitOptions();
 ### Version & Frontier Utilities
 
 <Method id="LoroDoc.frontiersToVV">
-```typescript
+```typescript no_run
 frontiersToVV(frontiers: Frontiers): VersionVector
 ```
 </Method>
@@ -1469,7 +1469,7 @@ const vv = doc.frontiersToVV(frontiers);
 </Indent>
 
 <Method id="LoroDoc.vvToFrontiers">
-```typescript
+```typescript no_run
 vvToFrontiers(vv: VersionVector): Frontiers
 ```
 </Method>
@@ -1492,7 +1492,7 @@ const frontiers = doc.vvToFrontiers(vv);
 </Indent>
 
 <Method id="LoroDoc.oplogVersion">
-```typescript
+```typescript no_run
 oplogVersion(): VersionVector
 ```
 </Method>
@@ -1511,7 +1511,7 @@ const vv = doc.oplogVersion();
 </Indent>
 
 <Method id="LoroDoc.oplogFrontiers">
-```typescript
+```typescript no_run
 oplogFrontiers(): Frontiers
 ```
 </Method>
@@ -1530,7 +1530,7 @@ const frontiers = doc.oplogFrontiers();
 </Indent>
 
 <Method id="LoroDoc.cmpWithFrontiers">
-```typescript
+```typescript no_run
 cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
 ```
 </Method>
@@ -1553,7 +1553,7 @@ const cmp = doc.cmpWithFrontiers(frontiers);
 </Indent>
 
 <Method id="LoroDoc.cmpFrontiers">
-```typescript
+```typescript no_run
 cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
 ```
 </Method>
@@ -1581,7 +1581,7 @@ const cmp = doc.cmpFrontiers(f1, f2);
 Use simple path strings and JSONPath to fetch nested values and containers. Paths are formed from root container names and keys (e.g., map/key or list/0). For container IDs, see [Container ID](/docs/advanced/cid).
 
 <Method id="LoroDoc.getByPath">
-```typescript
+```typescript no_run
 getByPath(path: string): Value | Container | undefined
 ```
 </Method>
@@ -1606,7 +1606,7 @@ const value = doc.getByPath("map/key");
 </Indent>
 
 <Method id="LoroDoc.getPathToContainer">
-```typescript
+```typescript no_run
 getPathToContainer(id: ContainerID): (string | number)[] | undefined
 ```
 </Method>
@@ -1629,7 +1629,7 @@ const path = doc.getPathToContainer(map.id);
 </Indent>
 
 <Method id="LoroDoc.JSONPath">
-```typescript
+```typescript no_run
 JSONPath(jsonpath: string): any[]
 ```
 </Method>
@@ -1657,7 +1657,7 @@ const results = doc.JSONPath("$.map");
 These helpers relate to shallow snapshots and redaction. If you need a refresher on what “shallow” means, see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
 <Method id="LoroDoc.shallowSinceVV">
-```typescript
+```typescript no_run
 shallowSinceVV(): VersionVector
 ```
 </Method>
@@ -1676,7 +1676,7 @@ const vv = doc.shallowSinceVV();
 </Indent>
 
 <Method id="LoroDoc.shallowSinceFrontiers">
-```typescript
+```typescript no_run
 shallowSinceFrontiers(): Frontiers
 ```
 </Method>
@@ -1695,7 +1695,7 @@ const frontiers = doc.shallowSinceFrontiers();
 </Indent>
 
 <Method id="LoroDoc.isShallow">
-```typescript
+```typescript no_run
 isShallow(): boolean
 ```
 </Method>
@@ -1714,7 +1714,7 @@ const shallow = doc.isShallow();
 </Indent>
 
 <Method id="LoroDoc.setHideEmptyRootContainers">
-```typescript
+```typescript no_run
 setHideEmptyRootContainers(hide: boolean): void
 ```
 </Method>
@@ -1735,7 +1735,7 @@ doc.setHideEmptyRootContainers(true);
 </Indent>
 
 <Method id="LoroDoc.deleteRootContainer">
-```typescript
+```typescript no_run
 deleteRootContainer(cid: ContainerID): void
 ```
 </Method>
@@ -1757,7 +1757,7 @@ doc.deleteRootContainer(map.id);
 </Indent>
 
 <Method id="LoroDoc.hasContainer">
-```typescript
+```typescript no_run
 hasContainer(id: ContainerID): boolean
 ```
 </Method>
@@ -1782,7 +1782,7 @@ const exists = doc.hasContainer(map.id);
 ### JSON Serialization with Replacer
 
 <Method id="LoroDoc.toJsonWithReplacer">
-```typescript
+```typescript no_run
 toJsonWithReplacer(replacer: (key: string | number, value: Value | Container) => Value | Container | undefined): Value
 ```
 </Method>
@@ -1814,7 +1814,7 @@ const json = doc.toJsonWithReplacer((key, value) => {
 ### Stats & Introspection
 
 <Method id="LoroDoc.debugHistory">
-```typescript
+```typescript no_run
 debugHistory(): void
 ```
 </Method>
@@ -1831,7 +1831,7 @@ doc.debugHistory();
 </Indent>
 
 <Method id="LoroDoc.changeCount">
-```typescript
+```typescript no_run
 changeCount(): number
 ```
 </Method>
@@ -1850,7 +1850,7 @@ const changes = doc.changeCount();
 </Indent>
 
 <Method id="LoroDoc.opCount">
-```typescript
+```typescript no_run
 opCount(): number
 ```
 </Method>
@@ -1869,7 +1869,7 @@ const ops = doc.opCount();
 </Indent>
 
 <Method id="LoroDoc.getAllChanges">
-```typescript
+```typescript no_run
 getAllChanges(): Map<PeerID, Change[]>
 ```
 </Method>
@@ -1888,7 +1888,7 @@ const changes = doc.getAllChanges();
 </Indent>
 
 <Method id="LoroDoc.getChangeAt">
-```typescript
+```typescript no_run
 getChangeAt(id: OpId): Change
 ```
 </Method>
@@ -1911,7 +1911,7 @@ const change = doc.getChangeAt(frontiers[0]);
 </Indent>
 
 <Method id="LoroDoc.getChangeAtLamport">
-```typescript
+```typescript no_run
 getChangeAtLamport(peer_id: string, lamport: number): Change | undefined
 ```
 </Method>
@@ -1934,7 +1934,7 @@ const change = doc.getChangeAtLamport(doc.peerIdStr, 0);
 </Indent>
 
 <Method id="LoroDoc.getOpsInChange">
-```typescript
+```typescript no_run
 getOpsInChange(id: OpId): any[]
 ```
 </Method>
@@ -1957,7 +1957,7 @@ const ops = doc.getOpsInChange(frontiers[0]);
 </Indent>
 
 <Method id="LoroDoc.getPendingTxnLength">
-```typescript
+```typescript no_run
 getPendingTxnLength(): number
 ```
 </Method>
@@ -1980,7 +1980,7 @@ doc.commit();
 ### Import/Export Utilities
 
 <Method id="decodeImportBlobMeta">
-```typescript
+```typescript no_run
 decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata
 ```
 </Method>
@@ -2004,7 +2004,7 @@ const meta = decodeImportBlobMeta(updates, true);
 </Indent>
 
 <Method id="redactJsonUpdates">
-```typescript
+```typescript no_run
 redactJsonUpdates(json: string | JsonSchema, version_range: any): JsonSchema
 ```
 </Method>
@@ -2057,7 +2057,7 @@ LoroText uses **UTF-16** encoding, matching JavaScript's native string encoding:
 4. **Performance**: Cursor queries on deleted positions require history traversal - refresh cursors periodically
 
 **Example with emoji:**
-```typescript
+```typescript no_run
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
 console.log(text.length);        // 13 (emoji counts as 2)
@@ -2079,7 +2079,7 @@ text.iter((char) => {
 
 
 <Method id="LoroText.insert">
-```typescript
+```typescript no_run
 insert(index: number, text: string): void
 ```
 </Method>
@@ -2104,7 +2104,7 @@ text.insert(6, "World");
 </Indent>
 
 <Method id="LoroText.delete">
-```typescript
+```typescript no_run
 delete(index: number, len: number): void
 ```
 </Method>
@@ -2126,7 +2126,7 @@ text.delete(5, 1); // Delete space before World
 </Indent>
 
 <Method id="LoroText.mark">
-```typescript
+```typescript no_run
 mark(range: { start: number, end: number }, key: string, value: Value): void
 ```
 </Method>
@@ -2147,7 +2147,7 @@ text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 </Indent>
 
 <Method id="LoroText.unmark">
-```typescript
+```typescript no_run
 unmark(range: { start: number, end: number }, key: string): void
 ```
 </Method>
@@ -2165,7 +2165,7 @@ text.unmark({ start: 0, end: 5 }, "bold");
 </Indent>
 
 <Method id="LoroText.toDelta">
-```typescript
+```typescript no_run
 toDelta(): Delta<string>[]
 ```
 </Method>
@@ -2182,7 +2182,7 @@ const delta = text.toDelta();
 </Indent>
 
 <Method id="LoroText.applyDelta">
-```typescript
+```typescript no_run
 applyDelta(delta: Delta<string>[]): void
 ```
 </Method>
@@ -2202,7 +2202,7 @@ text.applyDelta([
 </Indent>
 
 <Method id="LoroText.update">
-```typescript
+```typescript no_run
 update(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
 ```
 </Method>
@@ -2227,14 +2227,14 @@ text.update("Hello World", { timeoutMs: 100 });
 </Indent>
 
 <Method id="LoroText.updateByLine">
-```typescript
+```typescript no_run
 updateByLine(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean }): void
 ```
 </Method>
 <Indent>
 Line-based update that's faster for large texts (less precise than `update`).
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
@@ -2245,7 +2245,7 @@ text.updateByLine("Line A\nLine B\nLine C");
 </Indent>
 
 <Method id="LoroText.getCursor">
-```typescript
+```typescript no_run
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
 </Method>
@@ -2270,7 +2270,7 @@ const cursor = text.getCursor(5);
 </Indent>
 
 <Method id="LoroText.toString">
-```typescript
+```typescript no_run
 toString(): string
 ```
 </Method>
@@ -2286,7 +2286,7 @@ const plainText = text.toString();
 </Indent>
 
 <Method id="LoroText.charAt">
-```typescript
+```typescript no_run
 charAt(pos: number): string
 ```
 </Method>
@@ -2316,7 +2316,7 @@ const valid = text.charAt(2);   // "H" from "Hello"
 </Indent>
 
 <Method id="LoroText.slice">
-```typescript
+```typescript no_run
 slice(start: number, end: number): string
 ```
 </Method>
@@ -2345,7 +2345,7 @@ const slice3 = text.slice(9, 14); // "World"
 </Indent>
 
 <Method id="LoroText.splice">
-```typescript
+```typescript no_run
 splice(pos: number, len: number, s: string): string
 ```
 </Method>
@@ -2372,7 +2372,7 @@ const deleted = text.splice(6, 5, "Loro"); // returns "World"
 </Indent>
 
 <Method id="LoroText.push">
-```typescript
+```typescript no_run
 push(s: string): void
 ```
 </Method>
@@ -2394,7 +2394,7 @@ text.push(" World");
 </Indent>
 
 <Method id="LoroText.iter">
-```typescript
+```typescript no_run
 iter(callback: (char: string) => boolean): void
 ```
 </Method>
@@ -2420,7 +2420,7 @@ text.iter((char) => {
 </Indent>
 
 <Method id="LoroText.insertUtf8">
-```typescript
+```typescript no_run
 insertUtf8(index: number, content: string): void
 ```
 </Method>
@@ -2442,7 +2442,7 @@ text.insertUtf8(0, "Hello");
 </Indent>
 
 <Method id="LoroText.deleteUtf8">
-```typescript
+```typescript no_run
 deleteUtf8(index: number, len: number): void
 ```
 </Method>
@@ -2466,7 +2466,7 @@ text.deleteUtf8(6, 5); // Delete "World"
 </Indent>
 
 <Method id="LoroText.getEditorOf">
-```typescript
+```typescript no_run
 getEditorOf(pos: number): PeerID | undefined
 ```
 </Method>
@@ -2491,7 +2491,7 @@ const editor = text.getEditorOf(0);
 </Indent>
 
 <Method id="LoroText.kind">
-```typescript
+```typescript no_run
 kind(): "Text"
 ```
 </Method>
@@ -2511,7 +2511,7 @@ const type = text.kind(); // "Text"
 </Indent>
 
 <Method id="LoroText.parent">
-```typescript
+```typescript no_run
 parent(): Container | undefined
 ```
 </Method>
@@ -2533,7 +2533,7 @@ const parent = text.parent(); // Returns the list
 </Indent>
 
 <Method id="LoroText.isAttached">
-```typescript
+```typescript no_run
 isAttached(): boolean
 ```
 </Method>
@@ -2553,7 +2553,7 @@ const attached = text.isAttached(); // false until attached to doc
 </Indent>
 
 <Method id="LoroText.getAttached">
-```typescript
+```typescript no_run
 getAttached(): LoroText | undefined
 ```
 </Method>
@@ -2573,7 +2573,7 @@ const attached = text.getAttached();
 </Indent>
 
 <Method id="LoroText.isDeleted">
-```typescript
+```typescript no_run
 isDeleted(): boolean
 ```
 </Method>
@@ -2593,7 +2593,7 @@ const deleted = text.isDeleted();
 </Indent>
 
 <Method id="LoroText.getShallowValue">
-```typescript
+```typescript no_run
 getShallowValue(): string
 ```
 </Method>
@@ -2615,7 +2615,7 @@ const value = text.getShallowValue(); // "Hello"
 </Indent>
 
 <Method id="LoroText.toJSON">
-```typescript
+```typescript no_run
 toJSON(): any
 ```
 </Method>
@@ -2637,7 +2637,7 @@ const json = text.toJSON(); // "Hello"
 </Indent>
 
 <Method id="LoroText.id">
-```typescript
+```typescript no_run
 readonly id: ContainerID
 ```
 </Method>
@@ -2655,7 +2655,7 @@ const containerId = text.id;
 </Indent>
 
 <Method id="LoroText.length">
-```typescript
+```typescript no_run
 readonly length: number
 ```
 </Method>
@@ -2703,7 +2703,7 @@ coord.set("y", 20);
 ```
 
 <Method id="LoroList.insert">
-```typescript
+```typescript no_run
 insert(pos: number, value: Value | Container): void
 ```
 </Method>
@@ -2722,7 +2722,7 @@ list.insert(1, { type: "object" });
 </Indent>
 
 <Method id="LoroList.insertContainer">
-```typescript
+```typescript no_run
 insertContainer<T extends Container>(pos: number, container: T): T
 ```
 </Method>
@@ -2743,7 +2743,7 @@ subText.insert(0, "Nested text");
 </Indent>
 
 <Method id="LoroList.delete">
-```typescript
+```typescript no_run
 delete(pos: number, len: number): void
 ```
 </Method>
@@ -2761,7 +2761,7 @@ list.delete(1, 2); // Delete 2 elements starting at index 1
 </Indent>
 
 <Method id="LoroList.push">
-```typescript
+```typescript no_run
 push(value: Value | Container): void
 ```
 </Method>
@@ -2778,12 +2778,12 @@ list.push("Last item");
 </Indent>
 
 <Method id="LoroList.getIdAt">
-```typescript
+```typescript no_run
 getIdAt(pos: number): { peer: PeerID, counter: number } | undefined
 ```
 </Method>
 <Indent>
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
@@ -2794,7 +2794,7 @@ const id0 = list.getIdAt(0);
 </Indent>
 
 <Method id="LoroList.pushContainer">
-```typescript
+```typescript no_run
 pushContainer<T extends Container>(container: T): T
 ```
 </Method>
@@ -2814,7 +2814,7 @@ map.set("key", "value");
 </Indent>
 
 <Method id="LoroList.pop">
-```typescript
+```typescript no_run
 pop(): Value | Container | undefined
 ```
 </Method>
@@ -2833,7 +2833,7 @@ const lastItem = list.pop();
 </Indent>
 
 <Method id="LoroList.get">
-```typescript
+```typescript no_run
 get(index: number): Value | Container | undefined
 ```
 </Method>
@@ -2858,7 +2858,7 @@ const item = list.get(0); // "first"
 </Indent>
 
 <Method id="LoroList.getCursor">
-```typescript
+```typescript no_run
 getCursor(pos: number, side?: Side): Cursor | undefined
 ```
 </Method>
@@ -2884,7 +2884,7 @@ const cursor = list.getCursor(2);
 </Indent>
 
 <Method id="LoroList.toArray">
-```typescript
+```typescript no_run
 toArray(): (Value | Container)[]
 ```
 </Method>
@@ -2900,7 +2900,7 @@ const array = list.toArray();
 </Indent>
 
 <Method id="LoroList.clear">
-```typescript
+```typescript no_run
 clear(): void
 ```
 </Method>
@@ -2914,7 +2914,7 @@ list.clear();
 </Indent>
 
 <Method id="LoroList.length">
-```typescript
+```typescript no_run
 length: number
 ```
 </Method>
@@ -2930,7 +2930,7 @@ console.log(`List has ${list.length} items`);
 </Indent>
 
 <Method id="LoroList.kind">
-```typescript
+```typescript no_run
 kind(): "List"
 ```
 </Method>
@@ -2950,7 +2950,7 @@ const type = list.kind(); // "List"
 </Indent>
 
 <Method id="LoroList.toJSON">
-```typescript
+```typescript no_run
 toJSON(): any
 ```
 </Method>
@@ -2972,7 +2972,7 @@ const json = list.toJSON(); // [1, 2, 3]
 </Indent>
 
 <Method id="LoroList.parent">
-```typescript
+```typescript no_run
 parent(): Container | undefined
 ```
 </Method>
@@ -2994,7 +2994,7 @@ const parent = list.parent(); // Returns the map
 </Indent>
 
 <Method id="LoroList.isAttached">
-```typescript
+```typescript no_run
 isAttached(): boolean
 ```
 </Method>
@@ -3014,7 +3014,7 @@ const attached = list.isAttached(); // false until attached to doc
 </Indent>
 
 <Method id="LoroList.getAttached">
-```typescript
+```typescript no_run
 getAttached(): LoroList | undefined
 ```
 </Method>
@@ -3034,7 +3034,7 @@ const attached = list.getAttached();
 </Indent>
 
 <Method id="LoroList.isDeleted">
-```typescript
+```typescript no_run
 isDeleted(): boolean
 ```
 </Method>
@@ -3054,7 +3054,7 @@ const deleted = list.isDeleted();
 </Indent>
 
 <Method id="LoroList.getShallowValue">
-```typescript
+```typescript no_run
 getShallowValue(): Value[]
 ```
 </Method>
@@ -3076,7 +3076,7 @@ const values = list.getShallowValue(); // [1, 2]
 </Indent>
 
 <Method id="LoroList.id">
-```typescript
+```typescript no_run
 readonly id: ContainerID
 ```
 </Method>
@@ -3098,7 +3098,7 @@ const containerId = list.id;
 A key-value map container for collaborative objects. See [Map](/docs/tutorial/map).
 
 <Method id="LoroMap.set">
-```typescript
+```typescript no_run
 set(key: string, value: Value | Container): void
 ```
 </Method>
@@ -3123,7 +3123,7 @@ map.set("age", 30);
 </Indent>
 
 <Method id="LoroMap.setContainer">
-```typescript
+```typescript no_run
 setContainer<T extends Container>(key: string, container: T): T
 ```
 </Method>
@@ -3157,7 +3157,7 @@ list.push("item1");
 </Indent>
 
 <Method id="LoroMap.get">
-```typescript
+```typescript no_run
 get(key: string): Value | Container | undefined
 ```
 </Method>
@@ -3180,7 +3180,7 @@ const name = map.get("name");
 </Indent>
 
 <Method id="LoroMap.getOrCreateContainer">
-```typescript
+```typescript no_run
 getOrCreateContainer<T extends Container>(key: string, container: T): T
 ```
 </Method>
@@ -3217,7 +3217,7 @@ const text = map.getOrCreateContainer("description", new LoroText());
 </Indent>
 
 <Method id="LoroMap.delete">
-```typescript
+```typescript no_run
 delete(key: string): void
 ```
 </Method>
@@ -3238,7 +3238,7 @@ map.delete("obsoleteKey");
 </Indent>
 
 <Method id="LoroMap.clear">
-```typescript
+```typescript no_run
 clear(): void
 ```
 </Method>
@@ -3256,7 +3256,7 @@ map.clear();
 </Indent>
 
 <Method id="LoroMap.keys">
-```typescript
+```typescript no_run
 keys(): string[]
 ```
 </Method>
@@ -3276,7 +3276,7 @@ const allKeys = map.keys();
 </Indent>
 
 <Method id="LoroMap.values">
-```typescript
+```typescript no_run
 values(): (Value | Container)[]
 ```
 </Method>
@@ -3296,7 +3296,7 @@ const allValues = map.values();
 </Indent>
 
 <Method id="LoroMap.entries">
-```typescript
+```typescript no_run
 entries(): [string, Value | Container][]
 ```
 </Method>
@@ -3318,12 +3318,12 @@ for (const [key, value] of map.entries()) {
 </Indent>
 
 <Method id="LoroMap.getLastEditor">
-```typescript
+```typescript no_run
 getLastEditor(key: string): PeerID | undefined
 ```
 </Method>
 <Indent>
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -3335,7 +3335,7 @@ const who = map.getLastEditor("k");
 </Indent>
 
 <Method id="LoroMap.size">
-```typescript
+```typescript no_run
 size: number
 ```
 </Method>
@@ -3355,7 +3355,7 @@ console.log(`Map has ${map.size} entries`);
 </Indent>
 
 <Method id="LoroMap.kind">
-```typescript
+```typescript no_run
 kind(): "Map"
 ```
 </Method>
@@ -3375,7 +3375,7 @@ const type = map.kind(); // "Map"
 </Indent>
 
 <Method id="LoroMap.toJSON">
-```typescript
+```typescript no_run
 toJSON(): any
 ```
 </Method>
@@ -3397,7 +3397,7 @@ const json = map.toJSON(); // { name: "Alice" }
 </Indent>
 
 <Method id="LoroMap.parent">
-```typescript
+```typescript no_run
 parent(): Container | undefined
 ```
 </Method>
@@ -3419,7 +3419,7 @@ const parent = map.parent(); // Returns the list
 </Indent>
 
 <Method id="LoroMap.isAttached">
-```typescript
+```typescript no_run
 isAttached(): boolean
 ```
 </Method>
@@ -3439,7 +3439,7 @@ const attached = map.isAttached(); // false until attached to doc
 </Indent>
 
 <Method id="LoroMap.getAttached">
-```typescript
+```typescript no_run
 getAttached(): LoroMap | undefined
 ```
 </Method>
@@ -3459,7 +3459,7 @@ const attached = map.getAttached();
 </Indent>
 
 <Method id="LoroMap.isDeleted">
-```typescript
+```typescript no_run
 isDeleted(): boolean
 ```
 </Method>
@@ -3479,7 +3479,7 @@ const deleted = map.isDeleted();
 </Indent>
 
 <Method id="LoroMap.getShallowValue">
-```typescript
+```typescript no_run
 getShallowValue(): Record<string, Value>
 ```
 </Method>
@@ -3501,7 +3501,7 @@ const values = map.getShallowValue(); // { key: "value" }
 </Indent>
 
 <Method id="LoroMap.id">
-```typescript
+```typescript no_run
 readonly id: ContainerID
 ```
 </Method>
@@ -3530,7 +3530,7 @@ A hierarchical tree container for nested structures. Supports moving subtrees wh
 - **Network delays**: Can temporarily create invalid states (cycles) before being rejected
 
 <Method id="LoroTree.createNode">
-```typescript
+```typescript no_run
 createNode(parent?: TreeID, index?: number): LoroTreeNode
 ```
 </Method>
@@ -3555,7 +3555,7 @@ const child = root.createNode(0);
 </Indent>
 
 <Method id="LoroTree.move">
-```typescript
+```typescript no_run
 move(target: TreeID, parent?: TreeID, index?: number): void
 ```
 </Method>
@@ -3581,7 +3581,7 @@ tree.move(nodeId, newParentId, 0);
 </Indent>
 
 <Method id="LoroTree.delete">
-```typescript
+```typescript no_run
 delete(target: TreeID): void
 ```
 </Method>
@@ -3604,7 +3604,7 @@ tree.delete(nodeId);
 </Indent>
 
 <Method id="LoroTree.getNodeByID">
-```typescript
+```typescript no_run
 getNodeByID(id: TreeID): LoroTreeNode | undefined
 ```
 </Method>
@@ -3632,7 +3632,7 @@ if (node) {
 </Indent>
 
 <Method id="LoroTree.nodes">
-```typescript
+```typescript no_run
 nodes(): LoroTreeNode[]
 ```
 </Method>
@@ -3652,7 +3652,7 @@ const allNodes = tree.nodes();
 </Indent>
 
 <Method id="LoroTree.roots">
-```typescript
+```typescript no_run
 roots(): LoroTreeNode[]
 ```
 </Method>
@@ -3672,7 +3672,7 @@ const rootNodes = tree.roots();
 </Indent>
 
 <Method id="LoroTree.has">
-```typescript
+```typescript no_run
 has(target: TreeID): boolean
 ```
 </Method>
@@ -3699,7 +3699,7 @@ if (tree.has(nodeId)) {
 </Indent>
 
 <Method id="LoroTree.isNodeDeleted">
-```typescript
+```typescript no_run
 isNodeDeleted(target: TreeID): boolean
 ```
 </Method>
@@ -3725,7 +3725,7 @@ if (tree.isNodeDeleted(nodeId)) {
 ```
 </Indent>
 <Method id="LoroTree.enableFractionalIndex">
-```typescript
+```typescript no_run
 enableFractionalIndex(jitter: number): void
 ```
 </Method>
@@ -3746,7 +3746,7 @@ tree.enableFractionalIndex(0.001);
 </Indent>
 
 <Method id="LoroTree.disableFractionalIndex">
-```typescript
+```typescript no_run
 disableFractionalIndex(): void
 ```
 </Method>
@@ -3764,7 +3764,7 @@ tree.disableFractionalIndex();
 </Indent>
 
 <Method id="LoroTree.isFractionalIndexEnabled">
-```typescript
+```typescript no_run
 isFractionalIndexEnabled(): boolean
 ```
 </Method>
@@ -3784,7 +3784,7 @@ const enabled = tree.isFractionalIndexEnabled();
 </Indent>
 
 <Method id="LoroTree.kind">
-```typescript
+```typescript no_run
 kind(): "Tree"
 ```
 </Method>
@@ -3804,7 +3804,7 @@ const type = tree.kind(); // "Tree"
 </Indent>
 
 <Method id="LoroTree.toJSON">
-```typescript
+```typescript no_run
 toJSON(): any
 ```
 </Method>
@@ -3824,7 +3824,7 @@ const json = tree.toJSON();
 </Indent>
 
 <Method id="LoroTree.parent">
-```typescript
+```typescript no_run
 parent(): Container | undefined
 ```
 </Method>
@@ -3846,7 +3846,7 @@ const parent = tree.parent();
 </Indent>
 
 <Method id="LoroTree.isAttached">
-```typescript
+```typescript no_run
 isAttached(): boolean
 ```
 </Method>
@@ -3866,7 +3866,7 @@ const attached = tree.isAttached();
 </Indent>
 
 <Method id="LoroTree.getAttached">
-```typescript
+```typescript no_run
 getAttached(): LoroTree | undefined
 ```
 </Method>
@@ -3886,7 +3886,7 @@ const attached = tree.getAttached();
 </Indent>
 
 <Method id="LoroTree.isDeleted">
-```typescript
+```typescript no_run
 isDeleted(): boolean
 ```
 </Method>
@@ -3906,7 +3906,7 @@ const deleted = tree.isDeleted();
 </Indent>
 
 <Method id="LoroTree.getShallowValue">
-```typescript
+```typescript no_run
 getShallowValue(): TreeNodeShallowValue[]
 ```
 </Method>
@@ -3926,7 +3926,7 @@ const values = tree.getShallowValue();
 </Indent>
 
 <Method id="LoroTree.id">
-```typescript
+```typescript no_run
 readonly id: ContainerID
 ```
 </Method>
@@ -3948,7 +3948,7 @@ const containerId = tree.id;
 Represents a single node in the tree.
 
 <Method id="LoroTreeNode.data">
-```typescript
+```typescript no_run
 data: LoroMap
 ```
 </Method>
@@ -3967,7 +3967,7 @@ node.data.set("expanded", true);
 </Indent>
 
 <Method id="LoroTreeNode.createNode">
-```typescript
+```typescript no_run
 createNode(index?: number): LoroTreeNode
 ```
 </Method>
@@ -3990,7 +3990,7 @@ const childId = node.createNode(0);
 </Indent>
 
 <Method id="LoroTreeNode.move">
-```typescript
+```typescript no_run
 move(parent?: LoroTreeNode, index?: number): void
 ```
 </Method>
@@ -4015,7 +4015,7 @@ node.move(parent, 0);
 </Indent>
 
 <Method id="LoroTreeNode.moveAfter">
-```typescript
+```typescript no_run
 moveAfter(target: LoroTreeNode): void
 ```
 </Method>
@@ -4039,7 +4039,7 @@ node.moveAfter(sibling);
 </Indent> 
 
 <Method id="LoroTreeNode.moveBefore">
-```typescript
+```typescript no_run
 moveBefore(target: LoroTreeNode): void
 ```
 </Method>
@@ -4063,7 +4063,7 @@ node.moveBefore(sibling);
 </Indent>
 
 <Method id="LoroTreeNode.parent">
-```typescript
+```typescript no_run
 parent(): LoroTreeNode | undefined
 ```
 </Method>
@@ -4085,7 +4085,7 @@ const parentNode = node.parent();
 </Indent>
 
 <Method id="LoroTreeNode.children">
-```typescript
+```typescript no_run
 children(): LoroTreeNode[]
 ```
 </Method>
@@ -4107,7 +4107,7 @@ const childNodes = node.children();
 </Indent>
 
 <Method id="LoroTreeNode.index">
-```typescript
+```typescript no_run
 index(): number | undefined
 ```
 </Method>
@@ -4129,7 +4129,7 @@ const position = node.index();
 </Indent>
 
 <Method id="LoroTreeNode.fractionalIndex">
-```typescript
+```typescript no_run
 fractionalIndex(): string | undefined
 creationId(): { peer: PeerID, counter: number }
 creator(): PeerID
@@ -4137,7 +4137,7 @@ getLastMoveId(): { peer: PeerID, counter: number } | undefined
 ```
 </Method>
 <Indent>
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const tree = doc.getTree("tree");
@@ -4153,7 +4153,7 @@ const lastMove = node.getLastMoveId();
 </Indent>
 
 <Method id="LoroTreeNode.isDeleted">
-```typescript
+```typescript no_run
 isDeleted(): boolean
 ```
 </Method>
@@ -4181,7 +4181,7 @@ if (node.isDeleted()) {
 A counter CRDT for collaborative numeric values.
 
 <Method id="LoroCounter.increment">
-```typescript
+```typescript no_run
 increment(value: number): void
 ```
 </Method>
@@ -4202,7 +4202,7 @@ counter.increment(5);   // +5
 </Indent>
 
 <Method id="LoroCounter.decrement">
-```typescript
+```typescript no_run
 decrement(value: number): void
 ```
 </Method>
@@ -4223,7 +4223,7 @@ counter.decrement(3);   // -3
 </Indent>
 
 <Method id="LoroCounter.value">
-```typescript
+```typescript no_run
 value: number
 ```
 </Method>
@@ -4255,7 +4255,7 @@ concurrent moves (concurrent moves resolve to one final position). See [List and
 Extends `LoroList` with additional methods for efficient element reordering.
 
 <Method id="LoroMovableList.move">
-```typescript
+```typescript no_run
 move(from: number, to: number): void
 ```
 </Method>
@@ -4277,7 +4277,7 @@ movableList.move(0, 3); // Move first element to fourth position
 </Indent>
 
 <Method id="LoroMovableList.set">
-```typescript
+```typescript no_run
 set(pos: number, value: Value | Container): void
 ```
 </Method>
@@ -4299,7 +4299,7 @@ movableList.set(0, "Updated value");
 </Indent>
 
 <Method id="LoroMovableList.setContainer">
-```typescript
+```typescript no_run
 setContainer<T extends Container>(pos: number, container: T): T
 ```
 </Method>
@@ -4336,7 +4336,7 @@ Import/export updates over any transport and choose the right encoding for speed
 
 #### Basic Synchronization
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 // Peer A: Export updates
@@ -4351,7 +4351,7 @@ doc2.import(updates);
 
 #### Continuous Sync
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc1 = new LoroDoc();
 const doc2 = new LoroDoc();
@@ -4402,7 +4402,7 @@ ws.on('message', (data) => {
 
 Shallow snapshots allow for efficient storage by garbage collecting deleted operations.
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4426,7 +4426,7 @@ newDoc.import(shallowSnapshot);
 
 Navigate through document history:
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4455,7 +4455,7 @@ doc.checkoutToLatest();
 
 Create document branches:
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4475,7 +4475,7 @@ fork2.getText("text").insert(0, "Fork 2 changes");
 
 Track document versions:
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const vv = doc.version();
@@ -4488,7 +4488,7 @@ console.log(`Document has ${vv.length()} peers`);
 
 ### Event Structure
 
-```typescript
+```typescript no_run
 interface LoroEventBatch {
   by: "local" | "import" | "checkout"
   origin?: string
@@ -4512,7 +4512,7 @@ Different containers produce different diff types:
 #### TextDiff
 
 <Indent>
-```typescript
+```typescript no_run
 type TextDiff = {
   type: "text"
   diff: Delta<string>[]
@@ -4551,7 +4551,7 @@ text.subscribe((e) => {
 #### ListDiff
 
 <Indent>
-```typescript
+```typescript no_run
 type ListDiff = {
   type: "list"
   diff: Delta<(Value | Container)[]>[]
@@ -4587,7 +4587,7 @@ list.subscribe((e) => {
 #### MapDiff
 
 <Indent>
-```typescript
+```typescript no_run
 type MapDiff = {
   type: "map"
   updated: Record<string, Value | Container | undefined>
@@ -4625,7 +4625,7 @@ map.subscribe((e) => {
 #### TreeDiff
 
 <Indent>
-```typescript
+```typescript no_run
 type TreeDiff = {
   type: "tree"
   diff: TreeDiffItem[]
@@ -4699,7 +4699,7 @@ tree.subscribe((e) => {
 
 Subscribe to nested changes:
 
-```typescript
+```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -4737,7 +4737,7 @@ Provides local undo/redo functionality.
 - **Clear after major operations**: Consider clearing undo stack after document resets or major imports
 
 <Method id="UndoManager.constructor">
-```typescript
+```typescript no_run
 constructor(doc: LoroDoc, config: UndoConfig)
 ```
 </Method>
@@ -4767,7 +4767,7 @@ const undo = new UndoManager(doc, {
 </Indent>
 
 <Method id="UndoManager.undo">
-```typescript
+```typescript no_run
 undo(): boolean
 ```
 </Method>
@@ -4792,7 +4792,7 @@ console.log(success); // true
 </Indent>
 
 <Method id="UndoManager.redo">
-```typescript
+```typescript no_run
 redo(): boolean
 ```
 </Method>
@@ -4818,7 +4818,7 @@ console.log(success); // true
 </Indent>
 
 <Method id="UndoManager.canUndo">
-```typescript
+```typescript no_run
 canUndo(): boolean
 ```
 </Method>
@@ -4841,7 +4841,7 @@ if (undo.canUndo()) {
 </Indent>
 
 <Method id="UndoManager.canRedo">
-```typescript
+```typescript no_run
 canRedo(): boolean
 ```
 </Method>
@@ -4864,7 +4864,7 @@ if (undo.canRedo()) {
 </Indent>
 
 <Method id="UndoManager.peer">
-```typescript
+```typescript no_run
 peer(): PeerID
 ```
 </Method>
@@ -4886,7 +4886,7 @@ console.log(peerId); // e.g., "123456"
 </Indent>
 
 <Method id="UndoManager.setMaxUndoSteps">
-```typescript
+```typescript no_run
 setMaxUndoSteps(steps: number): void
 ```
 </Method>
@@ -4908,7 +4908,7 @@ undo.setMaxUndoSteps(50);
 </Indent>
 
 <Method id="UndoManager.setMergeInterval">
-```typescript
+```typescript no_run
 setMergeInterval(interval: number): void
 ```
 </Method>
@@ -4930,7 +4930,7 @@ undo.setMergeInterval(2000); // 2 seconds
 </Indent>
 
 <Method id="UndoManager.addExcludeOriginPrefix">
-```typescript
+```typescript no_run
 addExcludeOriginPrefix(prefix: string): void
 ```
 </Method>
@@ -4953,7 +4953,7 @@ undo.addExcludeOriginPrefix("import-");
 </Indent>
 
 <Method id="UndoManager.clear">
-```typescript
+```typescript no_run
 clear(): void
 ```
 </Method>
@@ -5007,7 +5007,7 @@ Reference for core types used across the API. For conceptual background, see [Co
 
 ### Core Types
 
-```typescript
+```typescript no_run
 // Peer identifier
 type PeerID = `${number}`
 
@@ -5044,7 +5044,7 @@ type Value =
 ### Version Types
 Loro uses two complementary version representations: Version Vectors (per-peer counters) and Frontiers (a compact set of heads). See [Version Vector](/docs/concepts/version_vector) and [Frontiers](/docs/concepts/frontiers). For the full DAG model, see [Version Deep Dive](/docs/advanced/version_deep_dive).
 
-```typescript
+```typescript no_run
 // Version vector class
 class VersionVector {
   constructor(value: Map<PeerID, number> | Uint8Array | VersionVector | undefined | null)
@@ -5073,7 +5073,7 @@ type IdSpan = {
 
 ### Change Types
 
-```typescript
+```typescript no_run
 // Change metadata
 interface Change {
   peer: PeerID
@@ -5095,7 +5095,7 @@ interface ChangeModifier {
 ### Cursor Types
 Stable cursors survive concurrent edits and resolve to absolute positions on demand. See [Cursor and Stable Positions](/docs/concepts/cursor_stable_positions) and [Cursor tutorial](/docs/tutorial/cursor).
 
-```typescript
+```typescript no_run
 // Stable position in containers
 class Cursor {
   containerId(): ContainerID
@@ -5112,7 +5112,7 @@ type Side = -1 | 0 | 1
 ### Delta Type
 Delta is a popular rich-text operation format (e.g., Quill). LoroText can export/import Delta; see [Text](/docs/tutorial/text).
 
-```typescript
+```typescript no_run
 // Rich text delta operations
 type Delta<T> =
   | {
@@ -5144,7 +5144,7 @@ Small helpers for type checks and IDs. See [Container IDs](/docs/advanced/cid) a
 ### Frontier Encoding
 
 <Method id="encodeFrontiers">
-```typescript
+```typescript no_run
 encodeFrontiers(frontiers: OpId[]): Uint8Array
 ```
 </Method>
@@ -5168,7 +5168,7 @@ const encoded = encodeFrontiers(frontiers);
 </Indent>
 
 <Method id="decodeFrontiers">
-```typescript
+```typescript no_run
 decodeFrontiers(bytes: Uint8Array): OpId[]
 ```
 </Method>
@@ -5193,7 +5193,7 @@ console.log(frontiers); // [{ peer: "1", counter: 10 }, ...]
 ### Debugging
 
 <Method id="setDebug">
-```typescript
+```typescript no_run
 setDebug(): void
 ```
 </Method>
@@ -5210,7 +5210,7 @@ setDebug();
 </Indent>
 
 <Method id="LORO_VERSION">
-```typescript
+```typescript no_run
 LORO_VERSION(): string
 ```
 </Method>
@@ -5231,7 +5231,7 @@ console.log("Loro version:", version);
 ### Import Blob Metadata
 
 <Method id="decodeImportBlobMeta">
-```typescript
+```typescript no_run
 decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata
 ```
 </Method>
@@ -5269,7 +5269,7 @@ Manages ephemeral state like cursor positions and user presence. See [Ephemeral 
 ### EphemeralStore
 
 <Method id="EphemeralStore.constructor">
-```typescript
+```typescript no_run
 constructor(timeout?: number)
 ```
 </Method>
@@ -5289,7 +5289,7 @@ const store = new EphemeralStore(30000);
 </Indent>
 
 <Method id="EphemeralStore.set">
-```typescript
+```typescript no_run
 set<K extends keyof T>(key: K, value: T[K]): void
 ```
 </Method>
@@ -5313,7 +5313,7 @@ store.set("user", { name: "Alice", color: "#ff0000" });
 </Indent>
 
 <Method id="EphemeralStore.get">
-```typescript
+```typescript no_run
 get<K extends keyof T>(key: K): T[K] | undefined
 ```
 </Method>
@@ -5338,7 +5338,7 @@ console.log(cursor); // { line: 10 }
 </Indent>
 
 <Method id="EphemeralStore.delete">
-```typescript
+```typescript no_run
 delete<K extends keyof T>(key: K): void
 ```
 </Method>
@@ -5360,7 +5360,7 @@ store.delete("cursor");
 </Indent>
 
 <Method id="EphemeralStore.getAllStates">
-```typescript
+```typescript no_run
 getAllStates(): Partial<T>
 ```
 </Method>
@@ -5383,7 +5383,7 @@ console.log(allStates);
 </Indent>
 
 <Method id="EphemeralStore.encode">
-```typescript
+```typescript no_run
 encode<K extends keyof T>(key: K): Uint8Array
 ```
 </Method>
@@ -5408,7 +5408,7 @@ const encoded = store.encode("cursor");
 </Indent>
 
 <Method id="EphemeralStore.encodeAll">
-```typescript
+```typescript no_run
 encodeAll(): Uint8Array
 ```
 </Method>
@@ -5431,7 +5431,7 @@ const encoded = store.encodeAll();
 </Indent>
 
 <Method id="EphemeralStore.apply">
-```typescript
+```typescript no_run
 apply(bytes: Uint8Array): void
 ```
 </Method>
@@ -5453,7 +5453,7 @@ store.apply(remoteData);
 </Indent>
 
 <Method id="EphemeralStore.keys">
-```typescript
+```typescript no_run
 keys(): string[]
 ```
 </Method>
@@ -5476,7 +5476,7 @@ console.log(allKeys); // ["cursor", "user"]
 </Indent>
 
 <Method id="EphemeralStore.subscribe">
-```typescript
+```typescript no_run
 subscribe(listener: EphemeralListener): () => void
 ```
 </Method>
@@ -5504,7 +5504,7 @@ unsubscribe();
 </Indent>
 
 <Method id="EphemeralStore.subscribeLocalUpdates">
-```typescript
+```typescript no_run
 subscribeLocalUpdates(listener: EphemeralLocalListener): () => void
 ```
 </Method>
@@ -5535,7 +5535,7 @@ unsubscribe();
 </Indent>
 
 <Method id="EphemeralStore.destroy">
-```typescript
+```typescript no_run
 destroy(): void
 ```
 </Method>
