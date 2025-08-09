@@ -673,12 +673,12 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
 
 ### Transaction Methods
 
-#### commit
-
+<Method>
 ```typescript
 commit(options?: { origin?: string, message?: string, timestamp?: number }): void
 ```
-
+</Method>
+<Indent>
 Commits pending changes as a single transaction.
 
 **Parameters:**
@@ -698,15 +698,16 @@ doc.commit({
   timestamp: Math.floor(Date.now() / 1000)
 });
 ```
+</Indent>
 
 ### Query Methods
 
-#### toJSON
-
+<Method>
 ```typescript
 toJSON(): Value
 ```
-
+</Method>
+<Indent>
 Converts the entire document to a JSON-compatible value.
 
 **Returns:** JSON representation of the document
@@ -719,13 +720,14 @@ const doc = new LoroDoc();
 const json = doc.toJSON();
 console.log(JSON.stringify(json, null, 2));
 ```
+</Indent>
 
-#### getShallowValue
-
+<Method>
 ```typescript
 getShallowValue(): Record<string, ContainerID>
 ```
-
+</Method>
+<Indent>
 Gets a shallow representation where sub-containers are represented by their IDs.
 
 **Returns:** Shallow JSON value
@@ -738,13 +740,14 @@ const doc = new LoroDoc();
 const shallow = doc.getShallowValue();
 // Sub-containers appear as: "cid:..."
 ```
+</Indent>
 
-#### version
-
+<Method>
 ```typescript
 version(): VersionVector
 ```
-
+</Method>
+<Indent>
 Gets the current version vector of the document.
 
 **Returns:** Map from PeerID to counter
@@ -757,13 +760,14 @@ const doc = new LoroDoc();
 const vv = doc.version();
 console.log(vv.toJSON());
 ```
+</Indent>
 
-#### frontiers
-
+<Method>
 ```typescript
 frontiers(): Frontiers
 ```
-
+</Method>
+<Indent>
 Gets the current frontiers (heads) of the document.
 
 **Returns:** Array of OpIds
@@ -776,13 +780,14 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 // Can be used for checkouts or shallow snapshots
 ```
+</Indent>
 
-#### diff
-
+<Method>
 ```typescript
 diff(from: Frontiers, to: Frontiers, for_json?: boolean): [ContainerID, Diff | JsonDiff][]
 ```
-
+</Method>
+<Indent>
 Calculates differences between two versions.
 
 **Parameters:**
@@ -806,6 +811,7 @@ diffs.forEach(([containerId, diff]) => {
   console.log(`Container ${containerId} changed:`, diff);
 });
 ```
+</Indent>
 
 ### Pre-Commit Hook
 
@@ -995,34 +1001,138 @@ doc2.applyDiff(diff);
 
 ### Detached Editing
 
+<Method>
 ```typescript
 setDetachedEditing(enable: boolean): void
-isDetachedEditingEnabled(): boolean
-isDetached(): boolean
-detach(): void
-attach(): void
 ```
+</Method>
+<Indent>
+Enables or disables detached editing mode.
 
+**Parameters:**
+- `enable` - Whether to enable detached editing
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
 doc.setDetachedEditing(true);
-doc.detach();
-console.log(doc.isDetached());
-doc.attach();
 ```
+</Indent>
+
+<Method>
+```typescript
+isDetachedEditingEnabled(): boolean
+```
+</Method>
+<Indent>
+Checks if detached editing mode is enabled.
+
+**Returns:** True if detached editing is enabled
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const enabled = doc.isDetachedEditingEnabled();
+```
+</Indent>
+
+<Method>
+```typescript
+isDetached(): boolean
+```
+</Method>
+<Indent>
+Checks if the document is currently detached.
+
+**Returns:** True if document is detached
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+console.log(doc.isDetached());
+```
+</Indent>
 
 ### Commit Options Helpers
 
+<Method>
 ```typescript
 setNextCommitMessage(msg: string): void
-setNextCommitOrigin(origin: string): void
-setNextCommitTimestamp(timestamp: number): void
-setNextCommitOptions(options: { origin?: string, timestamp?: number, message?: string }): void
-clearNextCommitOptions(): void
 ```
+</Method>
+<Indent>
+Sets the message for the next commit.
 
+**Parameters:**
+- `msg` - Commit message
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setNextCommitMessage("User action");
+```
+</Indent>
+
+<Method>
+```typescript
+setNextCommitOrigin(origin: string): void
+```
+</Method>
+<Indent>
+Sets the origin for the next commit.
+
+**Parameters:**
+- `origin` - Origin identifier
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setNextCommitOrigin("ui");
+```
+</Indent>
+
+<Method>
+```typescript
+setNextCommitTimestamp(timestamp: number): void
+```
+</Method>
+<Indent>
+Sets the timestamp for the next commit.
+
+**Parameters:**
+- `timestamp` - Unix timestamp in seconds
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.setNextCommitTimestamp(Math.floor(Date.now() / 1000));
+```
+</Indent>
+
+<Method>
+```typescript
+setNextCommitOptions(options: { origin?: string, timestamp?: number, message?: string }): void
+```
+</Method>
+<Indent>
+Sets multiple options for the next commit.
+
+**Parameters:**
+- `options` - Commit options object
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1030,38 +1140,176 @@ const doc = new LoroDoc();
 doc.setNextCommitOptions({ origin: "ui", message: "batch" });
 doc.getText("text").insert(0, "Hi");
 doc.commit();
+```
+</Indent>
+
+<Method>
+```typescript
+clearNextCommitOptions(): void
+```
+</Method>
+<Indent>
+Clears all pending commit options.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 doc.clearNextCommitOptions();
 ```
+</Indent>
 
 ### Version & Frontier Utilities
 
+<Method>
 ```typescript
 frontiersToVV(frontiers: Frontiers): VersionVector
-vvToFrontiers(vv: VersionVector): Frontiers
-oplogVersion(): VersionVector
-oplogFrontiers(): Frontiers
-cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
-cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
 ```
+</Method>
+<Indent>
+Converts frontiers to a version vector.
 
+**Parameters:**
+- `frontiers` - Frontiers to convert
+
+**Returns:** Version vector representation
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.frontiers();
+const vv = doc.frontiersToVV(frontiers);
+```
+</Indent>
+
+<Method>
+```typescript
+vvToFrontiers(vv: VersionVector): Frontiers
+```
+</Method>
+<Indent>
+Converts a version vector to frontiers.
+
+**Parameters:**
+- `vv` - Version vector to convert
+
+**Returns:** Frontiers representation
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const vv = doc.version();
+const frontiers = doc.vvToFrontiers(vv);
+```
+</Indent>
+
+<Method>
+```typescript
+oplogVersion(): VersionVector
+```
+</Method>
+<Indent>
+Gets the oplog version vector.
+
+**Returns:** Oplog version vector
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
 const vv = doc.oplogVersion();
-const f = doc.vvToFrontiers(vv);
-const vv2 = doc.frontiersToVV(f);
-const cmp = doc.cmpFrontiers(doc.frontiers(), f);
 ```
+</Indent>
+
+<Method>
+```typescript
+oplogFrontiers(): Frontiers
+```
+</Method>
+<Indent>
+Gets the oplog frontiers.
+
+**Returns:** Oplog frontiers
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.oplogFrontiers();
+```
+</Indent>
+
+<Method>
+```typescript
+cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
+```
+</Method>
+<Indent>
+Compares current document state with given frontiers.
+
+**Parameters:**
+- `frontiers` - Frontiers to compare with
+
+**Returns:** -1 if behind, 0 if equal, 1 if ahead
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.frontiers();
+const cmp = doc.cmpWithFrontiers(frontiers);
+```
+</Indent>
+
+<Method>
+```typescript
+cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
+```
+</Method>
+<Indent>
+Compares two frontiers.
+
+**Parameters:**
+- `a` - First frontiers
+- `b` - Second frontiers
+
+**Returns:** -1 if a < b, 0 if equal, 1 if a > b, undefined if incomparable
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const f1 = doc.frontiers();
+const f2 = doc.frontiers();
+const cmp = doc.cmpFrontiers(f1, f2);
+```
+</Indent>
 
 ### JSONPath & Path Queries
 
+<Method>
 ```typescript
 getByPath(path: string): Value | Container | undefined
-getPathToContainer(id: ContainerID): (string | number)[] | undefined
-JSONPath(jsonpath: string): any[]
 ```
+</Method>
+<Indent>
+Gets a value or container by its path.
 
+**Parameters:**
+- `path` - Path string (e.g., "map/key")
+
+**Returns:** Value or container at the path, or undefined
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1069,40 +1317,196 @@ const map = doc.getMap("map");
 map.set("key", 1);
 // ---cut---
 const value = doc.getByPath("map/key");
+```
+</Indent>
+
+<Method>
+```typescript
+getPathToContainer(id: ContainerID): (string | number)[] | undefined
+```
+</Method>
+<Indent>
+Gets the path to a container by its ID.
+
+**Parameters:**
+- `id` - Container ID
+
+**Returns:** Array representing the path, or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
 const path = doc.getPathToContainer(map.id);
+```
+</Indent>
+
+<Method>
+```typescript
+JSONPath(jsonpath: string): any[]
+```
+</Method>
+<Indent>
+Queries the document using JSONPath syntax.
+
+**Parameters:**
+- `jsonpath` - JSONPath query string
+
+**Returns:** Array of matching values
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+map.set("key", 1);
+// ---cut---
 const results = doc.JSONPath("$.map");
 ```
+</Indent>
 
 ### Shallow Doc Utilities
 
+<Method>
 ```typescript
 shallowSinceVV(): VersionVector
-shallowSinceFrontiers(): Frontiers
-isShallow(): boolean
-setHideEmptyRootContainers(hide: boolean): void
-deleteRootContainer(cid: ContainerID): void
-hasContainer(id: ContainerID): boolean
 ```
+</Method>
+<Indent>
+Gets the version vector since which the document is shallow.
 
+**Returns:** Version vector
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
-doc.getMap("map");
+const vv = doc.shallowSinceVV();
+```
+</Indent>
+
+<Method>
+```typescript
+shallowSinceFrontiers(): Frontiers
+```
+</Method>
+<Indent>
+Gets the frontiers since which the document is shallow.
+
+**Returns:** Frontiers
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.shallowSinceFrontiers();
+```
+</Indent>
+
+<Method>
+```typescript
+isShallow(): boolean
+```
+</Method>
+<Indent>
+Checks if the document is shallow.
+
+**Returns:** True if document is shallow
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const shallow = doc.isShallow();
+```
+</Indent>
+
+<Method>
+```typescript
+setHideEmptyRootContainers(hide: boolean): void
+```
+</Method>
+<Indent>
+Controls whether empty root containers are hidden in JSON output.
+
+**Parameters:**
+- `hide` - Whether to hide empty root containers
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 doc.setHideEmptyRootContainers(true);
 // Now empty roots are hidden in toJSON()
 ```
+</Indent>
+
+<Method>
+```typescript
+deleteRootContainer(cid: ContainerID): void
+```
+</Method>
+<Indent>
+Deletes a root container.
+
+**Parameters:**
+- `cid` - Container ID to delete
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+doc.deleteRootContainer(map.id);
+```
+</Indent>
+
+<Method>
+```typescript
+hasContainer(id: ContainerID): boolean
+```
+</Method>
+<Indent>
+Checks if a container exists in the document.
+
+**Parameters:**
+- `id` - Container ID to check
+
+**Returns:** True if container exists
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+const exists = doc.hasContainer(map.id);
+```
+</Indent>
 
 ### JSON Serialization with Replacer
 
-#### toJsonWithReplacer
-
+<Method>
 ```typescript
 toJsonWithReplacer(replacer: (key: string | number, value: Value | Container) => Value | Container | undefined): Value
 ```
-
+</Method>
+<Indent>
 Customize JSON serialization of containers and values.
 
+**Parameters:**
+- `replacer` - Function to transform values during serialization
+
+**Returns:** Customized JSON value
+
+**Example:**
 ```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1116,20 +1520,164 @@ const json = doc.toJsonWithReplacer((key, value) => {
   return value;
 });
 ```
+</Indent>
 
 ### Stats & Introspection
 
+<Method>
 ```typescript
 debugHistory(): void
+```
+</Method>
+<Indent>
+Prints debug information about the document history.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.debugHistory();
+```
+</Indent>
+
+<Method>
+```typescript
 changeCount(): number
+```
+</Method>
+<Indent>
+Gets the total number of changes in the document.
+
+**Returns:** Number of changes
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const changes = doc.changeCount();
+```
+</Indent>
+
+<Method>
+```typescript
 opCount(): number
+```
+</Method>
+<Indent>
+Gets the total number of operations in the document.
+
+**Returns:** Number of operations
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const ops = doc.opCount();
+```
+</Indent>
+
+<Method>
+```typescript
 getAllChanges(): Map<PeerID, Change[]>
+```
+</Method>
+<Indent>
+Gets all changes grouped by peer ID.
+
+**Returns:** Map of peer ID to changes
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const changes = doc.getAllChanges();
+```
+</Indent>
+
+<Method>
+```typescript
 getChangeAt(id: OpId): Change
+```
+</Method>
+<Indent>
+Gets a specific change by operation ID.
+
+**Parameters:**
+- `id` - Operation ID
+
+**Returns:** Change object
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.frontiers();
+const change = doc.getChangeAt(frontiers[0]);
+```
+</Indent>
+
+<Method>
+```typescript
 getChangeAtLamport(peer_id: string, lamport: number): Change | undefined
+```
+</Method>
+<Indent>
+Gets a change by peer ID and Lamport timestamp.
+
+**Parameters:**
+- `peer_id` - Peer ID
+- `lamport` - Lamport timestamp
+
+**Returns:** Change object or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const change = doc.getChangeAtLamport(doc.peerIdStr, 0);
+```
+</Indent>
+
+<Method>
+```typescript
 getOpsInChange(id: OpId): any[]
+```
+</Method>
+<Indent>
+Gets all operations in a specific change.
+
+**Parameters:**
+- `id` - Operation ID
+
+**Returns:** Array of operations
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+const frontiers = doc.frontiers();
+const ops = doc.getOpsInChange(frontiers[0]);
+```
+</Indent>
+
+<Method>
+```typescript
 getPendingTxnLength(): number
 ```
+</Method>
+<Indent>
+Gets the number of pending operations in the current transaction.
 
+**Returns:** Number of pending operations
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1137,25 +1685,58 @@ const doc = new LoroDoc();
 doc.getText("text").insert(0, "x");
 console.log(doc.getPendingTxnLength());
 doc.commit();
-console.log(doc.changeCount(), doc.opCount());
 ```
+</Indent>
 
 ### Import/Export Utilities
 
+<Method>
 ```typescript
 decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetadata
-redactJsonUpdates(json: string | JsonSchema, version_range: any): JsonSchema
 ```
+</Method>
+<Indent>
+Decodes metadata from an import blob.
 
+**Parameters:**
+- `blob` - Binary data to decode
+- `check_checksum` - Whether to verify checksum
+
+**Returns:** Import blob metadata
+
+**Example:**
 ```ts twoslash
-import { LoroDoc, decodeImportBlobMeta, redactJsonUpdates } from "loro-crdt";
+import { LoroDoc, decodeImportBlobMeta } from "loro-crdt";
 const doc = new LoroDoc();
 // ---cut---
 const updates = doc.export({ mode: "update" });
 const meta = decodeImportBlobMeta(updates, true);
+```
+</Indent>
+
+<Method>
+```typescript
+redactJsonUpdates(json: string | JsonSchema, version_range: any): JsonSchema
+```
+</Method>
+<Indent>
+Redacts JSON updates within a specified version range.
+
+**Parameters:**
+- `json` - JSON updates to redact
+- `version_range` - Version range for redaction
+
+**Returns:** Redacted JSON schema
+
+**Example:**
+```ts twoslash
+import { LoroDoc, redactJsonUpdates } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
 const json = doc.exportJsonUpdates();
 const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
 ```
+</Indent>
 
 ---
 
@@ -2026,7 +2607,7 @@ if (tree.isNodeDeleted(nodeId)) {
 }
 ```
 </Indent>
-#### LoroTreeNode
+### LoroTreeNode
 
 Represents a single node in the tree.
 
@@ -2561,15 +3142,22 @@ interface LoroEvent {
 
 Different containers produce different diff types:
 
-#### TextDiff
-
+<Method>
 ```typescript
 type TextDiff = {
   type: "text"
   diff: Delta<string>[]
 }
 ```
+</Method>
+<Indent>
+Represents changes to text content using Delta format.
 
+**Properties:**
+- `type` - Always "text" for text diffs
+- `diff` - Array of Delta operations (insert, delete, retain)
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2591,16 +3179,24 @@ text.subscribe((e) => {
   }
 });
 ```
+</Indent>
 
-#### ListDiff
-
+<Method>
 ```typescript
 type ListDiff = {
   type: "list"
   diff: Delta<(Value | Container)[]>[]
 }
 ```
+</Method>
+<Indent>
+Represents changes to list content using Delta format.
 
+**Properties:**
+- `type` - Always "list" for list diffs
+- `diff` - Array of Delta operations on list items
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2619,16 +3215,24 @@ list.subscribe((e) => {
   }
 });
 ```
+</Indent>
 
-#### MapDiff
-
+<Method>
 ```typescript
 type MapDiff = {
   type: "map"
   updated: Record<string, Value | Container | undefined>
 }
 ```
+</Method>
+<Indent>
+Represents changes to map content.
 
+**Properties:**
+- `type` - Always "map" for map diffs
+- `updated` - Record of key-value changes (undefined means deleted)
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2649,9 +3253,9 @@ map.subscribe((e) => {
   }
 });
 ```
+</Indent>
 
-#### TreeDiff
-
+<Method>
 ```typescript
 type TreeDiff = {
   type: "tree"
@@ -2682,7 +3286,20 @@ type TreeDiffItem =
       oldIndex: number
     }
 ```
+</Method>
+<Indent>
+Represents changes to tree structure.
 
+**Properties:**
+- `type` - Always "tree" for tree diffs
+- `diff` - Array of TreeDiffItem operations (create, delete, move)
+
+**TreeDiffItem Actions:**
+- `create` - Node creation with parent and position
+- `delete` - Node deletion with old parent and position
+- `move` - Node movement with old and new positions
+
+**Example:**
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2708,6 +3325,8 @@ tree.subscribe((e) => {
     }
   }
 });
+```
+</Indent>
 ```
 
 ### Deep Subscription
