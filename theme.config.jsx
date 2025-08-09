@@ -39,8 +39,14 @@ export default {
   },
   head: () => {
     const config = useConfig();
-    const { title, description, image } = config.frontMatter;
-    const pageTitle = title ? `${title} – Loro` : "Loro";
+    // Nextra v3 moves reserved fields like `title`, `description`, `image`
+    // out of `frontMatter` into top-level config. Fallback to frontMatter for
+    // older content that still sets them there.
+    const metaTitle = config.title ?? config.frontMatter?.title;
+    const metaDescription =
+      config.description ?? config.frontMatter?.description ?? "Loro";
+    const metaImage = config.image ?? config.frontMatter?.image;
+    const pageTitle = metaTitle ? `${metaTitle} – Loro` : "Loro";
     const DEFAULT_IMAGE = "https://i.ibb.co/T1x1bSf/IMG-8191.jpg";
 
     return (
@@ -50,19 +56,20 @@ export default {
           src="https://us.umami.is/script.js"
           data-website-id="5a4c9e46-22c9-46ee-82d8-901253485cf1"
         />
+        <title>{pageTitle}</title>
         <meta name="msapplication-TileColor" content="#fff" />
         <meta name="theme-color" content="#fff" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta httpEquiv="Content-Language" content="en" />
-        <meta name="description" content={description || "Loro"} />
-        <meta name="og:description" content={description || "Loro"} />
+        <meta name="description" content={metaDescription} />
+        <meta name="og:description" content={metaDescription} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={image || DEFAULT_IMAGE} />
+        <meta name="twitter:image" content={metaImage || DEFAULT_IMAGE} />
         <meta name="twitter:site:domain" content="loro.dev" />
         <meta name="twitter:site" content="@loro_dev" />
         <meta name="twitter:url" content="https://loro.dev" />
         <meta property="og:title" content={pageTitle} />
-        <meta property="og:image" content={image || DEFAULT_IMAGE} />
+        <meta property="og:image" content={metaImage || DEFAULT_IMAGE} />
         <meta name="apple-mobile-web-app-title" content="Loro" />
       </>
     );
