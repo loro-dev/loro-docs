@@ -542,6 +542,52 @@ const status = doc.importBatch(updates);
 ```
 </Indent>
 
+<Method id="LoroDoc.importUpdateBatch">
+```typescript
+importUpdateBatch(data: Uint8Array[]): ImportStatus
+```
+</Method>
+<Indent>
+**Deprecated:** Use [`importBatch`](#LoroDoc.importBatch) instead.
+
+Imports a batch of updates and snapshots. This method is deprecated in favor of `importBatch`.
+
+**Parameters:**
+- `data` - Array of binary updates
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+declare const updates: Uint8Array[];
+// ---cut---
+// Deprecated - use importBatch instead
+const status = doc.importUpdateBatch(updates);
+```
+</Indent>
+
+<Method id="LoroDoc.exportSnapshot">
+```typescript
+exportSnapshot(): Uint8Array
+```
+</Method>
+<Indent>
+**Deprecated:** Use [`export({ mode: "snapshot" })`](#LoroDoc.export) instead.
+
+Exports the snapshot of the current version. This method is deprecated in favor of the more flexible `export` method.
+
+**Returns:** Binary snapshot data
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+// Deprecated - use export({ mode: "snapshot" }) instead
+const snapshot = doc.exportSnapshot();
+```
+</Indent>
+
 <Method id="LoroDoc.exportJsonUpdates">
 ```typescript
 exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompression?: boolean): JsonSchema
@@ -2262,6 +2308,302 @@ const deleted = text.splice(6, 5, "Loro"); // returns "World"
 ```
 </Indent>
 
+<Method id="LoroText.push">
+```typescript
+push(s: string): void
+```
+</Method>
+<Indent>
+Appends text to the end of the document.
+
+**Parameters:**
+- `s` - String to append
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.push("Hello");
+text.push(" World");
+```
+</Indent>
+
+<Method id="LoroText.iter">
+```typescript
+iter(callback: (char: string) => boolean): void
+```
+</Method>
+<Indent>
+Iterates over each character in the text.
+
+**Parameters:**
+- `callback` - Function called for each character. Return false to stop iteration.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+text.iter((char) => {
+  console.log(char);
+  return true; // continue iteration
+});
+```
+</Indent>
+
+<Method id="LoroText.insertUtf8">
+```typescript
+insertUtf8(index: number, content: string): void
+```
+</Method>
+<Indent>
+Inserts text at a UTF-8 byte index position.
+
+**Parameters:**
+- `index` - UTF-8 byte index
+- `content` - Text to insert
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+text.insertUtf8(0, "Hello");
+```
+</Indent>
+
+<Method id="LoroText.deleteUtf8">
+```typescript
+deleteUtf8(index: number, len: number): void
+```
+</Method>
+<Indent>
+Deletes text at a UTF-8 byte index position.
+
+**Parameters:**
+- `index` - UTF-8 byte index
+- `len` - Number of UTF-8 bytes to delete
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+// ---cut---
+text.deleteUtf8(6, 5); // Delete "World"
+```
+</Indent>
+
+<Method id="LoroText.getEditorOf">
+```typescript
+getEditorOf(pos: number): PeerID | undefined
+```
+</Method>
+<Indent>
+Gets the peer ID of who last edited the character at a position.
+
+**Parameters:**
+- `pos` - Character position
+
+**Returns:** PeerID of last editor or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const editor = text.getEditorOf(0);
+```
+</Indent>
+
+<Method id="LoroText.kind">
+```typescript
+kind(): "Text"
+```
+</Method>
+<Indent>
+Returns the container type.
+
+**Returns:** "Text"
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+const type = text.kind(); // "Text"
+```
+</Indent>
+
+<Method id="LoroText.parent">
+```typescript
+parent(): Container | undefined
+```
+</Method>
+<Indent>
+Gets the parent container if this text is nested.
+
+**Returns:** Parent container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+const text = list.insertContainer(0, doc.getText("nested"));
+// ---cut---
+const parent = text.parent(); // Returns the list
+```
+</Indent>
+
+<Method id="LoroText.isAttached">
+```typescript
+isAttached(): boolean
+```
+</Method>
+<Indent>
+Checks if the container is attached to a document.
+
+**Returns:** True if attached
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+const doc = new LoroDoc();
+const text = new LoroText();
+// ---cut---
+const attached = text.isAttached(); // false until attached to doc
+```
+</Indent>
+
+<Method id="LoroText.getAttached">
+```typescript
+getAttached(): LoroText | undefined
+```
+</Method>
+<Indent>
+Gets the attached version of this container.
+
+**Returns:** Attached container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+const doc = new LoroDoc();
+const text = new LoroText();
+// ---cut---
+const attached = text.getAttached();
+```
+</Indent>
+
+<Method id="LoroText.isDeleted">
+```typescript
+isDeleted(): boolean
+```
+</Method>
+<Indent>
+Checks if the container has been deleted.
+
+**Returns:** True if deleted
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+const deleted = text.isDeleted();
+```
+</Indent>
+
+<Method id="LoroText.getShallowValue">
+```typescript
+getShallowValue(): string
+```
+</Method>
+<Indent>
+Gets the text content without marks.
+
+**Returns:** Plain text string
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const value = text.getShallowValue(); // "Hello"
+```
+</Indent>
+
+<Method id="LoroText.toJSON">
+```typescript
+toJSON(): any
+```
+</Method>
+<Indent>
+Converts the text to JSON representation.
+
+**Returns:** JSON value
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const json = text.toJSON(); // "Hello"
+```
+</Indent>
+
+<Method id="LoroText.id">
+```typescript
+readonly id: ContainerID
+```
+</Method>
+<Indent>
+Gets the unique container ID.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+// ---cut---
+const containerId = text.id;
+```
+</Indent>
+
+<Method id="LoroText.length">
+```typescript
+readonly length: number
+```
+</Method>
+<Indent>
+Gets the length of the text in Unicode characters.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello");
+// ---cut---
+const len = text.length; // 5
+```
+</Indent>
+
 ### LoroList
 
 An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices 
@@ -2487,6 +2829,167 @@ Gets the number of elements in the list.
 **Example:**
 ```typescript
 console.log(`List has ${list.length} items`);
+```
+</Indent>
+
+<Method id="LoroList.kind">
+```typescript
+kind(): "List"
+```
+</Method>
+<Indent>
+Returns the container type.
+
+**Returns:** "List"
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+// ---cut---
+const type = list.kind(); // "List"
+```
+</Indent>
+
+<Method id="LoroList.toJSON">
+```typescript
+toJSON(): any
+```
+</Method>
+<Indent>
+Converts the list to JSON representation.
+
+**Returns:** JSON array
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push(1, 2, 3);
+// ---cut---
+const json = list.toJSON(); // [1, 2, 3]
+```
+</Indent>
+
+<Method id="LoroList.parent">
+```typescript
+parent(): Container | undefined
+```
+</Method>
+<Indent>
+Gets the parent container if this list is nested.
+
+**Returns:** Parent container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+const list = map.setContainer("nested", doc.getList("list"));
+// ---cut---
+const parent = list.parent(); // Returns the map
+```
+</Indent>
+
+<Method id="LoroList.isAttached">
+```typescript
+isAttached(): boolean
+```
+</Method>
+<Indent>
+Checks if the container is attached to a document.
+
+**Returns:** True if attached
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroList } from "loro-crdt";
+const doc = new LoroDoc();
+const list = new LoroList();
+// ---cut---
+const attached = list.isAttached(); // false until attached to doc
+```
+</Indent>
+
+<Method id="LoroList.getAttached">
+```typescript
+getAttached(): LoroList | undefined
+```
+</Method>
+<Indent>
+Gets the attached version of this container.
+
+**Returns:** Attached container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroList } from "loro-crdt";
+const doc = new LoroDoc();
+const list = new LoroList();
+// ---cut---
+const attached = list.getAttached();
+```
+</Indent>
+
+<Method id="LoroList.isDeleted">
+```typescript
+isDeleted(): boolean
+```
+</Method>
+<Indent>
+Checks if the container has been deleted.
+
+**Returns:** True if deleted
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+// ---cut---
+const deleted = list.isDeleted();
+```
+</Indent>
+
+<Method id="LoroList.getShallowValue">
+```typescript
+getShallowValue(): Value[]
+```
+</Method>
+<Indent>
+Gets the list values with sub-containers as IDs.
+
+**Returns:** Array of values
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push(1, 2);
+// ---cut---
+const values = list.getShallowValue(); // [1, 2]
+```
+</Indent>
+
+<Method id="LoroList.id">
+```typescript
+readonly id: ContainerID
+```
+</Method>
+<Indent>
+Gets the unique container ID.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+// ---cut---
+const containerId = list.id;
 ```
 </Indent>
 
@@ -2730,6 +3233,167 @@ const doc = new LoroDoc();
 const map = doc.getMap("map");
 // ---cut---
 console.log(`Map has ${map.size} entries`);
+```
+</Indent>
+
+<Method id="LoroMap.kind">
+```typescript
+kind(): "Map"
+```
+</Method>
+<Indent>
+Returns the container type.
+
+**Returns:** "Map"
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+const type = map.kind(); // "Map"
+```
+</Indent>
+
+<Method id="LoroMap.toJSON">
+```typescript
+toJSON(): any
+```
+</Method>
+<Indent>
+Converts the map to JSON representation.
+
+**Returns:** JSON object
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+map.set("name", "Alice");
+// ---cut---
+const json = map.toJSON(); // { name: "Alice" }
+```
+</Indent>
+
+<Method id="LoroMap.parent">
+```typescript
+parent(): Container | undefined
+```
+</Method>
+<Indent>
+Gets the parent container if this map is nested.
+
+**Returns:** Parent container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+const map = list.insertContainer(0, doc.getMap("nested"));
+// ---cut---
+const parent = map.parent(); // Returns the list
+```
+</Indent>
+
+<Method id="LoroMap.isAttached">
+```typescript
+isAttached(): boolean
+```
+</Method>
+<Indent>
+Checks if the container is attached to a document.
+
+**Returns:** True if attached
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+const doc = new LoroDoc();
+const map = new LoroMap();
+// ---cut---
+const attached = map.isAttached(); // false until attached to doc
+```
+</Indent>
+
+<Method id="LoroMap.getAttached">
+```typescript
+getAttached(): LoroMap | undefined
+```
+</Method>
+<Indent>
+Gets the attached version of this container.
+
+**Returns:** Attached container or undefined
+
+**Example:**
+```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+const doc = new LoroDoc();
+const map = new LoroMap();
+// ---cut---
+const attached = map.getAttached();
+```
+</Indent>
+
+<Method id="LoroMap.isDeleted">
+```typescript
+isDeleted(): boolean
+```
+</Method>
+<Indent>
+Checks if the container has been deleted.
+
+**Returns:** True if deleted
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+const deleted = map.isDeleted();
+```
+</Indent>
+
+<Method id="LoroMap.getShallowValue">
+```typescript
+getShallowValue(): Record<string, Value>
+```
+</Method>
+<Indent>
+Gets the map values with sub-containers as IDs.
+
+**Returns:** Object with values
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+map.set("key", "value");
+// ---cut---
+const values = map.getShallowValue(); // { key: "value" }
+```
+</Indent>
+
+<Method id="LoroMap.id">
+```typescript
+readonly id: ContainerID
+```
+</Method>
+<Indent>
+Gets the unique container ID.
+
+**Example:**
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const map = doc.getMap("map");
+// ---cut---
+const containerId = map.id;
 ```
 </Indent>
 
