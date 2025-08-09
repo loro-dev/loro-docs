@@ -6,16 +6,6 @@ const withNextra = nextra({
   defaultShowCopyCode: true,
   staticImage: true,
   readingTime: true,
-  mdxOptions: {
-    rehypePrettyCodeOptions: {
-      transformers: [
-        {
-          name: '@shikijs/transformers:twoslash',
-          options: {}
-        }
-      ]
-    }
-  }
 });
 
 export default withNextra({

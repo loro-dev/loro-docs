@@ -129,6 +129,9 @@ importers:
         specifier: ^2.9.1
         version: 2.16.0(react@18.3.1)
     devDependencies:
+      '@shikijs/twoslash':
+        specifier: ^3.9.2
+        version: 3.9.2(typescript@5.9.2)
       '@storybook/addon-essentials':
         specifier: ^7.5.2
         version: 7.6.20(@types/react@18.0.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2076,6 +2079,11 @@ packages:
 
   '@shikijs/twoslash@1.29.2':
     resolution: {integrity: sha512-2S04ppAEa477tiaLfGEn1QJWbZUmbk8UoPbAEw4PifsrxkBXtAtOflIZJNtuCwz8ptc/TPxy7CO7gW4Uoi6o/g==}
+
+  '@shikijs/twoslash@3.9.2':
+    resolution: {integrity: sha512-LRAhdZwp+4AXyScSgWAyoo1EM6lf2iTQPivl3w9fWSBi3yp4MJZfbed/6dcemd20jW4A9olzB3j1mFAKv/CRFw==}
+    peerDependencies:
+      typescript: '>=5.5.0'
 
   '@shikijs/types@1.29.2':
     resolution: {integrity: sha512-VJjK0eIijTZf0QSTODEXCqinjBn0joAHQ+aPSBzrv4O2d/QSbsMw+ZeSRx03kV34Hy7NzUvV/7NqfYGRLrASmw==}
@@ -7246,10 +7254,18 @@ packages:
   twoslash-protocol@0.2.12:
     resolution: {integrity: sha512-5qZLXVYfZ9ABdjqbvPc4RWMr7PrpPaaDSeaYY55vl/w1j6H6kzsWK/urAEIXlzYlyrFmyz1UbwIt+AA0ck+wbg==}
 
+  twoslash-protocol@0.3.3:
+    resolution: {integrity: sha512-26NXjXEj+2NgytwOjjhFtNpQI7Zgct6PTyLg6JO7fIbO7MIm+kx89IxvBustgBOSKxoWjNBN2LXjNHHMD7+k0g==}
+
   twoslash@0.2.12:
     resolution: {integrity: sha512-tEHPASMqi7kqwfJbkk7hc/4EhlrKCSLcur+TcvYki3vhIfaRMXnXjaYFgXpoZRbT6GdprD4tGuVBEmTpUgLBsw==}
     peerDependencies:
       typescript: '*'
+
+  twoslash@0.3.3:
+    resolution: {integrity: sha512-Yen1RBSYh/NUR6tfK6xT7DsXkBYby7lfp078Q7XoJR5dtAeG9jB5PVL1oF2sZwHapLjaqcZNlw7GSB8himZNsQ==}
+    peerDependencies:
+      typescript: ^5.5.0
 
   type-fest@0.16.0:
     resolution: {integrity: sha512-eaBzG6MxNzEn9kiwvtre90cXaNLkmadMWa1zQMs3XORCXNbsH/OewwbxC5ia9dCxIxnTAsSxXJaa/p5y8DlvJg==}
@@ -9730,6 +9746,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  '@shikijs/twoslash@3.9.2(typescript@5.9.2)':
+    dependencies:
+      '@shikijs/core': 3.9.2
+      '@shikijs/types': 3.9.2
+      twoslash: 0.3.3(typescript@5.9.2)
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - supports-color
 
   '@shikijs/types@1.29.2':
     dependencies:
@@ -16569,10 +16594,20 @@ snapshots:
 
   twoslash-protocol@0.2.12: {}
 
+  twoslash-protocol@0.3.3: {}
+
   twoslash@0.2.12(typescript@5.9.2):
     dependencies:
       '@typescript/vfs': 1.6.1(typescript@5.9.2)
       twoslash-protocol: 0.2.12
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - supports-color
+
+  twoslash@0.3.3(typescript@5.9.2):
+    dependencies:
+      '@typescript/vfs': 1.6.1(typescript@5.9.2)
+      twoslash-protocol: 0.3.3
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
