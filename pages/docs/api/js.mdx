@@ -146,7 +146,9 @@ Creates a new LoroDoc from a snapshot. This is useful for loading a document fro
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have a snapshot from a previous export
-const snapshot: Uint8Array = // ... from storage or network
+const prevDoc = new LoroDoc();
+prevDoc.getText("text").insert(0, "Hello");
+const snapshot: Uint8Array = prevDoc.export({ mode: "snapshot" });
 
 const doc = LoroDoc.fromSnapshot(snapshot);
 ```
@@ -568,7 +570,9 @@ import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 // Receive updates from another peer (e.g., via network)
-const updates: Uint8Array = // ... from network or storage
+const otherDoc = new LoroDoc();
+otherDoc.getText("text").insert(0, "Hello");
+const updates: Uint8Array = otherDoc.export({ mode: "update" });
 
 // Import binary updates
 const status = doc.import(updates);
@@ -641,7 +645,9 @@ Imports updates from JSON format. Useful for debugging, migration, or custom sto
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
-const jsonStr = '{"ops": [], "peer": "1"}';
+const otherDoc = new LoroDoc();
+otherDoc.getText("text").insert(0, "Hello");
+const jsonStr = otherDoc.exportJsonUpdates();
 doc.importJsonUpdates(jsonStr);
 ```
 </Indent>
@@ -1880,6 +1886,7 @@ Gets a specific change by operation ID.
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
+doc.getText("text").insert(0, "hello");
 const frontiers = doc.frontiers();
 const change = doc.getChangeAt(frontiers[0]);
 ```
@@ -1926,6 +1933,7 @@ Gets all operations in a specific change.
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
+doc.getText("text").insert(0, "hello");
 const frontiers = doc.frontiers();
 const ops = doc.getOpsInChange(frontiers[0]);
 ```
@@ -2090,6 +2098,8 @@ Deletes text from the specified position using UTF-16 code units.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
 text.delete(6, 2); // Delete emoji (2 UTF-16 units)
@@ -2113,6 +2123,10 @@ Applies formatting to a text range. Marks can be configured to expand/stop at ed
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
 text.mark({ start: 0, end: 5 }, "bold", true);
 text.mark({ start: 6, end: 11 }, "color", "#ff0000");
 ```
@@ -2132,6 +2146,11 @@ Removes formatting from a text range. For how conflicting edits on marks resolve
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+text.mark({ start: 0, end: 5 }, "bold", true);
 text.unmark({ start: 0, end: 5 }, "bold");
 ```
 </Indent>
@@ -2148,6 +2167,11 @@ Converts text to Delta format (Quill-compatible).
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
+text.mark({ start: 0, end: 5 }, "bold", true);
 const delta = text.toDelta();
 // [{ insert: "Hello", attributes: { bold: true } }, { insert: " World" }]
 ```
@@ -2166,6 +2190,9 @@ Applies Delta operations to the text.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
 text.applyDelta([
   { insert: "Hello", attributes: { bold: true } },
   { insert: " World" }
@@ -2235,6 +2262,7 @@ Gets a stable cursor position that survives edits.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
+text.insert(0, "Hello World");
 
 const cursor = text.getCursor(5);
 // Cursor remains valid even after edits
@@ -2253,6 +2281,10 @@ Converts to plain text string.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hello World");
 const plainText = text.toString();
 ```
 </Indent>
@@ -2684,6 +2716,9 @@ Inserts a value at the specified position.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
 list.insert(0, "First");
 list.insert(1, { type: "object" });
 ```
@@ -2705,6 +2740,9 @@ Inserts a new container at the position.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc, LoroText } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
 const subText = list.insertContainer(0, new LoroText());
 subText.insert(0, "Nested text");
 ```
@@ -2724,6 +2762,10 @@ Deletes elements from the list.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push("a", "b", "c", "d");
 list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
 </Indent>
@@ -2741,6 +2783,9 @@ Appends a value to the end of the list.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
 list.push("Last item");
 ```
 </Indent>
@@ -2776,6 +2821,9 @@ Appends a container to the end of the list.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc, LoroMap } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
 const map = list.pushContainer(new LoroMap());
 map.set("key", "value");
 ```
@@ -2863,6 +2911,10 @@ Converts the list to a JavaScript array.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push("a", "b", "c");
 const array = list.toArray();
 ```
 </Indent>
@@ -2877,6 +2929,10 @@ Removes all elements from the list.
 
 **Example:**
 ```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const list = doc.getList("list");
+list.push("a", "b", "c");
 list.clear();
 ```
 </Indent>
@@ -4217,6 +4273,7 @@ Moves an element from one position to another.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
+movableList.push("a", "b", "c", "d", "e");
 
 movableList.move(0, 3); // Move first element to fourth position
 ```
@@ -4239,6 +4296,7 @@ Replaces the value at a position.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
+movableList.push("a", "b", "c");
 
 movableList.set(0, "Updated value");
 ```
@@ -4263,6 +4321,7 @@ Replaces the value with a container.
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
 const movableList = doc.getMovableList("list");
+movableList.push("placeholder");
 
 const text = movableList.setContainer(0, new LoroText());
 ```
