@@ -2046,6 +2046,23 @@ stable cursors. The merge semantics avoid interleaving artifacts under concurren
 APIs and Loro handles index transformation. 
 See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
+**Important: String Encoding**
+
+LoroText uses **UTF-16** encoding, matching JavaScript's native string encoding:
+- `insert()` and `delete()` use UTF-16 code unit indices (same as JavaScript string indices)
+- `length` returns the UTF-16 code unit count (same as JavaScript `string.length`)
+- Characters outside the Basic Multilingual Plane (e.g., emoji 😀) count as 2 units
+- Use `insertUtf8()` and `deleteUtf8()` for UTF-8 byte-based operations if needed
+
+**Example with emoji:**
+```typescript
+const text = doc.getText("text");
+text.insert(0, "Hello 😀 World");
+console.log(text.length);        // 13 (emoji counts as 2)
+console.log(text.toString()[6]); // Invalid - splits the emoji
+text.delete(6, 2);               // Deletes the entire emoji
+```
+
 
 <Method id="LoroText.insert">
 ```typescript
@@ -2054,10 +2071,10 @@ insert(index: number, text: string): void
 </Method>
 
 <Indent>
-Inserts text at the specified position.
+Inserts text at the specified position using UTF-16 code unit indices (same as JavaScript string indices).
 
 **Parameters:**
-- `index` - Position to insert at (0-based)
+- `index` - UTF-16 code unit position to insert at (0-based, same as JavaScript string index)
 - `text` - Text to insert
 
 **Example:**
@@ -2079,15 +2096,18 @@ delete(index: number, len: number): void
 </Method>
 
 <Indent>
-Deletes text from the specified position.
+Deletes text from the specified position using UTF-16 code units.
 
 **Parameters:**
-- `index` - Starting position
-- `len` - Number of characters to delete
+- `index` - Starting UTF-16 code unit position (same as JavaScript string index)
+- `len` - Number of UTF-16 code units to delete
 
 **Example:**
 ```typescript
-text.delete(5, 1); // Delete one character at position 5
+const text = doc.getText("text");
+text.insert(0, "Hello 😀 World");
+text.delete(6, 2); // Delete emoji (2 UTF-16 units)
+text.delete(5, 1); // Delete space before World
 ```
 </Indent>
 
@@ -2257,10 +2277,12 @@ charAt(pos: number): string
 ```
 </Method>
 <Indent>
-Gets the character at a specific position.
+Gets the character at a specific UTF-16 code unit position.
+
+**Warning:** May return invalid results for positions inside multi-unit characters (e.g., emoji).
 
 **Parameters:**
-- `pos` - Position index
+- `pos` - UTF-16 code unit position
 
 **Returns:** Character at position
 
@@ -2270,9 +2292,12 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello");
-
-// Usage example:
 const char = text.charAt(1); // "e"
+
+// Be careful with emoji
+text.insert(0, "😀");
+const invalid = text.charAt(0); // First half of emoji (invalid)
+const valid = text.charAt(2);   // "H" from "Hello"
 ```
 </Indent>
 
@@ -2282,11 +2307,13 @@ slice(start: number, end: number): string
 ```
 </Method>
 <Indent>
-Extracts a section of the text.
+Extracts a section of the text using UTF-16 code unit positions.
+
+**Warning:** Be careful not to slice in the middle of multi-unit characters.
 
 **Parameters:**
-- `start` - Start index
-- `end` - End index (exclusive)
+- `start` - Start UTF-16 code unit index
+- `end` - End UTF-16 code unit index (exclusive)
 
 **Returns:** Sliced text
 
@@ -2295,10 +2322,11 @@ Extracts a section of the text.
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
-text.insert(0, "Hello World");
+text.insert(0, "Hello 😀 World");
 
-// Usage example:
-const slice = text.slice(0, 5); // "Hello"
+const slice1 = text.slice(0, 5);  // "Hello"
+const slice2 = text.slice(6, 8);  // "😀" (emoji spans 6-8)
+const slice3 = text.slice(9, 14); // "World"
 ```
 </Indent>
 
@@ -2618,7 +2646,9 @@ readonly length: number
 ```
 </Method>
 <Indent>
-Gets the length of the text in Unicode characters.
+Gets the length of the text in UTF-16 code units (same as JavaScript's `string.length`).
+
+**Note:** Emoji and other characters outside the Basic Multilingual Plane count as 2 units.
 
 **Example:**
 ```typescript
@@ -2626,9 +2656,10 @@ import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello");
+console.log(text.length); // 5
 
-// Usage example:
-const len = text.length; // 5
+text.insert(5, " 😀");
+console.log(text.length); // 8 (space + emoji which counts as 2)
 ```
 </Indent>
 
