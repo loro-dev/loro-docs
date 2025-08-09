@@ -14,16 +14,35 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 
 ## Common Tasks
 
-- Stream updates over WebSocket: see [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) and [`import`](#LoroDoc.import) under [Synchronization](#synchronization).
-- Redact leaked secrets from history: see [`redactJsonUpdates`](#LoroDoc.redactJsonUpdates) in [Synchronization](#synchronization).
-- Undo/redo only my edits: see [Undo/Redo](#undoredo) and `UndoManager`.
-- Fork a branch and merge later: see [Versioning](#versioning) and [`fork`](#LoroDoc.fork)/[`forkAt`](#LoroDoc.forkAt) + [`export`](#LoroDoc.export)/[`import`](#LoroDoc.import).
-- Time travel and view older versions: see [Versioning](#versioning) and [`checkout`](#LoroDoc.checkout)/[`checkoutToLatest`](#LoroDoc.checkoutToLatest).
-- Fast load with current state only: export a [shallow snapshot](#synchronization) and import it.
-- Track peer metadata when first seen: use [`subscribeFirstCommitFromPeer`](#LoroDoc.subscribeFirstCommitFromPeer) in [Events & Transactions](#events--transactions).
-- Tag implicit commits (import/export/checkout): use [`subscribePreCommit`](#LoroDoc.subscribePreCommit) in [Events & Transactions](#events--transactions).
-- Find containers changed in a change range: see [`getChangedContainersIn`](#LoroDoc.getChangedContainersIn) in [LoroDoc](#lorodoc).
-- Diff two versions: see [`diff`](#LoroDoc.diff) in [LoroDoc](#lorodoc) and [Versioning](#versioning).
+### Getting Started
+- Create and edit a document: [`getText`](#LoroDoc.getText), [`getList`](#LoroDoc.getList), [`getMap`](#LoroDoc.getMap)
+- Listen to document changes: [`subscribe`](#LoroDoc.subscribe) for all changes
+- Export document state: [`export`](#LoroDoc.export) with `mode: "snapshot"`
+- Import from another document: [`import`](#LoroDoc.import) binary data or another doc
+
+### Real-time Collaboration
+- Sync between peers: [`export`](#LoroDoc.export) updates from a version + [`import`](#LoroDoc.import)
+- Stream updates over WebSocket: [`subscribeLocalUpdates`](#LoroDoc.subscribeLocalUpdates) for outgoing changes
+- Handle concurrent edits: automatic with all container types
+- Set unique peer ID: [`setPeerId`](#LoroDoc.setPeerId) at startup
+
+### Rich Text Editing
+- Create rich text: [`getText`](#LoroDoc.getText) with [`insert`](#LoroText.insert), [`delete`](#LoroText.delete)
+- Apply formatting: [`mark`](#LoroText.mark) for bold, italic, links
+- Track cursor positions: [`getCursor`](#LoroText.getCursor) + [`getCursorPos`](#LoroDoc.getCursorPos)
+- Configure text styles: [`configTextStyle`](#LoroDoc.configTextStyle) for expand behavior
+
+### Data Structures
+- Ordered lists: [`getList`](#LoroDoc.getList) with [`push`](#LoroList.push), [`insert`](#LoroList.insert)
+- Key-value maps: [`getMap`](#LoroDoc.getMap) with [`set`](#LoroMap.set), [`get`](#LoroMap.get)
+- Hierarchical trees: [`getTree`](#LoroDoc.getTree) for file systems, nested comments
+- Reorderable lists: [`getMovableList`](#LoroDoc.getMovableList) with [`move`](#LoroMovableList.move)
+
+### Advanced Features
+- Undo/redo user edits: see [Undo/Redo](#undoredo) with `UndoManager`
+- Time travel debugging: [`checkout`](#LoroDoc.checkout) to any version
+- Optimize storage: export [shallow snapshot](#synchronization) without history
+- Fork and merge branches: [`fork`](#LoroDoc.fork) + separate editing + [`import`](#LoroDoc.import)
 
 ## Basic Usage
 
