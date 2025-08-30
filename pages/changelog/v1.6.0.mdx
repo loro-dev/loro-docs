@@ -1,0 +1,32 @@
+---
+version: "v1.6.0"
+title: "Release Loro v1.6.0"
+date: 2025/08/29
+---
+
+Snapshot import speed is now 2x.
+
+This is implemented by skipping the scan when importing a snapshot, which avoids running the decompression during the import process (but we need to ensure the parent-child link is still accessible in Arena). It also skips the checksum check in the import_all method on MemKV because we already check the checksum in the header of the snapshot/update.
+
+## v1.0.0 vs v1.6.0
+
+You can find the benchmark [here](https://github.com/loro-dev/latch-bench/tree/cmp-loro-160).
+
+| name                       | task                            | time                   |
+| -------------------------- | ------------------------------- | ---------------------- |
+| Shallow Snapshot on v1.0.0 | Import                          | 150.667µs +- 1.823µs   |
+|                            | Import+GetAllValues             | 163.957µs +- 1.841µs   |
+|                            | Import+GetAllValues+Edit        | 173.971µs +- 2.03µs    |
+|                            | Import+GetAllValues+Edit+Export | 488.848µs +- 3.621µs   |
+| Shallow Snapshot on v1.6.0 | Import                          | 82.82µs +- 507ns       |
+|                            | Import+GetAllValues             | 90.376µs +- 393ns      |
+|                            | Import+GetAllValues+Edit        | 103.358µs +- 1.916µs   |
+|                            | Import+GetAllValues+Edit+Export | 419.463µs +- 2.316µs   |
+| Snapshot on v1.0.0         | Import                          | 466.425µs +- 3.879µs   |
+|                            | Import+GetAllValues             | 487.06µs +- 3.523µs    |
+|                            | Import+GetAllValues+Edit        | 541.477µs +- 9.067µs   |
+|                            | Import+GetAllValues+Edit+Export | 2.98382ms +- 80.537µs  |
+| Snapshot on v1.6.0         | Import                          | 201.934µs +- 854ns     |
+|                            | Import+GetAllValues             | 370.108µs +- 4.049µs   |
+|                            | Import+GetAllValues+Edit        | 386.497µs +- 3.509µs   |
+|                            | Import+GetAllValues+Edit+Export | 2.362296ms +- 28.258µs |
