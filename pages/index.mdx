@@ -18,6 +18,7 @@ import CustomerWall from "@components/landing/CustomerWall";
 import { Separator } from "@ariakit/react";
 import Demo from "@components/richtextDemo";
 import Testimonial from "@components/Testimonial";
+import { FileText, Palette, BarChart3, Gamepad2, MessageCircle, Smartphone } from "lucide-react";
 
 <div className="relative landing-page-root dark bg-zinc-900">
   <div style={{ maxWidth: 1400, margin: "0 auto" }}>
@@ -160,7 +161,7 @@ import Testimonial from "@components/Testimonial";
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">📝</span>
+            <FileText className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="documents" />
             <h3 className="font-semibold">Collaborative Documents</h3>
           </div>
           <div className="text-sm opacity-80">Docs‑style editors with presence, history, and conflict‑free merges.</div>
@@ -169,7 +170,7 @@ import Testimonial from "@components/Testimonial";
 
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">🎨</span>
+            <Palette className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="design" />
             <h3 className="font-semibold">Design Tools</h3>
           </div>
           <div className="text-sm opacity-80">Figma‑style canvases with lists/trees, undo/redo, and real‑time sync.</div>
@@ -178,7 +179,7 @@ import Testimonial from "@components/Testimonial";
 
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">📊</span>
+            <BarChart3 className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="dashboards" />
             <h3 className="font-semibold">Data Dashboards</h3>
           </div>
           <div className="text-sm opacity-80">Airtable‑like tables with shared JSON state, snapshots, and history.</div>
@@ -187,7 +188,7 @@ import Testimonial from "@components/Testimonial";
 
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">🎮</span>
+            <Gamepad2 className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="games" />
             <h3 className="font-semibold">Multiplayer Games</h3>
           </div>
           <div className="text-sm opacity-80">Shared game state with conflict‑free updates and timeline playback.</div>
@@ -195,7 +196,7 @@ import Testimonial from "@components/Testimonial";
 
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">💬</span>
+            <MessageCircle className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="chat" />
             <h3 className="font-semibold">Chat Applications</h3>
           </div>
           <div className="text-sm opacity-80">Message streams with offline sync, presence, and conflict‑free history.</div>
@@ -204,7 +205,7 @@ import Testimonial from "@components/Testimonial";
 
         <div className="group rounded-xl border border-white/10 bg-zinc-800/40 hover:bg-zinc-800/60 transition-colors p-5">
           <div className="flex items-center mb-3">
-            <span className="text-3xl mr-3">📱</span>
+            <Smartphone className="inline w-7 h-7 mr-3 align-text-bottom" aria-label="offline" />
             <h3 className="font-semibold">Offline‑First Apps</h3>
           </div>
           <div className="text-sm opacity-80">Local‑first state, updates, and merges that sync when online.</div>
