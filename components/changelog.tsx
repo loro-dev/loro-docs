@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ExpendableContent } from "./ExpandableContent";
 
 // border-b border-gray-400 border-opacity-20
 
@@ -35,17 +34,17 @@ export function ChangelogComponent({ date, mdx, title, url }: ChangelogProps) {
                 strokeDasharray="5, 10"
               />
             </svg>
-            <div className="absolute left-0 sm:left-1/2 -translate-x-1/2 top-[50px] sm:top-[20px] w-2 h-2 bg-slate-500 rounded-xl hidden sm:block"
-              style={{ left: "calc(50% - 56px)" }} />
+            <div
+              className="absolute left-0 sm:left-1/2 -translate-x-1/2 top-[50px] sm:top-[20px] w-2 h-2 bg-slate-500 rounded-xl hidden sm:block"
+              style={{ left: "calc(50% - 56px)" }}
+            />
           </div>
           <div className="flex-1">
             <Link className="text-2xl sm:text-4xl font-bold" href={url}>
               {title}
             </Link>
             {/* code block min width */}
-            <div className="min-w-[600px]">
-              {mdx}
-            </div>
+            <div className="min-w-[600px]">{mdx}</div>
           </div>
         </div>
       </div>
