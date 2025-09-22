@@ -7,7 +7,7 @@ description: "CRDT benchmarks, comparing the performance of Loro and popular CRD
 
 > The primary role of these benchmarks should be to serve as indicators of the absence of performance pitfalls rather than as measures of which project is superior. This is because different projects consistently make different trade-offs. It is inaccurate to claim that Project A is superior to Project B simply because A performs better in certain benchmarks, while Project B may excel in other areas by a significant margin.
 
-The benchmark can be reproduced using the [crdt-benchmarks](https://github.com/zxch3n/crdt-benchmarks) repo.
+The benchmark can be reproduced using the [crdt-benchmarks](https://github.com/https://twitter.com/zx_loro/crdt-benchmarks) repo.
 
 - The benchmarks were performed on MacBook Pro M1 2020 with 16GB RAM
 - loro-old is the version of loro on 2023-11-10, it's compiled from

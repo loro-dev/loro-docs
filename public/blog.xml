@@ -1,0 +1,2541 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Loro Blog</title>
+        <link>https://loro.dev/blog/</link>
+        <description>Updates and stories from the Loro team.</description>
+        <lastBuildDate>Mon, 22 Sep 2025 13:16:41 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs]]></title>
+            <link>https://loro.dev/blog/loro-mirror</link>
+            <guid>https://loro.dev/blog/loro-mirror</guid>
+            <pubDate>Sun, 21 Sep 2025 16:00:00 GMT</pubDate>
+            <description><![CDATA[Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history. ]]></description>
+            <content:encoded><![CDATA[<h1>Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs</h1>
+<p><img src="/images/loro-mirror.png" alt=""></p>
+<p><strong>TL;DR.</strong> Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local <code>setState</code> edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history.</p>
+<blockquote>
+<p>CRDT: A Conflict‑free Replicated Data Type lets multiple peers edit concurrently and still converge without central coordination.</p>
+<p><strong>Local‑first:</strong> Data is usable offline and synced later; the device is the primary source of truth.</p>
+</blockquote>
+<h2>Overview</h2>
+<p><strong>Loro</strong> is a CRDT library for local‑first apps. It supports rich containers—<code>Text</code>, <code>Map</code>, <code>List</code>/<code>MovableList</code>, <code>MovableTree</code>—with versioning, time‑travel, and compact updates/snapshots.</p>
+<p>Though CRDTs ensure CRDTs states converge, apps still need glue code to map between CRDT documents and UI state to ensure their consistency. It&#39;s not an easy task.</p>
+<p><strong>Loro Mirror</strong> addresses this boundary. You declare a schema once. Mirror maintains an immutable app‑state view and handles both directions:</p>
+<ul>
+<li><strong>Event → state.</strong> Loro events update your state.</li>
+<li><strong>State → CRDT.</strong> <code>setState</code> diffs become container‑level CRDT ops (insert / delete / move / text edits).</li>
+</ul>
+<p>For an update, if <strong>k</strong> items change and each changed item affects <strong>m</strong> of its immediate fields, time complexity is <strong>≈ O(k·m)</strong>. <em>(k = number of changed items; m = average number of changed immediate fields per changed item.)</em> This is similar to React’s render complexity.</p>
+<h2>Why this exists</h2>
+<p>Without Mirror, projects that uses Loro need to:</p>
+<ol>
+<li>Map CRDTs states to UI states</li>
+<li>Diff UI edits and translate them to CRDT operations</li>
+<li>Subscribe to CRDT events and patch UI state</li>
+</ol>
+<p>This code is repetitive and easy to get wrong. Mirror centralizes it behind a declarative schema.</p>
+<hr>
+<h2>What Mirror provides</h2>
+<ul>
+<li><strong>Declarative schema.</strong> Describe UI state in terms of Loro containers; Mirror maintains an immutable view.</li>
+<li><strong>Typed and framework‑agnostic.</strong> Works in plain TypeScript, React (via <code>loro-mirror-react</code>) or any other UI framework that supports immutable states.</li>
+<li><strong>Fine‑grained diffs.</strong> Generates ops such as item moves in <code>MovableList</code> and character deltas in <code>Text</code>.</li>
+</ul>
+<hr>
+<h2>How to use</h2>
+<ol>
+<li>Define a schema that describes your app state</li>
+<li>Create a <code>LoroDoc</code> and a Mirror store; provide <code>schema</code></li>
+<li>Update via <code>setState</code>. Subscribe for changes if needed.</li>
+<li>Sync across peers using Loro updates; Mirror applies remote delta back to your app state automatically.</li>
+</ol>
+<h3>Basic Example</h3>
+<pre><code class="language-ts">/**
+ * As an example, you can use `useState` from React to manage the state
+ *
+ * `const [appState, setAppState] = useState({});`
+ */
+function setAppState(state: any) {}
+// ---cut---
+
+// 1) Declare state shape – a MovableList of todos with stable Container ID `$cid`
+type TodoStatus = &quot;todo&quot; | &quot;inProgress&quot; | &quot;done&quot;;
+const appSchema = schema({
+  todos: schema.LoroMovableList(
+    schema.LoroMap({
+      text: schema.String(),
+      status: schema.String&lt;TodoStatus&gt;(),
+    }),
+    // $cid is the container ID of LoroMap assigned by Loro
+    (t) =&gt; t.$cid,
+  ),
+});
+
+// 2) Create a Loro document and a Mirror store
+const doc = new LoroDoc();
+const store = new Mirror({
+  doc,
+  schema: appSchema,
+  // InitialState will not be written into LoroDoc
+  initialState: { todos: [] },
+});
+
+// 3) Subscribe (optional) – know whether updates came from local or remote
+const unsubscribe = store.subscribe((state, { direction, tags }) =&gt; {
+  if (direction === SyncDirection.FROM_LORO) {
+    console.log(&quot;Remote update&quot;, { state, tags });
+  } else {
+    console.log(&quot;Local update&quot;, { state, tags });
+  }
+
+  // You can use `state` to render directly, it&#39;s a new immutable object that shares
+  // the unchanged fields with the old state
+  setAppState(state);
+});
+
+// 4) Either draft‑mutate or return a new state
+// Draft‑style (mutate a draft)
+store.setState((s) =&gt; {
+  s.todos.push({ text: &quot;Draft add&quot;, status: &quot;todo&quot; });
+});
+
+// Immutable return (construct a new object)
+store.setState((s) =&gt; ({
+  ...s,
+  todos: [...s.todos, { text: &quot;Immutable add&quot;, status: &quot;todo&quot; }],
+}));
+
+// 5) Sync across peers with Loro updates (transport‑agnostic)
+// Example: two docs in memory – in real apps, send `bytes` over WS/HTTP/WebRTC
+const other = new LoroDoc();
+other.import(doc.export({ mode: &quot;snapshot&quot; }));
+
+// Wire realtime sync (local updates → remote import)
+const stop = doc.subscribeLocalUpdates((bytes) =&gt; {
+  other.import(bytes);
+});
+
+// Any `store.setState(...)` on `doc` now appears in `other` as well
+</code></pre>
+<h3>React Example</h3>
+<pre><code class="language-tsx">
+type TodoStatus = &quot;todo&quot; | &quot;inProgress&quot; | &quot;done&quot;;
+
+const todoSchema = schema({
+  todos: schema.LoroMovableList(
+    schema.LoroMap({
+      text: schema.String(),
+      status: schema.String&lt;TodoStatus&gt;(),
+    }),
+    (t) =&gt; t.$cid,
+  ),
+});
+
+export function TodoApp() {
+  const doc = useMemo(() =&gt; new LoroDoc(), []);
+  const { state, setState } = useLoroStore({
+    doc,
+    schema: todoSchema,
+    initialState: { todos: [] },
+  });
+
+  function addTodo(text: string) {
+    setState((s) =&gt; {
+      s.todos.push({ text, status: &quot;todo&quot; });
+    });
+  }
+
+  return (
+    &lt;&gt;
+      &lt;button onClick={() =&gt; addTodo(&quot;Write blog&quot;)}&gt;Add&lt;/button&gt;
+      &lt;ul&gt;
+        {state.todos.map((t) =&gt; (
+          &lt;li key={t.$cid}&gt;
+            &lt;input
+              value={t.text}
+              onChange={(e) =&gt;
+                setState((s) =&gt; {
+                  const i = s.todos.findIndex((x) =&gt; x.$cid === t.$cid);
+                  // Text delta will be calculated automatically
+                  if (i !== -1) s.todos[i].text = e.target.value;
+                })
+              }
+            /&gt;
+            &lt;select
+              value={t.status}
+              onChange={(e) =&gt;
+                setState((s) =&gt; {
+                  const i = s.todos.findIndex((x) =&gt; x.$cid === t.$cid);
+                  if (i !== -1)
+                    s.todos[i].status = e.target.value as TodoStatus;
+                })
+              }
+            &gt;
+              &lt;option value=&quot;todo&quot;&gt;Todo&lt;/option&gt;
+              &lt;option value=&quot;inProgress&quot;&gt;In Progress&lt;/option&gt;
+              &lt;option value=&quot;done&quot;&gt;Done&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/&gt;
+  );
+}
+</code></pre>
+<p>Undo/Redo</p>
+<pre><code class="language-tsx">
+// Inside the same component, after creating `doc`:
+const undo = useMemo(() =&gt; new UndoManager(doc), [doc]);
+
+// Add controls anywhere in your UI:
+&lt;div&gt;
+  &lt;button onClick={() =&gt; undo.undo()}&gt;Undo&lt;/button&gt;
+  &lt;button onClick={() =&gt; undo.redo()}&gt;Redo&lt;/button&gt;
+  {/* UndoManager only reverts your local edits; remote edits stay. */}
+  {/* See docs: &lt;https://loro.dev/docs/advanced/undo&gt; */}
+  {/* For full time travel, see: &lt;https://loro.dev/docs/tutorial/time_travel&gt; */}
+&lt;/div&gt;;
+</code></pre>
+<p>What you get</p>
+<ul>
+<li>Type-safe, framework-agnostic state</li>
+<li>Each mutation becomes a minimal change-set (CRDT delta)—no manual diffing</li>
+<li>Fine-grained updates to subscribers for fast, predictable renders</li>
+<li><a href="https://loro.dev/docs/tutorial/time_travel">Built-in history and time travel</a></li>
+<li><a href="https://loro.dev/docs/tutorial/sync">Offline-first sync</a> via updates or snapshots with deterministic conflict resolution over any transport (HTTP, WebSocket, P2P)</li>
+<li><a href="https://loro.dev/docs/advanced/undo">Collaborative undo/redo</a> across clients</li>
+</ul>
+<p>We built a example PWA app here <a href="https://todo.loro.dev">https://todo.loro.dev</a> . It’s open source at <a href="https://github.com/loro-dev/loro-todo">https://github.com/loro-dev/loro-todo</a>. It’s collaborative and account-free. The data will be persisted locally in IndexedDB and saved in the cloud for 7 days. You can share your todo list with others by just sharing the unique URL. In the codebase, only a tiny portion of the code is about Loro thanks to the help of loro-mirror.</p>
+<h2>Where we’re going</h2>
+<p>Because Mirror owns the bidirectional mapping between application state and the Loro document, we can move value up the stack while lowering integration cost. For example:</p>
+<ul>
+<li>Text. Many interfaces render by lines, yet LoroText’s low‑level API is index‑based. Teams typically re‑implement line segmentation and map edits back to lines by hand. With Mirror in the middle, it becomes feasible to surface optional line‑aware events on top of LoroText so the UI receives stable, line‑based diffs without custom conversion—while retaining the underlying CRDT guarantees.</li>
+<li>Tree. LoroTree CRDT already ensures correct concurrent moves, but developers still translate tree operations into application‑state patches. Mirror carries first‑class mappings from tree events into your state shape, so consumers can work with natural “insert/move/delete node” updates.</li>
+<li>Ephemeral patches. We&#39;ll add <a href="https://github.com/loro-dev/loro-mirror/issues/35"><code>setStateWithEphemeralPatch</code></a> so Mirror can stream temporary drag or scale interactions through an <code>EphemeralStore</code>, letting collaborators see live previews while the persisted history stays clean and deduplicated once the change finalizes.</li>
+</ul>
+<p>By using loro-mirror to bridge CRDTs and application state consistency, and by expressing schemas declaratively, we can let AI help developers get more done correctly. This makes Loro not only suitable for professional creative tools with real-time collaboration, but also for enabling people to build practical mini-tools for themselves and their communities.</p>
+<p>If this work helps you build collaborative, local‑first experiences, we’d be grateful for your sponsorship. You can support us via <a href="https://github.com/sponsors/loro-dev">GitHub Sponsors</a>.</p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Loro 1.0]]></title>
+            <link>https://loro.dev/blog/v1.0</link>
+            <guid>https://loro.dev/blog/v1.0</guid>
+            <pubDate>Tue, 22 Oct 2024 16:00:00 GMT</pubDate>
+            <description><![CDATA[Announcing Loro 1.0: Introducing a stable encoding schema, 10-100x faster document import, advanced version control, and more for efficient real-time collaboration and local-first software development.]]></description>
+            <content:encoded><![CDATA[<h1>Loro 1.0</h1>
+<p>Loro is a <a href="https://crdt.tech/">Conflict-free Replicated Data Type (CRDT)</a>
+library that developers can use to implement real-time collaboration and version
+control in their applications. You can use Loro to create
+<a href="https://www.inkandswitch.com/local-first/">local-first software</a>. Loro 1.0 has
+a stable data format, excellent performance, and rich features. You can use it
+in Rust, JS (via WASM), and Swift.</p>
+<details>
+<summary>What is CRDT? What is it used for?</summary>
+
+<p>Distributed states are now ubiquitous in multi-user collaborative applications
+and applications that need multi-device synchronization. You need to ensure
+consistency across devices. CRDTs provide a decentralized way to automatically
+solve this problem.</p>
+<blockquote>
+<p>CRDTs automatically resolve conflicts and ensure the consistency of the data.
+Some CRDT algorithms provide extra properties for merge results, which should align with user expectations as much as possible.</p>
+</blockquote>
+<p>CRDT provides a decentralized way to solve this problem. The decentralization here not only means that it can synchronize through P2P methods, but it also means:</p>
+<ul>
+<li>It allows applications to naturally support offline editing</li>
+<li>It allows users to store and implement two-way synchronization of data in
+multiple different locations</li>
+<li>It makes it easier for the backend to implement horizontal scaling</li>
+<li>It can easily support end-to-end encryption</li>
+</ul>
+<p>CRDTs were once considered unable to be used in serious and complex scenarios,
+such as rich text, but optimizations in recent years have greatly expanded its
+application scenarios, making it a practical and easy-to-use technology.</p>
+<p>Based on CRDT, we can create applications that
+allow users to fully control data ownership. These applications can be like
+Git-managed repositories, not relying on specific software service providers.
+Users can switch between GitHub, GitLab, self-hosted Git servers, and the data
+is always available locally. This is the vision of
+<a href="https://www.inkandswitch.com/local-first/">local-first software</a>.</p>
+<aside>
+❓ **What's the difference between sync via CRDT and sync via Git?**
+
+<p>Git&#39;s protocol doesn&#39;t support real-time collaboration. When there are concurrent
+edits, Git needs to resolve conflicts manually; while CRDT can support real-time
+collaboration, can be extended to support rich text, and supports data with
+JSON-like schemas.</p>
+</aside>
+
+<p>CRDTs often also provides a simpler and easier-to-use sync method,
+because for Op-based CRDTs like Loro, as long as the sets of CRDT operations
+received by two peers are consistent, the CRDT document states of these two
+peers are consistent. You don&#39;t have to worry about idempotency, the order of
+operation application, and network exception handling. For Loro&#39;s CRDT document,
+just two rounds of data exchange can transmit the missing operations between two
+documents to achieve final consistency:</p>
+<blockquote>
+<p>You can find all the code samples in this blog <a href="https://github.com/https://twitter.com/zx_loro/loro-blog-examples">here</a></p>
+</blockquote>
+<pre><code class="language-jsx">
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.setPeerId(0);
+docA.setPeerId(1);
+
+docA.getText(&quot;text&quot;).insert(0, &quot;Hello!&quot;);
+docB.getText(&quot;text&quot;).insert(0, &quot;Hi!&quot;);
+const versionA: Uint8Array = docA.version().encode();
+const versionB: Uint8Array = docB.version().encode();
+
+// Exchange versionA and versionB Info
+const bytesA: Uint8Array = docA.export({
+    mode: &quot;update&quot;,
+    from: VersionVector.decode(versionB),
+});
+const bytesB: Uint8Array = docB.export({
+    mode: &quot;update&quot;,
+    from: VersionVector.decode(versionA),
+});
+
+// Exchange bytesA and bytesB
+docB.import(bytesA);
+docA.import(bytesB);
+
+console.log(docA.getText(&quot;text&quot;).toString()); // Hello!Hi!
+console.log(docB.getText(&quot;text&quot;).toString()); // Hello!Hi!
+</code></pre>
+<details>
+<summary>
+A minimum of one round of data exchange can ensure consistency
+</summary>
+
+<pre><code class="language-jsx">
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.setPeerId(0);
+docA.setPeerId(1);
+docA.getText(&quot;text&quot;).insert(0, &quot;Hello!&quot;);
+docB.getText(&quot;text&quot;).insert(0, &quot;Hi!&quot;);
+
+// Exchange versionA and versionB Info
+const bytesA: Uint8Array = docA.export({
+    mode: &quot;update&quot;,
+});
+const bytesB: Uint8Array = docB.export({
+    mode: &quot;update&quot;,
+});
+
+// Exchange bytesA and bytesB
+docB.import(bytesA);
+docA.import(bytesB);
+
+console.log(docA.getText(&quot;text&quot;).toString()); // Hello!Hi!
+console.log(docB.getText(&quot;text&quot;).toString()); // Hello!Hi!
+</code></pre>
+</details>
+</details>
+
+
+<h2>Features of Loro 1.0</h2>
+<h3>High-performance CRDTs</h3>
+<p>High-performance, general-purpose CRDTs can significantly reduce data synchronization
+complexity and are crucial for local-first development. </p>
+<p>However, large CRDT documents may face challenges with loading speed and memory consumption,
+especially when dealing with those with extensive editing histories.
+Loro 1.0 addresses this challenge through a new storage format, achieving a 10x improvement in
+loading speed. In <a href="#document-import-speed-benchmarks">benchmarks using Loro with real-world editing data</a>,
+we&#39;ve reduced the loading time for a document with millions of operations from 16ms to 1ms. When utilizing the
+shallow snapshot format (discussed later), the time can be further reduced to 0.37ms.
+As a result, Loro will not become a bottleneck for applications dealing with such large documents.
+It expands the potential use cases for CRDTs, making them viable for a wider range of applications.</p>
+<h3>Rich CRDT types</h3>
+<p>Loro now supports
+<a href="https://loro.dev/blog/loro-richtext">rich text CRDT</a>,
+which enhances the merge result of rich text (text with formatting and styling) to better align with user expectations.
+Our text/list CRDT is based on the <a href="https://arxiv.org/abs/2305.00583">Fugue</a> algorithm.
+It prevents interleaving issues when merging concurrent edits. For example,
+it can avoid unintended merges like &quot;1H2i3&quot; when &quot;123&quot; and &quot;Hi&quot; are inserted concurrently.</p>
+<p>We also support:</p>
+<ul>
+<li>Movable List: Supports set, insert, delete, and move operations. The algorithm ensures that after
+merging concurrent moves, each element occupies only one position.</li>
+<li>Map: Similar to a JavaScript object.</li>
+<li><a href="https://loro.dev/blog/movable-tree">Movable Tree</a>: Used to model file directories, outliners, and
+other hierarchical structures that may need moving. It ensures no cyclic dependencies exist in the
+tree after merging concurrent move operations.</li>
+</ul>
+<p>Loro also supports nesting between types, so you can model edits on JSON documents through them:</p>
+<blockquote>
+<p>You can find all the code samples in this blog <a href="https://github.com/https://twitter.com/zx_loro/loro-blog-examples">here</a></p>
+</blockquote>
+<pre><code class="language-tsx">  LoroDoc,
+  LoroList,
+  LoroMap,
+  LoroText,
+} from &quot;npm:loro-crdt@1.0.0-beta.2&quot;;
+
+// Create a JSON structure of
+interface JsonStructure {
+  users: LoroList&lt;
+    LoroMap&lt;{
+      name: string;
+      age: number;
+    }&gt;
+  &gt;;
+  notes: LoroList&lt;LoroText&gt;;
+}
+
+const doc = new LoroDoc&lt;JsonStructure&gt;();
+const users = doc.getList(&quot;users&quot;);
+const user = users.insertContainer(0, new LoroMap());
+user.set(&quot;name&quot;, &quot;Alice&quot;);
+user.set(&quot;age&quot;, 20);
+const notes = doc.getList(&quot;notes&quot;);
+const firstNote = notes.insertContainer(0, new LoroText());
+firstNote.insert(0, &quot;Hello, world!&quot;);
+
+// { users: [ { age: 20, name: &quot;Alice&quot; } ], notes: [ &quot;Hello, world!&quot; ] }
+console.log(doc.toJSON());
+</code></pre>
+<h3>Version control</h3>
+<p>Like Git, Loro saves a complete directed acyclic graph (DAG) of edit history. In Loro, the DAG is used to represent the dependencies between edits, similar to how Git represents commit history. </p>
+<p>Loro supports primitives that allow users to switch between different versions, fork new branches, edit on new branches, and merge branches.</p>
+<p>Based on this operation primitive, applications can build various Git-like capabilities:</p>
+<ul>
+<li>You can merge multiple versions without needing to manually resolve conflicts</li>
+<li>You can rebase/squash updates from the current branch to the target branch (WIP)</li>
+</ul>
+<pre><code class="language-jsx">
+const doc = new LoroDoc();
+doc.setPeerId(&quot;0&quot;);
+doc.getText(&quot;text&quot;).insert(0, &quot;Hello, world!&quot;);
+doc.checkout([{ peer: &quot;0&quot;, counter: 1 }]);
+console.log(doc.getText(&quot;text&quot;).toString()); // &quot;He&quot;
+doc.checkout([{ peer: &quot;0&quot;, counter: 5 }]);
+console.log(doc.getText(&quot;text&quot;).toString()); // &quot;Hello,&quot;
+doc.checkoutToLatest();
+console.log(doc.getText(&quot;text&quot;).toString()); // &quot;Hello, world!&quot;
+
+// Simulate a concurrent edit
+doc.checkout([{ peer: &quot;0&quot;, counter: 5 }]);
+doc.setDetachedEditing(true);
+doc.setPeerId(&quot;1&quot;);
+doc.getText(&quot;text&quot;).insert(6, &quot; Alice!&quot;);
+// ┌───────────────┐     ┌───────────────┐
+// │    Hello,     │◀─┬──│     world!    │
+// └───────────────┘  │  └───────────────┘
+//                    │
+//                    │  ┌───────────────┐
+//                    └──│     Alice!    │
+//                       └───────────────┘
+doc.checkoutToLatest();
+console.log(doc.getText(&quot;text&quot;).toString()); // &quot;Hello, world! Alice!&quot;
+</code></pre>
+<p>You can also use <code>doc.fork()</code> to create a separate doc at the current version. It is independent of the current doc, and works like a fork:</p>
+<pre><code class="language-tsx">
+const doc = new LoroDoc();
+doc.setPeerId(&quot;0&quot;);
+doc.getText(&quot;text&quot;).insert(0, &quot;Hello, world!&quot;);
+doc.checkout([{ peer: &quot;0&quot;, counter: 5 }]);
+const newDoc = doc.fork();
+newDoc.setPeerId(&quot;1&quot;);
+newDoc.getText(&quot;text&quot;).insert(6, &quot; Alice!&quot;);
+// ┌───────────────┐     ┌───────────────┐
+// │    Hello,     │◀─┬──│     world!    │
+// └───────────────┘  │  └───────────────┘
+//                    │
+//                    │  ┌───────────────┐
+//                    └──│     Alice!    │
+//                       └───────────────┘
+doc.import(newDoc.export({ mode: &quot;update&quot; }));
+doc.checkoutToLatest();
+console.log(doc.getText(&quot;text&quot;).toString()); // &quot;Hello, world! Alice!&quot;
+</code></pre>
+<aside>
+**Current limitations of version control in Loro**
+
+<p>The application layer still needs a lot of code to provide users with more
+complete version control capabilities, such as:</p>
+<ul>
+<li>Storing and synchronizing version tags and branches</li>
+<li>Presenting diff view</li>
+<li>Handling rebase and merge interactions</li>
+<li>...</li>
+</ul>
+<p>These problems are not suitable to be solved in the current Loro CRDTs Lib, as
+too many assumptions about the schema and environment would make it difficult to
+use in other scenarios, so we won&#39;t build these parts in. But they all can be
+solved through additional libraries.</p>
+</aside>
+
+<h3>Leveraging the potential of the <a href="https://arxiv.org/abs/2409.14252">Eg-walker</a></h3>
+<p><a href="/docs/advanced/event_graph_walker">Event Graph Walker (Eg-walker)</a> is a pioneering collaboration algorithm that combines the strengths of
+Operational Transformation (OT) and CRDT, two widely used algorithms for real-time collaboration. </p>
+<p>While OT is centralized and CRDT is decentralized, OT traditionally had an advantage
+in terms of lower document overhead. CRDTs initially had higher overhead, but recent
+optimizations have significantly reduced this gap, making CRDTs increasingly competitive.
+Eg-walker leverages the best aspects of both approaches.</p>
+<p>Not only have we use the idea of Eg-walker for Text and List CRDTs in Loro, but
+Loro&#39;s overall architecture has also been greatly inspired by Eg-walker. As a
+result, Loro closely resembles Eg-walker in terms of algorithmic properties.</p>
+<aside>
+In terms of implementation details, Loro differs from the Eg-walker described
+in the paper. So it might be controversial to say Loro implements Eg-walker.
+
+<p>For example, Loro supports types other than text, and in Loro we store the ID
+of each character in the document state (but do not store tombstones), and so on.</p>
+<p>But it implements the idea of Eg-walker that travels the graph to
+construct temporary CRDTs for conflict resolution. And, like
+Eg-walker, Loro doesn&#39;t need to keep the CRDT structures in memory to edit
+a document.</p>
+</aside>
+
+<p><a href="https://arxiv.org/abs/2409.14252">The Eg-walker paper</a> was released in
+September 2023. Prior to its official publication, Joseph Gentle shared an
+initial version of the algorithm in the Diamond-Type repository. Excited by
+the design, I implemented a similar algorithm in Loro two years ago. A brief
+introduction to this algorithm can be found
+<a href="https://loro.dev/docs/advanced/event_graph_walker">here</a>.</p>
+<p>The properties of Eg-walker includes:</p>
+<ul>
+<li>It itself conforms to the definition of CRDT, so it has the strong eventual
+consistency property of CRDT, thus can be used in distributed environments</li>
+<li>Fast local operation speed: compared to previous CRDTs, it processes
+operations extremely fast because it doesn&#39;t need to generate corresponding
+Operations based on CRDT data structures</li>
+<li>Fast merging of remote operations: The complexity of OT merging remote
+operations is O(n^2), while Eg-walker, like mainstream CRDTs, is O(nlogn),
+only reaching O(n^2) in extremely rare worst-case scenarios. This means that
+when the number of concurrent operations reaches 10,000, OT will start to show
+noticeable lag to users, while CRDTs can handle it easily. And in most
+real-world scenario benchmarks, it&#39;s faster than other CRDTs.</li>
+<li>Lower memory usage: Because it doesn&#39;t need to persistently store CRDT
+structures in memory, its memory usage is lower than general CRDTs</li>
+<li>Faster import speed: CRDT documents often take a long time to load because
+they need to parse the corresponding CRDT structures or operations to build the CRDT
+data structures. Without these structures, they cannot continue subsequent
+editing, resulting in long import times. Eg-walker, like OT algorithms, only
+needs the current document state and does not need to build these additional
+structures to allow users to start editing the document directly, thus
+achieving much faster import speed</li>
+</ul>
+<aside>
+💡 **Differences between Loro and Eg-walker**
+
+<p>Although Loro is inspired by Eg-walker, overall, Loro&#39;s features differ
+from those of Eg-walker as described in the paper. The following are the
+specific differences:</p>
+<ul>
+<li>In terms of performance characteristics of local operations and importing
+updates, Loro and Eg-walker are similar.</li>
+<li>Loro supports multiple data types besides text, such as Map, List, Movable
+List, Tree, Counter, etc. Some CRDT types are not easily combined with
+Eg-walker directly, so we need to make additional adaptations and adjustments
+in Loro.</li>
+<li>Loro&#39;s document state has additional metadata, including the ID of each
+character. This metadata is used to support cursor synchronization and other
+features. The IDs on the text can provide a stable position information
+expression for functions like commenting.</li>
+<li>In the algorithm described in the Eg-walker paper, users A and B can
+initialize a CRDT document from the same plain text document and begin
+collaboration without any historical information. Moreover, the histories that
+formed these two plain text documents can be different. In Loro, however, it
+is necessary to ensure that the histories of the documents on which A and B
+collaborate are the same.</li>
+<li>Our text supports not only plain text but also rich text, which includes formatting
+attributes like bold, italic, and font styles. This makes our text data format different
+from plain text and cannot be described directly using plain text description methods.</li>
+<li>Loro&#39;s design supports not only real-time collaboration but also version
+control. Therefore, we have additional data structures and information for
+each op to make it faster to switch versions.</li>
+</ul>
+</aside>
+
+<p>In the past quarter, we have made significant architectural adjustments to allow
+Loro to further leverage the advantages of the Eg-walker algorithm. Here are our
+achievements</p>
+<h4>Shallow Snapshot</h4>
+<p>By default, Loro stores the complete editing history of the document like Git,
+because
+<a href="https://loro.dev/docs/advanced/event_graph_walker">the Eg-walker algorithm needs to load edits that are parallel to them and to the least common ancestor when merging remote edits</a>.
+Shallow Snapshot is like Git&#39;s Shallow Clone, which can remove old historical
+operations that users don&#39;t need, greatly reducing document size and improving
+document import and export speed. This allows you to cold store document history
+that is too old and mainly use shallow doc for collaboration. Here&#39;s
+an example usage:</p>
+<pre><code class="language-jsx">
+const doc = new LoroDoc();
+for (let i = 0; i &lt; 10_000; i++) {
+    doc.getText(&quot;text&quot;).insert(0, &quot;Hello, world!&quot;);
+}
+const snapshotBytes = doc.export({ mode: &quot;snapshot&quot; });
+const shallowSnapshotBytes = doc.export({
+    mode: &quot;shallow-snapshot&quot;,
+    frontiers: doc.frontiers(),
+});
+
+console.log(snapshotBytes.length); // 5421
+console.log(shallowSnapshotBytes.length); // 869
+</code></pre>
+<p>For details on the implementation principle, see
+<a href="/docs/advanced/shallow_snapshot">Shallow Snapshot</a>.</p>
+<h4>Optimized Document Format</h4>
+<p>Loro version 1.0 has achieved a 10x to 100x improvement in document import speed
+compared to version 0.16, which already has a fast import speed.
+It makes it possible to load a large text document with several million operations
+in under a frame time. </p>
+<p>This is because we introduced a new snapshot format.
+When a LoroDoc is initialized through this snapshot format, we don&#39;t
+parse the corresponding document state and historical information until the user
+actually needs that information.</p>
+<aside>
+💡 **Loro performs integrity checks before importing updates/snapshots**
+
+<p>We append a 4-byte xxhash32 checksum to each export to prevent data corruption.
+While this doesn&#39;t protect against malicious tampering, it&#39;s fast and effective
+at detecting issues caused by transmission errors or storage failures.</p>
+<p>Our main motivation for including integrity checks is to avoid bugs caused by
+data errors at a relatively low cost. Because Loro uses its own binary encoding
+format, which is different from user-understandable document formats like JSON,
+it would be extremely difficult to troubleshoot if data errors occur.</p>
+</aside>
+
+<p>In Loro 1.0&#39;s snapshot format, without compression algorithms, its document size
+is twice that of the old version (and other mainstream CRDTs). This additional
+size mainly comes from encoding historical operations + document state in the
+1.0 snapshot format, without reusing stored data between the two, while in the
+old version we used the order of historical operations to encode the current
+state of the document (the old version&#39;s encoding learned from
+<a href="https://automerge.org/automerge-binary-format-spec/#_value_column">Automerge encoding&#39;s Value Column</a>).</p>
+<p>Trading twice the document size for ten times the import speed is worthwhile
+because import speed affects the performance of many aspects, and the import
+speed of CRDT documents
+<a href="https://loro.dev/docs/performance">is often noticeable to users on large documents</a>
+(&gt; 16ms). It also leaves possibilities for more optimizations in the future. </p>
+<aside>
+❓ **Does this affect the efficiency of data transmission?**
+
+<p>It depends on the scenario:</p>
+<ol>
+<li><p>For real-time collaboration:</p>
+<ul>
+<li>We don&#39;t need to continuously transmit the entire snapshot.</li>
+<li>We only need document updates (operations that are missing from other peers).</li>
+<li>The snapshot format mentioned above isn&#39;t used, so the transmission volume remains unchanged.</li>
+</ul>
+</li>
+<li><p>When a document needs to be loaded from remote:</p>
+<ul>
+<li>If using the complete snapshot, it would be twice as large as before.</li>
+<li>However, you have options:<ol>
+<li>Use the shallow snapshot format.</li>
+<li>Export a complete set of updates for other peers, allowing them to calculate the latest document state.</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>For local storage:</p>
+<ul>
+<li>Users are generally less sensitive to local storage costs.</li>
+<li>The snapshot format can be used for local persistence without significant impact.</aside></li>
+</ul>
+</li>
+</ol>
+<p>Inspired by the design of Key-Value Databases, we have also divided the storage
+of document state and history into blocks, with each block roughly 4KB in size,
+so that when users really need a piece of history, we only need to decompress
+and read this 4KB of content, without parsing the entire document. This has led
+to a qualitative improvement in import speed, and because the serialization
+format can better compress history and state, memory usage is also lower than
+before.</p>
+<p>The lazy loading optimization takes advantage of Eg-walker&#39;s property that &quot;it
+doesn&#39;t need to keep the complete CRDT data structure in memory at all times,
+and only needs to access historical operations when parallel edits occur&quot;.</p>
+<details>
+<summary>How we implemented lazy loading</summary>
+
+<p>In Loro 1.0, we implemented a simple <a href="https://en.wikipedia.org/wiki/Log-structured_merge-tree">LSM (Log-structured merge-tree)</a> engine internally. LSM is a data structure often used to
+implement Key-Value Databases, and Loro 1.0 is heavily inspired by its design.
+Currently, Loro&#39;s storage implementation uses get, set, and range operations of
+Key-Value Database as primitives. For example, Loro stores history as a series of
+ChangeBlocks, with each ChangeBlock serialized to about 4KB. Each ChangeBlock
+uses its first Op Id as the Key, and the serialized binary data of the
+ChangeBlock as the Value, stored in the internal LSM engine.</p>
+<p>In our simple LSM Engine implementation, each Block is compressed during
+serialization, and decompression only occurs when the corresponding Value is
+actually retrieved. This allows the import speed of the new data format to be up
+to a hundred times faster than before, with even lower memory usage. So in Loro
+1.0:</p>
+<ol>
+<li>Data integrity is checked during import</li>
+<li>Loro internally stores history (History/OpLog) and state (DocState) in
+blocks, loading the corresponding blocks as needed</li>
+<li>The Eg-walker algorithm that Loro is based on allows documents to start
+editing without complete CRDTs meta information, thus easily working with
+lazy loading behavior</li>
+</ol>
+<p>Why is lazy loading valuable? Because in many use cases, we don&#39;t need to fully
+load the document&#39;s history and state:</p>
+<ul>
+<li><p>For example, when we receive a set of remote updates, but the Loro document
+data is still in the database, and we want to know the latest state of the
+document, we need to load the LoroDoc snapshot from the database, then import
+the remote update set, and then get the latest document state. At this point,
+most of the historical information won&#39;t be accessed.</p>
+</li>
+<li><p>Sometimes in data synchronization scenarios, peer A needs to send historical
+data that peer B doesn&#39;t have. It needs to import the snapshot and then
+extract the historical information that B doesn&#39;t have. In this case, the
+document&#39;s state doesn&#39;t need to be parsed, and the unused part of the history
+doesn&#39;t need to be parsed either.</p>
+</li>
+<li><p>Users don&#39;t need document history when initializing a document; only parsing
+the State is necessary at this point</p>
+<p><img src="./v1/merge-edit.png" alt="When merging remote operations, only the modified containers and some of the related historical operations need to be visited"></p>
+<p>When merging remote operations, only the modified containers and some of the
+related historical operations need to be visited</p>
+</li>
+</ul>
+<p>What happens during import and export in the new version? Let&#39;s take a common
+scenario as an example:</p>
+<p>In real-time collaboration sessions or local storage, we recommend developers
+first store the operations from users, and then periodically perform compaction.
+This compaction involves importing the old snapshot and all scattered updates
+into the same LoroDoc, then exporting uniformly through the Snapshot format. In
+the new version, this will involve the following:</p>
+<ul>
+<li>First, the old version of the snapshot is imported</li>
+<li>The received updates may contain parallel edits, so a part of the related
+parallel edit history from the old version needs to be loaded to construct the
+CRDT and complete the diff calculation<ul>
+<li>Loro internally loads and parses the data of the corresponding block to get
+the corresponding history; at this point, complete document parsing does not
+occur</li>
+</ul>
+</li>
+<li>After the diff calculation is complete, it needs to be applied to the
+corresponding States<ul>
+<li>Loro will internally load and parse the corresponding state, and at this
+point, complete document parsing does not occur either</li>
+</ul>
+</li>
+<li>Export<ul>
+<li>Unaffected history blocks or state blocks are exported as they are</li>
+<li>Affected blocks will be serialized to overwrite the original block, then
+exported</li>
+<li>During export, we use a method similar to SSTable internally for the final
+export</li>
+</ul>
+</li>
+</ul>
+<p>The only data that needs to be parsed in this entire process are:</p>
+<ul>
+<li>Meta information for each stored block</li>
+<li>Blocks that need to be read will be decompressed</li>
+<li>History Blocks / state Blocks that will be affected by Updates</li>
+</ul>
+<aside>
+❓ Do we still need to load the entire document blob with these optimizations?
+
+<p>We still need to load the entire document blob into memory. However, our current architecture has implemented internal block-based loading and storage, making it easier for us to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we&#39;ll assess if there are practical scenarios that require this capability. For most documents, Loro&#39;s current performance is already quite sufficient.</p>
+</aside>
+
+</details>
+
+<h4>Benchmarks</h4>
+<blockquote>
+<p>All benchmarks results below were performed on a MacBook Pro M1 2020</p>
+</blockquote>
+<p>Below is a comparison of Snapshot import and export speeds between Loro versions
+1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
+from the real world. Thanks to <a href="http://latch.bio">latch.bio</a> for sharing the
+document data. The benchmark code is available <a href="https://github.com/loro-dev/latch-bench">here</a>.
+The document contains 1,659,541 operations.</p>
+<blockquote>
+<p>In Loro, a Snapshot stores the document history along with its current state.
+The Shallow Snapshot format, similar to Git&#39;s Shallow Clone, can exclude
+history. In the benchmark below, the Shallow Snapshot has a depth=1 (only the
+most recent operation history is retained, other historical operations are
+removed)</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>task</th>
+<th>Old Snapshot Format on 0.16.12</th>
+<th>New Snapshot Format</th>
+<th>Shallow Snapshot Format</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Import</td>
+<td>17.3ms +- 0.0298ms</td>
+<td>1.15ms +- 0.0101ms (15x)</td>
+<td>375µs +- 8.47µs (47x)</td>
+</tr>
+<tr>
+<td>Import+GetAllValues</td>
+<td>17.4ms +- 0.0437ms</td>
+<td>1.19ms +- 0.0122ms (14.5x)</td>
+<td>375µs +- 1.60µs (46x)</td>
+</tr>
+<tr>
+<td>Import+GetAllValues+Edit</td>
+<td>17.5ms +- 0.0263ms</td>
+<td>1.21ms +- 0.0120ms (14.5x)</td>
+<td>375µs +- 1.40µs (46.5x)</td>
+</tr>
+<tr>
+<td>Import+GetAllValues+Edit+Export</td>
+<td>32.4ms +- 0.0560ms</td>
+<td>5.46ms +- 0.0772ms (6x)</td>
+<td>844µs +- 5.12µs (38.5x)</td>
+</tr>
+</tbody></table>
+<p>Here are the key points of this benchmark:</p>
+<ul>
+<li>The Shallow Snapshot has a depth of 1, meaning it only contains the document
+state and a single historical operation, which is why it&#39;s significantly
+faster</li>
+<li><em>GetAllValue</em> refers to calling <code>doc.get_deep_value()</code> (in JS, it&#39;s
+<code>doc.toJSON()</code> ). It loads the complete state of the document and
+obtains the corresponding JSON-like structure. This represents the time spent
+on CRDT parsing before a user loads a document.</li>
+<li><em>Edit</em> refers to making a local modification. As you can see, it has little
+impact on the time taken because Loro doesn&#39;t need to load the complete CRDT
+data structure for local operations.</li>
+<li><em>Export</em> refers to exporting the complete document data again. We expect to
+further reduce the time spent here in the future, as we can continue to reuse
+the encoding of unmodified Blocks from the import.</li>
+</ul>
+<p>The following shows the performance on a document after applying the editing
+history from the
+<a href="https://github.com/automerge/automerge-perf/tree/master/edit-by-index">Automerge Paper</a>
+<strong>100 times</strong>. You can reproduce the results <a href="https://github.com/https://twitter.com/zx_loro/automerge-paper-bench">here</a>.
+The document contains:</p>
+<ul>
+<li>18,231,500 single-character insertion operations</li>
+<li>7,746,300 single-character deletion operations</li>
+<li>25,977,800 operations totally</li>
+<li>10,485,200 characters in the final document</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Snapshot Type</th>
+<th>Size (bytes)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Old snapshot</td>
+<td>27,347,374</td>
+</tr>
+<tr>
+<td>New snapshot</td>
+<td>23,433,380</td>
+</tr>
+<tr>
+<td>Shallow Snapshot</td>
+<td>4,388,215</td>
+</tr>
+</tbody></table>
+<ul>
+<li>The New snapshot data is smaller because it performs additional simple
+compression on each Block during encoding internally</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>task</th>
+<th>Old Snapshot</th>
+<th>New Snapshot</th>
+<th>Shallow Snapshot</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Parse</td>
+<td>538ms +- 3.23ms</td>
+<td>17.9ms +- 48.5µs (30x)</td>
+<td>14.4ms +- 114µs (37x)</td>
+</tr>
+<tr>
+<td>Parse+ToString</td>
+<td>568ms +- 1.78ms</td>
+<td>20.2ms +- 57.2µs (28x)</td>
+<td>16.8ms +- 81.4µs (34x)</td>
+</tr>
+<tr>
+<td>Parse+ToString+Edit</td>
+<td>561ms +- 940µs</td>
+<td>119ms +- 180µs (4.5x)</td>
+<td>113ms +- 185µs (5x)</td>
+</tr>
+<tr>
+<td>Parse+ToString+Edit+Export</td>
+<td>1460ms +- 22.9ms</td>
+<td>251ms +- 1.60ms (6x)</td>
+<td>206ms +- 360µs (7x)</td>
+</tr>
+</tbody></table>
+<h2>Next Steps for Loro</h2>
+<h3>Loro Version Controller</h3>
+<p>Importing Loro Git Repo into Loro Version Controller</p>
+<p>Loro&#39;s performance on a single document is now sufficient to cover the real-time
+collaboration and version management needs of most documents. So our next step
+will be to explore real-time collaboration and version control across a
+collection of documents.</p>
+<p>We believe that CRDTs can create a Git for Everyone and Everything:</p>
+<ul>
+<li>It&#39;s for Everyone because by leveraging the power of CRDTs, we can make version
+control much easier to reason about and use for the average person.</li>
+<li>It&#39;s (nearly) for Everything because Loro provides a rich set of data
+synchronization types. We&#39;re no longer limited to synchronizing plain text
+data, but can solve semantic automatic merging of JSON-like schema, which can meet
+most needs of creative tools and collaborative tools.</li>
+</ul>
+<p>We&#39;ve created a demo of the Loro version controller, which is based on our
+sub-document implementation (implemented in the application layer)  with Version information.
+It can import the entire React repository (about 20,000 commits, thousands of
+collaborators), and it supports real-time collaboration on such
+repositories. However, how to better manage versions and seamlessly integrate with Git still needs to be explored.</p>
+<aside>
+When merging extensive concurrent edits, CRDTs can automatically merge changes,
+but the result may not always meet expectations. Fortunately, Loro stores the
+complete editing history. This allows us to offer Git-like manual conflict
+resolution at the application layer when needed.
+</aside>
+
+<p>Loro CRDTs still have significant room for optimization in these scenarios.
+Currently, the Loro CRDTs library doesn&#39;t involve network or disk I/O, which
+enhances its ease of use but also constrains its capabilities and potential
+optimizations.<br>For example, while we&#39;ve implemented block-level storage, documents are still
+imported and exported as whole units. Adding I/O capabilities to selectively
+load/save blocks would enable significant performance optimizations.</p>
+<h2>Conclusion</h2>
+<p>Loro 1.0 features great performance improvements, rich CRDT types, and advanced
+version control features. Our optimized document format has yielded promising
+results on the import speed and the memory usage.</p>
+<p>Now that Loro CRDTs are stable, we are able to develop a better ecosystem.
+We&#39;re excited to see it being applied in various scenarios.
+If you&#39;re interested in using Loro, welcome to join our
+<a href="https://discord.gg/tUsBSVfqzf">Discord community</a> for discussions.</p>
+<aside>
+🚀 **Want early access to our upcoming local-first apps built with Loro?**
+[Sign up here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p) to be among the first to try them out!
+</aside>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Movable tree CRDTs and Loro's implementation]]></title>
+            <link>https://loro.dev/blog/movable-tree</link>
+            <guid>https://loro.dev/blog/movable-tree</guid>
+            <pubDate>Wed, 17 Jul 2024 16:00:00 GMT</pubDate>
+            <description><![CDATA[This article introduces the implementation difficulties and challenges of Movable Tree CRDTs when collaboration, and how Loro implements it and sorts child nodes. The algorithm has high performance and can be used in production.]]></description>
+            <content:encoded><![CDATA[<h1>Movable tree CRDTs and Loro&#39;s implementation</h1>
+<p><img src="./movable-tree/movable-tree-cover.png" alt=""></p>
+<p>This article introduces the implementation difficulties and challenges of Movable Tree CRDTs when collaboration, and how Loro implements it and sorts child nodes. The algorithm has high performance and can be used in production.</p>
+<h2>Background</h2>
+<p>In distributed systems and collaborative software, managing hierarchical relationships is difficult and complex. Challenges arise in resolving conflicts and meeting user expectations when working with the data structure that models movement by combining deletion and insertion. For instance, if a node is concurrently moved to different parents in replicas, it may lead to the unintended creation of duplicate nodes with the same content. Because the node is deleted twice and created under two parents.</p>
+<p>Currently, many software solutions offer different levels of support and functionality for managing hierarchical data structures in distributed environments. The key variation among these solutions lies in their approaches to handling potential conflicts.</p>
+<h3>Conflicts in Movable Trees</h3>
+<p>A movable tree has 3 primary operations: creation, deletion, and movement. Consider a scenario where two peers independently execute various operations on their respective replicas of the same movable tree. Synchronizing these operations can lead to potential conflicts, such as:</p>
+<ul>
+<li>The same node was deleted and moved</li>
+<li>The same node was moved under different nodes</li>
+<li>Different nodes were moved, resulting in a cycle</li>
+<li>The ancestor node is deleted while the descendant node is moved</li>
+</ul>
+<h4>Deletion and Movement of the Same Node</h4>
+<p><img src="./movable-tree/move-delete-dark.png" alt="Deletion and Movement of the Same Node"></p>
+<p>This situation is relatively easy to resolve. It can be addressed by applying one of the operations while ignoring the other based on the timestamp in the distributed system or the application&#39;s specific requirements. Either approach yields an acceptable outcome.</p>
+<h4>Moving the Same Node Under Different Parents</h4>
+<p><img src="./movable-tree/move-same-node-dark.png" alt="Moving the Same Node Under Different Parents"></p>
+<p>Merging concurrent movement operations of the same node is slightly more complex. Different approaches can be adopted depending on the application:</p>
+<ul>
+<li>Delete the node and create copies of nodes under different parent nodes. Subsequent operations then treat these nodes independently. This approach is acceptable when node uniqueness is not critical.</li>
+<li>Allow the node have two edges pointing to different parents. However, this approach breaks the fundamental tree structure and is generally not considered acceptable.</li>
+<li>Sort all operations, then apply them one by one. The order can be determined by timestamps in a distributed system. Providing the system maintains a consistent operation sequence, it ensures uniform results across all peers.</li>
+</ul>
+<h4>Movement of Different Nodes Resulting in a Cycle</h4>
+<p><img src="./movable-tree/cycle-dark.png" alt="cycle"></p>
+<p>Concurrent movement operations that cause cycles make the conflict resolution of movable trees complex. Matthew Weidner listed several solutions to resolve cycles in his <a href="https://mattweidner.com/2023/09/26/crdt-survey-2.html#forests-and-trees">blog</a>.</p>
+<blockquote>
+<ol>
+<li>Error. Some desktop file sync apps do this in practice (<a href="https://doi.org/10.1109/TPDS.2021.3118603">Martin Kleppmann et al. (2022)</a> give an example).</li>
+<li>Render the cycle nodes (and their descendants) in a special “time-out” zone. They will stay there until some user manually fixes the cycle.</li>
+<li>Use a server to process move ops. When the server receives an op, if it would create a cycle in the server’s own state, the server rejects it and tells users to do likewise. This is <a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/#syncing-trees-of-objects">what Figma does</a>. Users can still process move ops optimistically, but they are tentative until confirmed by the server. (Optimistic updates can cause temporary cycles for users; in that case, Figma uses strategy (2): it hides the cycle nodes.)</li>
+<li>Similar, but use a <a href="https://mattweidner.com/2023/09/26/crdt-survey-2.html#topological-sort">topological sort</a> (below) instead of a server’s receipt order. When processing ops in the sort order, if an op would create a cycle, skip it <a href="https://doi.org/10.1109/TPDS.2021.3118603">(Martin Kleppmann et al. 2022)</a>.</li>
+<li>For forests: Within each cycle, let <code>B.parent = A</code> be the edge whose <code>set</code> operation has the largest LWW timestamp. At render time, “hide” that edge, instead rendering <code>B.parent = &quot;none&quot;</code>, but don’t change the actual CRDT state. This hides one of the concurrent edges that created the cycle.
+• To prevent future surprises, users’ apps should follow the rule: before performing any operation that would create or destroy a cycle involving a hidden edge, first “affirm” that hidden edge, by performing an op that sets <code>B.parent = &quot;none&quot;</code>.</li>
+<li>For trees: Similar, except instead of rendering <code>B.parent = &quot;none&quot;</code>, render the previous parent for <code>B</code> - as if the bad operation never happened. More generally, you might have to backtrack several operations. Both <a href="http://dx.doi.org/10.1145/3209280.3229110">Hall et al. (2018)</a> and <a href="https://arxiv.org/abs/2103.04828">Nair et al. (2022)</a> describe strategies along these lines.</li>
+</ol>
+</blockquote>
+<h4>Ancestor Node Deletion and Descendant Node Movement</h4>
+<p><img src="./movable-tree/move_chlid_delete_parent_dark.png" alt="Ancestor Node Deletion and Descendant Node Movement"></p>
+<p>The most easily overlooked scenario is moving descendant nodes when deleting an ancestor node. If all descendant nodes of the ancestor are deleted directly, users may easily misunderstand that their data has been lost.</p>
+<h3>How Popular Applications Handle Conflicts</h3>
+<p>Dropbox is a file data synchronization software. Initially, Dropbox treated file movement as a two-step process: deletion from the original location followed by creation at a new location. However, this method risked data loss, especially if a power outage or system crash occurred between the delete and create operations.</p>
+<p>Today, when multiple people move the same file concurrently and attempt to save their changes, Dropbox detects a conflict. In this scenario, it typically saves one version of the original file and creates a new <a href="https://help.dropbox.com/organize/conflicted-copy">&quot;conflicted copy&quot;</a> for the changes made by one of the users.</p>
+<p><img src="./movable-tree/dropbox_move.gif" alt="Solution for conflicts when moving files with Dropbox"></p>
+<p>  The image shows the conflict that occurs when A is moved to the B folder and B
+  is moved to the A folder concurrently.</p>
+<p>Figma is a real-time collaborative prototyping tool. They consider tree structures as the most complex part of the collaborative system, as detailed in their <a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/#syncing-trees-of-objects">blog post about multiplayer technology</a>. To maintain consistency, each element in Figma has a &quot;parent&quot; attribute. The centralized server plays a crucial role in ensuring the integrity of these structures. It monitors updates from various users and checks if any operation would result in a cycle. If a potential cycle is detected, the server rejects the operation.</p>
+<p>However, due to network delays and similar issues, there can be instances where updates from users temporarily create a cycle before the server has the chance to reject them. Figma acknowledges that this situation is uncommon. Their <a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/#syncing-trees-of-objects">solution</a> is straightforward yet effective: they temporarily preserve this state and hide the elements involved in the cycle. This approach lasts until the server formally rejects the operation, ensuring both the stability of the system and a seamless user experience.</p>
+<div style={{ filter: "invert(1) hue-rotate(180deg)" }}>
+  ![An animation that demonstrates how Figma resolves
+  conflicts.](./movable-tree/figma-tree.gif)
+</div>
+
+
+<p>  An animation that demonstrates how
+  <a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/#syncing-trees-of-objects">Figma</a>
+  resolves conflicts.</p>
+<h2>Movable Tree CRDTs</h2>
+<p>The applications mentioned above use movable trees and resolve conflicts based on centralized solutions. Another alternative approach to collaborative tree structures is using Conflict-free Replicated Data Types (CRDTs). While initial CRDT-based algorithms were challenging to implement and incurred significant storage overhead as noted in prior research, such as <a href="https://arxiv.org/pdf/1201.1784.pdf">Abstract unordered and
+ordered trees CRDT</a> or <a href="https://arxiv.org/pdf/1207.5990.pdf">File system on CRDT</a>, but continual optimization and improvement have made several CRDT-based tree synchronization algorithms suitable for certain production environments. This article highlights two innovative CRDT-based approaches for movable trees. The first is presented by Martin Kleppmann et al. in their work <strong><em><a href="https://martin.kleppmann.com/2021/10/07/crdt-tree-move-operation.html">A highly-available move operation for replicated trees</a></em></strong> and the second by Evan Wallace in his <strong><em><a href="https://madebyevan.com/algos/crdt-mutable-tree-hierarchy/">CRDT: Mutable Tree Hierarchy</a></em></strong>.</p>
+<h3>A highly-available move operation for replicated trees</h3>
+<p>This paper unifies the three operations used in trees (creating, deleting, and moving nodes) into a move operation. The move operation is defined as a four-tuple <code>Move t p m c</code>, where <code>t</code> is the operation&#39;s unique and ordered timestamp such as <a href="https://en.wikipedia.org/wiki/Lamport_timestamp"><code>Lamport timestamp</code></a>, <code>p</code> is the parent node ID, <code>m</code> is the metadata associated with the node, and <code>c</code> is the child node ID.</p>
+<p>If all nodes of the tree do not contain <code>c</code>, this is a <strong>creation</strong> operation that creates a child node <code>c</code> under parent node <code>p</code>. Otherwise, it is a <strong>move</strong> operation that moves <code>c</code> from its original parent to the new parent <code>p</code>. Additionally, node deletion is elegantly handled by introducing a designated <code>TRASH</code> node; moving a node to <code>TRASH</code> implies its deletion, with all descendants of <code>TRASH</code> considered deleted. But they remain in memory to prevent concurrent editing from moving them to other nodes. In order to handle the previously mentioned situation of deleting ancestor nodes and moving descendant nodes concurrently.</p>
+<p>In the three potential conflicts mentioned earlier, since deletion is also defined as a move operation, <strong>deleting and moving the same node</strong> is transformed into two move operations, leaving only two remaining problems:</p>
+<ul>
+<li><strong>Moving the same node under different parents</strong></li>
+<li><strong>Moving different nodes, creating a cycle</strong></li>
+</ul>
+<p>Logical timestamps are added so that all operations can be linearly ordered, thus the first conflict can be avoided as they can be expressed as two operations in sequence rather than concurrently for the same node. Therefore, in modeling a Tree using only move operations, the only exceptional case in concurrent editing would be creating a cycle, and operations causing a cycle are termed <strong>unsafe operations</strong>.</p>
+<p>This algorithm sorts all move operations according to their timestamps. It can then sequentially apply each operation. Before applying, the algorithm detects cycles to determine whether an operation is safe. If the operation creates a cycle, we ignore the unsafe operation to ensure the correct structure of the tree.</p>
+<p>Based on the above approach, the consistency problem of movable trees becomes the following two questions:</p>
+<ol>
+<li>How to introduce global order to operations</li>
+<li>How to apply a remote operation that should be inserted in the middle of an existing sorted sequence of operations</li>
+</ol>
+<h4>Globally Ordered Logical Timestamps</h4>
+<p><a href="https://en.wikipedia.org/wiki/Lamport_timestamp">Lamport Timestamp</a> can determine the causal order of events in a distributed system. Here&#39;s how they work: each peer starts with a counter initialized to <code>0</code>. When a local event occurs, the counter is increased by <code>1</code>, and this value becomes the event&#39;s Lamport Timestamp. When peer <code>A</code> sends a message to peer <code>B</code>, <code>A</code> attaches its Lamport Timestamp to the message. Upon receiving the message, peer <code>B</code> compares its current logical clock value with the timestamp in the message and updates its logical clock to the larger value.</p>
+<p>To globally sort events, we first look at the Lamport Timestamps: smaller numbers mean earlier events. If two events have the same timestamp, we use the unique ID of the peer serves as a tiebreaker.</p>
+<h4>Apply a Remote Operation</h4>
+<p>An op&#39;s safety depends on the tree&#39;s state when applied, avoiding cycles. Insertion requires evaluating the state formed by all preceding ops. For remote updates, we may need to:  </p>
+<ol>
+<li>Undo recent ops</li>
+<li>Insert the new op  </li>
+<li>Reapply undone ops</li>
+</ol>
+<p>This ensures proper integration of new ops into the existing sequence.  </p>
+<h5>Undo Recent Ops</h5>
+<p>Since we&#39;ve modeled all operations on the tree as move operations, undoing a move operation involves either moving the node back to its old parent or undoing the operation that created this node. To enable quick undoing, we cache and record the <strong>old parent</strong> of the node before applying each move operation.</p>
+<h5>Apply the Remote Op</h5>
+<p>Upon encountering an unsafe operation, disregarding its effects prevents the creation of a cycle. Nevertheless, it&#39;s essential to record the operation, as the safety of an operation is determined <strong>dynamically</strong>. For instance, if we receive and sort an update that deletes another node causing the cycle prior to this operation, the operation that was initially unsafe becomes safe. Additionally, we need to mark this unsafe operation as ineffective, since during undo operations, it&#39;s necessary to query the <strong>old parent</strong> node, which is the target parent of the last effective operation in the sequence targeting this node.</p>
+<h5>Reapply Undone Ops</h5>
+<p>Cycles only occur when receiving updates from other peers, so the undo-do-redo process is also needed at this time. When receiving a new op:</p>
+<pre><code class="language-jsx">function apply(newOp)
+      // Compare the ID of the new operation with existing operations
+      if largerThanExistingOpId(newOp.id, oplog)
+          // If the new operation&#39;s ID is greater, apply it directly
+          oplog.applyOp(newOp)
+      else
+          // If the new operation&#39;s ID is not the greatest, undo operations until it can be applied
+          undoneOps = oplog.undoUtilCanBeApplied(newOp)
+          oplog.applyOp(newOp)
+          // After applying the new operation, redo the undone operations to maintain sequence order
+          oplog.redoOps(undoneOps)
+</code></pre>
+<ul>
+<li>If the new operation depends on an op that has not been encountered locally, indicating that some inter-version updates are still missing, it is necessary to temporarily cache the new op and wait to apply it until the missing updates are received.</li>
+<li>Compare the new operation with all existing operations. If the <code>opId</code> of the new operation is greater than that of all existing operations, it can be directly applied. If the new operation is safe, record the parent node of the target node as the old parent node, then apply the move operation to change the current state. If it is not safe, mark this operation as ineffective and ignore the operation&#39;s impact.</li>
+<li>If the new opId is sorted in the middle of the existing sequence, it is necessary to pop the operations that are sorted later from the sequence one by one, and undo the impact of this operation, which means moving back to the child of the old parent node, until the new operation can be applied. After applying the new operation, reapply the undone nodes in sequence order, ensuring that all operations are applied in order.</li>
+</ul>
+<p>The following animated GIF demonstrates the process executed by <code>Peer1</code>:</p>
+<ol>
+<li>Received <code>Peer0</code> creating node <code>A</code> with the <code>root</code> node as its parent.</li>
+<li>Received <code>Peer0</code> creating node <code>B</code> with <code>A</code> as its parent.</li>
+<li>Created node <code>C</code> with <code>A</code> as its parent and synchronized it with <code>Peer0</code>.</li>
+<li>Moved <code>C</code> to have <code>B</code> as its parent.</li>
+<li>Received <code>Peer0</code>&#39;s moving <code>B</code> to have <code>C</code> as its parent.</li>
+</ol>
+<div style={{ filter: "invert(1) hue-rotate(180deg)" }}>
+  ![](./movable-tree/undo-do-redo.gif)
+</div>
+
+<p>The queue at the top right of the animation represents the order of local operations and newly received updates. The interpretation of each element in each <code>Block</code> is as follows:</p>
+<div style={{ filter: "invert(1) hue-rotate(180deg)" }}>
+  ![](./movable-tree/explain.png)
+</div>
+
+<p>A particular part of this process to note is the two operations with <code>lamport timestamps</code> of <code>0:3</code> and <code>1:3</code>. Initially, the <code>1:3</code> operation moving <code>C</code> to <code>B</code> was created and applied locally, followed by receiving <code>Peer0</code>&#39;s <code>0:3</code> operation moving <code>B</code> to <code>C</code>. In <code>lamport timestamp</code> order, <code>0:3</code> is less than <code>1:3</code> but greater than <code>1:2</code> (with peer as the tiebreaker when counters are equal). To apply the new op, the <code>1:3</code> operation is undone first, moving <code>C</code> back to its old parent <code>A</code>, then <code>0:3</code> moving <code>B</code> to <code>C</code> is applied. After that, <code>1:3</code> is redone, attempting to move <code>C</code> to <code>B</code> again (the old parent remains <code>A</code>, omitted in the animation). However, a cycle is detected during this attempt, preventing the operation from taking effect, and the state of the tree remains unchanged. This completes an <code>undo-do-redo</code> process.</p>
+<h3>CRDT: Mutable Tree Hierarchy</h3>
+<p>Evan Wallace has developed an innovative algorithm that enables each node to track all its historical parent nodes, attaching a counter to each recorded parent. The count value of a new parent node is 1 higher than that of all the node&#39;s historical parents, indicating the update sequence of the node&#39;s parents. The parent with the highest count is considered the current parent node.</p>
+<p>During synchronization, this parent node information is also synced. If a cycle occurs, a heuristic algorithm reattaches the nodes causing the cycle back to the nearest historical parent node that won&#39;t cause a cycle and is connected to the root node, thus updating the parent node record. This process is repeated until all nodes causing cycles are reattached to the tree, achieving all replica synchronization of the tree structure. The demo in <a href="https://madebyevan.com/algos/crdt-mutable-tree-hierarchy/">Evan&#39;s blog</a> clearly illustrates this process.</p>
+<p>As Evan summarized at the end of the article, this algorithm does not require the expensive <code>undo-do-redo</code> process. However, each time a remote move is received, the algorithm needs to determine if all nodes are connected to the root node and reattach the nodes causing cycles back to the tree, which can perform poorly when there are too many nodes.</p>
+<p>I established a <a href="https://github.com/Leeeon233/movable-tree-crdt">benchmark</a> to compare the performance of the movable tree algorithms.</p>
+<h2>Movable Tree CRDTs implementation in Loro</h2>
+<p>Loro implements the algorithm proposed by Martin Kleppmann et al., <strong><em><a href="https://martin.kleppmann.com/2021/10/07/crdt-tree-move-operation.html">A highly-available move operation for replicated trees</a></em></strong>. On one hand, this algorithm has high performance in most real world scenarios. On the other hand, the core <code>undo-do-redo</code> process of the algorithm is highly similar to how Eg-walker (Event Graph Walker) applies remote updates in Loro. Introduction about <strong>Eg-walker</strong> can be found in our previous <a href="https://www.loro.dev/blog/loro-richtext#brief-introduction-to-replayable-event-graph">blog</a>.</p>
+<p>Movable tree has been introduced in detail, but there is still another problem of tree structure that has not been solved. For movable tree, in some real use cases, we still need the capability to sort child nodes. This is necessary for outline notes or layer management in graphic design softwares. Users need to adjust node order and sync it to other collaborators or devices.</p>
+<p>We integrated the <code>Fractional Index</code> algorithm into Loro and combined it with the movable tree, making the child nodes of the movable tree sortable.</p>
+<p>There are many introductions to <code>Fractional Index</code> on the web, You can read more about <code>Fractional Index</code> in the <a href="https://www.figma.com/blog/realtime-editing-of-ordered-sequences">Figma blog</a> or <a href="https://madebyevan.com/algos/crdt-fractional-indexing/">Evan blog</a>. In simple terms, <code>Fractional Index</code> assigns a sortable value to each object, and if a new insertion occurs between two objects, the <code>Fractional Index</code> of the new object will be between the left and right values. What we want to speak about more here is how to deal with potential conflicts brought by <code>Fractional Index</code> in CRDTs systems.</p>
+<h3>Potential Conflicts in Child Node Sorting</h3>
+<p>As our applications are in a distributive condition, when multiple peers insert new nodes in the same position, the same <code>Fractional Index</code> would be assigned to these differing content but same position nodes. When updates from the remote are applied to local, conflicts arise as the same <code>Fractional Index</code> is encountered.</p>
+<p>In Loro, we retain these identical <code>Fractional Index</code> and use <code>PeerID</code> (unique ID of every Peer) as the tie-breaker for the relative order judgment of the same <code>Fractional Index</code>.</p>
+<p><img src="./movable-tree/FI-and-PeerID-dark.png" alt=""></p>
+<p>Although this solved the sorting problem among the same <code>Fractional Index</code> nodes from different peers, it impacted the generation of new <code>Fractional Index</code> as we cannot generate a new <code>Fractional Index</code> between two same ones. We use two methods to solve this problem:</p>
+<ol>
+<li>The first method, as stated in Evan&#39;s blog, we could add a certain amount of jitter to each generated <code>Fractional Index</code>, (for the ease of explanation, all examples below take decimal fraction as the <code>Fractional Index</code>) for example, when generating a new <code>Fractional Index</code> between 0 and 1, it should have been 0.5, but through random jitters, it could be <code>0.52712</code>, <code>0.58312</code>, <code>0.52834</code>, etc., thus significantly reducing the chance of same <code>Fractional Index</code> appearing.</li>
+<li>If the situation arises where the same <code>Fractional Index</code> is present on both sides, we can handle this problem by resetting these <code>Fractional Index</code>. For example, if we need to insert a new node between <code>0.7@A</code> and <code>0.7@B</code> (which indicates <code>Fractional Index</code> @ <code>PeerID</code>), instead of generating a new <code>Fractional Index</code> between 0.7 and 0.7, we could assign two new <code>Fractional Index</code> respectively for the new node and the <code>0.7@B</code> node between 0.7 and 1, which could be understood as an extra move operations.</li>
+</ol>
+<p><img src="./movable-tree/same-FI-dark.png" alt=""></p>
+<h3>Implementation and Encoding Size</h3>
+<p>Introducing <code>Fractional Index</code> brings the advantage of node sequence. What about encoding size?</p>
+<p>Loro uses <a href="https://github.com/drifting-in-space/fractional_index">drifting-in-space</a> <code>Fractional Index</code> implementation based on <code>Vec&lt;u8&gt;</code>, which is base 256. In other words, you need to continuously insert 128 values forward or backward from the default value to increase the byte size of the <code>Fractional Index</code> by 1. The worst storage overhead case, such as inserting new values alternately each time. For example, the initial sequence is <code>ab</code>, insert <code>c</code> between <code>a</code> and <code>b</code>, then insert <code>d</code> between <code>c</code> and <code>b</code>, then <code>e</code> between <code>c</code> and <code>d</code>, like:</p>
+<pre><code class="language-js">ab    // [128] [129, 128]
+acb   // [128] [129, 127, 128] [129, 128]
+acdb  // [128] [129, 127, 128] [129, 127, 129, 128] [129, 128]
+acedb // [128] [129, 127, 128] [129, 127, 129, 127, 128] [129, 127, 129, 128] [129, 128]
+</code></pre>
+<p>a new operation would cause an additional byte to be needed. But such a situation is very rare.</p>
+<p>Considering that potential conflicts wouldn&#39;t appear frequently in most applications, Loro simply extended the implementation, the original implementation produced new <code>Fractional Index</code> in <code>Vec&lt;u8&gt;</code> by only increasing or decreasing 1 in certain index to achieve relative sorting. The simple jitter solution was added, by appending random bytes in length of jitter value to <code>Fractional Index</code>. To enable jitter in js, you can use <code>doc.setFractionalIndexJitter(number)</code> with a positive value. But this will increase the encoding size slightly, but each <code>Fractional Index</code> only adds <code>jitter</code> bytes. If you want to generate <code>Fractional Index</code> at the same position with 99% probability without conflict, the relationship between <code>jitter</code> settings and the maximum number of concurrent edits <code>n</code> will be:</p>
+<table style={{ margin: "0 auto" }}>
+  <thead>
+    <tr class="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
+      <th class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 nx-font-semibold dark:nx-border-gray-600">
+        jitter
+      </th>
+      <th class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 nx-font-semibold dark:nx-border-gray-600">
+        max num of concurrent edits
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        1
+      </td>
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        3
+      </td>
+    </tr>
+    <tr class="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        2
+      </td>
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        37
+      </td>
+    </tr>
+    <tr class="nx-m-0 nx-border-t nx-border-gray-300 nx-p-0 dark:nx-border-gray-600 even:nx-bg-gray-100 even:dark:nx-bg-gray-600/20">
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        3
+      </td>
+      <td class="nx-m-0 nx-border nx-border-gray-300 nx-px-4 nx-py-2 dark:nx-border-gray-600">
+        582
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When there are numerous <code>Fractional Indexes</code>, there will be many common prefixes after being sorted, when Loro encodes these <code>Fractional Indexes</code>, prefix optimization would be implemented. Each <code>Fractional Index</code> only saves the amount of same prefix bits and remaining bytes with the previous one, which further downsizes the overall encoding size.</p>
+<h3>Related work</h3>
+<p>Other than using Fractional Index, there are other movable list CRDT that can make sibling nodes of the tree in order. One of these algorithms is Martin Kleppmann&#39;s <a href="https://martin.kleppmann.com/2020/04/27/papoc-list-move.html">Moving Elements in List CRDTs</a>, which has been used in Loro&#39;s <a href="https://www.loro.dev/docs/tutorial/list">Movable List</a>.</p>
+<p>In comparison, the implementation of <code>Fractional Index</code> solution is simpler, and no stable position representation is provided for child nodes when modeling nodes in a tree, otherwise, the overall tree structure would be too complex. However, the <code>Fractional Index</code> has the problem of <a href="https://vlcn.io/blog/fractional-indexing#interleaving">interleaving</a>, but this is acceptable when some only need relative order and do not require strict sequential semantics, such as figma layer items, multi-level bookmarks, etc.</p>
+<h2>Benchmark</h2>
+<p>We conducted performance benchmarks on the Movable Tree implementation by Loro, including scenarios of random node movement, switching to historical versions, and performance under extreme conditions with significantly deep tree structures. The results indicate that it is capable of supporting real-time collaboration and enabling seamless historical version checkouts.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Task</th>
+<th align="left">Time</th>
+<th align="left">Setup</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Move 10000 times randomly</td>
+<td align="left">28 ms</td>
+<td align="left">Create 1000 nodes first</td>
+</tr>
+<tr>
+<td align="left">Switch to different versions 1000 times</td>
+<td align="left">153 ms</td>
+<td align="left">Create 1000 nodes and move 1000 times first</td>
+</tr>
+<tr>
+<td align="left">Switch to different versions 1000 times in a tree with depth of 300</td>
+<td align="left">701 ms</td>
+<td align="left">The new node is a child node of the previous node</td>
+</tr>
+</tbody></table>
+<p>  Test environment: M2 Max CPU, you can find the bench code
+  <a href="https://github.com/loro-dev/loro/blob/main/crates/loro-internal/benches/tree.rs">here</a>.</p>
+<h2>Usage</h2>
+<pre><code class="language-tsx">
+let doc = new Loro();
+let tree: LoroTree = doc.getTree(&quot;tree&quot;);
+let root: LoroTreeNode = tree.createNode();
+// By default, append to the end of the parent node&#39;s children list
+let node = root.createNode();
+// Specify the child&#39;s position
+let node2 = root.createNode(0);
+// Move `node2` to be the last child of `node`
+node2.move(node);
+// Move `node` to be the first child of `node2`
+node.move(node2, 0);
+// Move the node to become the root node
+node.move();
+// Move the node to be positioned after another node
+node.moveAfter(node2);
+// Move the node to be positioned before another node
+node.moveBefore(node2);
+// Retrieve the index of the node within its parent&#39;s children
+let index = node.index();
+// Get the `Fractional Index` of the node
+let fractionalIndex = node.fractionalIndex();
+// Access the associated data map container
+let nodeData: LoroMap = node.data;
+</code></pre>
+<h3>Demo</h3>
+<p>We developed a simulated Todo app with data synchronization among multiple peers using Loro, including the use of <code>Movable Tree</code> to represent subtask relationships, <code>Map</code> to represent various attributes of tasks, and <code>Text</code> to represent task titles, etc. In addition to basic creation, moving, modification, and deletion, we also implemented version switching based on Loro. You can drag the scrollbar to switch between all the historical versions that have been operated on.</p>
+<iframe
+  src="https://loro-movable-tree-demo.zeabur.app"
+  style={{
+    width: "100%",
+    height: 700,
+    border: 0,
+    borderRadius: 8,
+    marginTop: 16,
+    overflow: "hidden",
+  }}
+  width="100%"
+  height="750px"
+/>
+
+<h2>Summary</h2>
+<p>This article discusses why implementing Movable Tree CRDTs is difficult, and presents two innovative algorithms for movable trees.</p>
+<p>For implementation, Loro has integrated <strong><em><a href="https://martin.kleppmann.com/2021/10/07/crdt-tree-move-operation.html">A highly-available move operation for replicated trees</a></em></strong> to implement the hierarchical movement of the Tree, and integrated the <code>Fractional Index</code> implementation by <a href="https://github.com/drifting-in-space/fractional_index">drifting-in-space</a> to achieve the movement between child nodes. This can meet the needs of various application scenarios.</p>
+<p>If you are developing collaborative applications or are interested in CRDT algorithms, you are welcome to join <a href="https://discord.gg/tUsBSVfqzf">our community</a>.</p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Introduction to Loro's Rich Text CRDT]]></title>
+            <link>https://loro.dev/blog/loro-richtext</link>
+            <guid>https://loro.dev/blog/loro-richtext</guid>
+            <pubDate>Sun, 21 Jan 2024 16:00:00 GMT</pubDate>
+            <description><![CDATA[This article presents the rich text CRDT algorithm implemented in Loro, complying with Peritext's criteria for seamless rich text collaboration. Furthermore, it can be built on top of any List CRDT algorithms and turn them into rich text CRDTs.]]></description>
+            <content:encoded><![CDATA[<h1>Introduction to Loro&#39;s Rich Text CRDT</h1>
+<p><img src="./loro-richtext/cover_long.png" alt=""></p>
+<p>This article presents the rich text CRDT algorithm implemented in Loro,
+complying with <a href="https://www.inkandswitch.com/peritext/">Peritext</a>&#39;s criteria for seamless rich text collaboration.
+Furthermore, it can be built on top of any List CRDT algorithms and turn them
+into rich text CRDTs.</p>
+<div className="mt-6" />
+
+
+<p>  Above is an online demo of Loro&#39;s rich text CRDT, built with Quill. After the
+  replay, you can simulate real-time collaboration and concurrent editing while
+  offline. You can also drag on the history view to replay the editing history.</p>
+<p>If CRDTs are new to you, our article <a href="/docs/concepts/crdt">What are CRDTs</a>
+provides a brief introduction.</p>
+<h2>Background</h2>
+<p>Loro is based on the
+<a href="/docs/advanced/replayable_event_graph">Event Graph Walker (Eg-walker)</a> algorithm
+proposed by Joseph Gentle, but this algorithm cannot integrate the original
+version of Peritext. This motivates us to create a new rich text algorithm. It
+is independent of the specific List CRDTs, thus working nicely with Eg-walker, and is
+developed on top of them to establish a rich text CRDT.</p>
+<p>Before diving into the algorithm of Loro&#39;s rich text CRDT, I&#39;d like to briefly
+introduce Eg-walker and Peritext, and why Peritext cannot be used on Eg-walker.</p>
+<details>
+<summary>Recap on List CRDTs</summary>
+
+<h3>Recap on List CRDTs</h3>
+<p>Unlike OT, most List-oriented CRDTs assign a unique ID to each item or
+character, often corresponding to the operation ID of its insertion. With unique
+IDs for each character, we can reliably reference a character or position
+through its ID.</p>
+<p><img src="./loro-richtext/list_crdt_ids.png" alt=""></p>
+<p>The unique ID eliminates concerns about consistent position descriptions during
+synchronization. For instance, deletions are straightforward by specifying the
+deleted character&#39;s ID, and insertions are described using the IDs of adjacent
+characters. In cases of concurrent insertions at the same location, List CRDT
+algorithms resolve the consistency issues.</p>
+<p><img src="./loro-richtext/list_crdt_insert.png" alt=""></p>
+<p><img src="./loro-richtext/list_crdt_delete.png" alt=""></p>
+<p>However, a notable limitation of List CRDTs is the use of &#39;tombstones&#39;. Upon
+deletion of a character, it is not fully removed but replaced with a tombstone,
+maintaining the ID&#39;s position. Depending on the algorithm, this tombstone may be
+removed once all participating nodes acknowledge the deletion. However, it can
+be challenging to determine if all peers have received the corresponding
+deletion operation. This information often means additional overhead for many
+CRDTs. Thus, the simplest solution is not to perform any tombstone collection.</p>
+<p><img src="./loro-richtext/list_crdt_tombstone.png" alt=""></p>
+</details>
+
+<h3>Brief Introduction to Event Graph Walker</h3>
+<p>Eg-walker is a novel CRDT algorithm introduced in:</p>
+<blockquote>
+<p><a href="https://arxiv.org/abs/2409.14252">Collaborative Text Editing with Eg-walker: Better, Faster, Smaller</a><br>By: Joseph Gentle, Martin Kleppmann</p>
+</blockquote>
+<p>Eg-walker is a novel CRDT algorithm that combines the strengths of both OT and CRDTs.
+It has the distributed nature of CRDT that enables P2P collaboration and data
+ownership. Moreover, it achieves minimal overhead in scenarios devoid of
+concurrent edits, similar to OT.</p>
+<p>Whether in real-time collaboration or multi-end synchronization, a directed
+acyclic graph (DAG) forms over the history of these parallel edits, similar to
+Git&#39;s history. The Eg-walker algorithm records the history of user edits on the DAG.</p>
+<p>Unlike conventional CRDTs, Eg-walker can record just the original description of
+operations, not the metadata of CRDTs. For instance, in text editing scenarios,
+the <a href="https://www.sciencedirect.com/science/article/abs/pii/S0743731510002716">RGA algorithm</a> needs the op ID and <a href="https://en.wikipedia.org/wiki/Lamport_timestamp">Lamport timestamp</a> of the
+character to the left to determine the insertion point. <a href="https://github.com/yjs/yjs">Yjs</a>/Fugue, however,
+requires the op ID of both the left and right characters at insertion. In
+contrast, Eg-walker simplifies this by only recording the index at the time of
+insertion. Loro, which uses <a href="https://arxiv.org/abs/2305.00583">Fugue</a> upon Eg-walker, inherits these advantages.</p>
+<p>An index is not a stable position descriptor, as the index of an operation can
+be affected by other operations. For example, if you highlight content from
+<code>index=x</code> to <code>index=y</code>, and concurrently someone inserts n characters at
+<code>index=n</code> where <code>n&lt;x</code>, then your highlighted range should shift to cover from
+<code>x+n</code> to <code>y+n</code>. But Eg-walker can determine the exact position of this index by
+replaying history. Thus, it can reconstruct the corresponding CRDT structure by
+replaying history.</p>
+<p>Reconstructing history might seem time-consuming, but Eg-walker can backtrack only
+some. When merging updates from remote sources, it only needs to replay
+operations parallel to the remote update, reconstructing the local CRDTs to
+calculate the diff after applying remote operations to the current document.</p>
+<p>The Eg-walker algorithm excels with its fast local update speeds and eliminate
+concerns about tombstone collection in CRDTs.For instance, if an operation has
+been synchronized across all endpoints, no new operations will occur
+concurrently with it, allowing it to be safely removed from the history.</p>
+<details>
+<summary>What is Fugue</summary>
+
+<p>Fugue is a new CRDT text algorithm, presented in
+<em><a href="https://arxiv.org/abs/2305.00583">The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing</a></em>
+by
+<a href="https://arxiv.org/search/cs?searchtype=author&query=Weidner%2C+M">Matthew Weidner</a>
+et al., nicely solves <strong>the interleaving problem</strong>.</p>
+<p>The interleaving problem was proposed in the paper
+<em><a href="https://martin.kleppmann.com/2019/03/25/papoc-interleaving-anomalies.html">Interleaving anomalies in collaborative text editors</a></em>
+by Martin Kleppmann et al.</p>
+<p>An example of interleaving:</p>
+<ul>
+<li>A type &quot;Hello &quot; from left to right/right to left</li>
+<li>B type &quot;Hi &quot; from left to right/right to left</li>
+<li>The expected result: &quot;Hello Hi &quot; or &quot;Hi Hello &quot;</li>
+<li>The interleaving result may look like: &quot;HHeil lo&quot;<ul>
+<li>This happens when typing from right to left in RGA.</li>
+</ul>
+</li>
+</ul>
+<p><img src="./images/richtext0.png" alt="An example of an interleaving anomaly when using [fractional indexing](https://madebyevan.com/algos/crdt-fractional-indexing/) CRDT on text content.
+Source: **Martin Kleppmann, Victor B. F. Gomes, Dominic P. Mulligan, and Alastair R. Beresford. 2019. Interleaving anomalies in collaborative text editors. [https://doi.org/10.1145/3301419.3323972](https://doi.org/10.1145/3301419.3323972)"></p>
+<p>An example of an interleaving anomaly when using
+<a href="https://madebyevan.com/algos/crdt-fractional-indexing/">fractional indexing</a>
+CRDT on text content. Source: **Martin Kleppmann, Victor B. F. Gomes, Dominic
+P. Mulligan, and Alastair R. Beresford. 2019. Interleaving anomalies in
+collaborative text editors.
+<a href="https://doi.org/10.1145/3301419.3323972">https://doi.org/10.1145/3301419.3323972</a></p>
+<p>The <a href="https://arxiv.org/abs/2305.00583">Fugue paper</a> summarizes the current state
+of the interleaving problems in the table.</p>
+<p><img src="./images/richtext1.png" alt="Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. *ArXiv*. /abs/2305.00583"></p>
+<p>Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue:
+Minimizing Interleaving in Collaborative Text Editing. <em>ArXiv</em>. /abs/2305.00583</p>
+<p>The interleaving problem sometimes are unsolvable when there are more than 2
+sites. See <a href="https://arxiv.org/abs/2305.00583">Fugue</a> paper Appendix B, Proof of
+Theorem 5 for detailed explanation.</p>
+<p><img src="./images/richtext2.png" alt="The case where the interleaving problem is unsolvable
+Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. *ArXiv*. /abs/2305.00583"></p>
+<p>The case where the interleaving problem is unsolvable Source: Weidner, M.,
+Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing
+Interleaving in Collaborative Text Editing. <em>ArXiv</em>. /abs/2305.00583</p>
+<p>However, we can still minimize the chance of interleaving. Fugue introduces the
+concept of <strong>maximal non-interleaving</strong> and solves it with an elegant algorithm
+that is easy to optimize. The definition of <em>maximal non-interleaving</em> makes a
+lot of sense to me and leaves little room for ambiguity. I won&#39;t reiterate the
+definition here. But the basic idea is first to solve forward interleaving by
+leftOrigin. If there is still ambiguity, then solve the backward interleaving by
+rightOrigin. (The leftOrigin and rightOrigin refer to the ids of the original
+neighbors when the character is inserted, just like Yjs)</p>
+</details>
+
+<h3>Brief Introduction to Peritext</h3>
+<p><a href="https://www.inkandswitch.com/peritext/">Peritext</a> was proposed by <em>Geoffrey Litt et al.</em> It&#39;s the first paper to
+discuss rich text CRDTs. It can merge concurrent edits in rich text format while
+<a href="https://www.inkandswitch.com/peritext/#preserving-the-authors-intent">preserving users&#39; intent as much as possible</a>.
+Its primary focus is merging the formats and annotations of rich text content,
+such as bold, italic, and comments. It was implemented in <a href="https://github.com/automerge/automerge">Automerge</a> and
+<a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a>.</p>
+<blockquote>
+<p>💡 The specific definition of user intent in the context of concurrent rich
+text editing can&#39;t be clearly explained in a few words. It&#39;s best understood
+through particular examples.</p>
+</blockquote>
+<p>Peritext is designed to solve a couple of significant challenges:</p>
+<p>Firstly, it addresses the anticipated problems arising from conflicting style
+edits. For instance, consider a text example, &quot;The quick fox jumped.&quot; If User A
+highlights &quot;The quick&quot; in bold and User B highlights &quot;quick fox jumped,&quot; the
+ideal merge should result in the entire sentence, &quot;The quick fox jumped,&quot; being
+bold. However, existing algorithms might not meet this expectation, resulting in
+either &quot;The quick fox&quot; or &quot;The&quot; and &quot;jumped&quot; being bold instead.</p>
+<table>
+<thead>
+<tr>
+<th>Original Text</th>
+<th>The quick fox jumped</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Concurrent Edit from A</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+<tr>
+<td>Concurrent Edit from B</td>
+<td>The <strong>quick fox jumped</strong></td>
+</tr>
+<tr>
+<td>Expected Merged Result</td>
+<td><strong>The quick fox jumped</strong></td>
+</tr>
+<tr>
+<td>Bad case from merging Markdown text directly</td>
+<td><strong>The</strong> quick <strong>fox jumped</strong></td>
+</tr>
+<tr>
+<td>Bad case from Yjs</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+</tbody></table>
+<p>Additionally, Peritext manages conflicts between style and text edits. In the
+same example, if User A highlights &quot;The quick&quot; in bold, but User B changes the
+text to &quot;The fast fox jumped,&quot; the ideal merge should result in &quot;The fast&quot; being
+bold.</p>
+<table>
+<thead>
+<tr>
+<th>Original Text</th>
+<th>The quick fox jumped</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Concurrent Edit from A</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+<tr>
+<td>Concurrent Edit from B</td>
+<td>The fast fox jumped</td>
+</tr>
+<tr>
+<td>Expected Merged Result</td>
+<td><strong>The fast</strong> fox jumped</td>
+</tr>
+</tbody></table>
+<p>What’s more, Peritext takes into account different expectations for expanding
+styles. For example, if you type after a bold text, you would typically want the
+new text to continue being bold. However, if you&#39;re typing after a hyperlink or
+a comment, you likely wouldn&#39;t want the new input to become part of the
+hyperlink or comment.</p>
+<div style={{filter: "invert(1) hue-rotate(180deg)"}}>
+![Link style should not expand](./loro-richtext/Peritext.png)
+</div>
+
+<p>Illustration of Peritext&#39;s internal state. It uses the IDs of the character&#39;s ops to record the style ranges. In the example, the bold mark has the range of <code>{ start: { type: &quot;before&quot;, opId: &quot;9@B&quot; }, end: { type: &quot;before&quot;, opId: &quot;10@B&quot; }}</code></p>
+<h3>Why Original Peritext Can&#39;t Be Directly Used with Eg-walker</h3>
+<p>On the one hand, Peritext&#39;s algorithm expresses style ranges
+<a href="https://www.inkandswitch.com/peritext/#generating-inline-formatting-operations">through character OpIDs</a>.
+Without replaying history, CRDTs based on Eg-walker cannot determine the specific
+positions corresponding to these OpIDs.</p>
+<p>On the other hand, it&#39;s not feasible to model Peritext on Eg-walker through replaying.
+This is because Eg-walker&#39;s &quot;local backtracking suffices&quot; relies on the algorithm
+satisfying &quot;the same operation will produce the same effect, regardless of the
+current state,&quot; which Peritext does not adhere to. For example, when inserting
+the character &quot;x&quot; at position <code>p</code>, whether &quot;x&quot; is bold depends on &quot;whether <code>p</code>
+is surrounded by bold&quot; and
+&quot;<a href="https://arc.net/l/quote/ifxpaand">whether the tombstones at <code>p</code> contain boundaries of bold and other styles</a>.&quot;</p>
+<h2>Loro&#39;s Rich Text CRDT</h2>
+<h3>Algorithm</h3>
+<p>Loro implements rich text using special control characters called &#39;style
+anchors&#39;. Each matching pair of start anchor and end anchor contains the
+following information:</p>
+<ul>
+<li>The op ID of the style operation</li>
+<li>The style&#39;s key-value pair</li>
+<li>The style&#39;s <a href="https://en.wikipedia.org/wiki/Lamport_timestamp">Lamport timestamp</a></li>
+<li>Style expansion behavior: Determines whether newly inserted text before or
+after the style boundaries should inherit the style.</li>
+</ul>
+<p>The method to determine a character&#39;s style is as follows:</p>
+<ul>
+<li>Find all style anchor pairs that include the character, where each pair is
+created by the same style operation</li>
+<li>Aggregate pairs according to the key. There may be multiple style pairs with
+the same key but different values. In such cases, the value with the greatest
+Lamport timestamp is chosen (if Lamport timestamps are equal, then use the
+peer ID to break the tie)</li>
+</ul>
+<p>Contrary to
+<a href="https://www.inkandswitch.com/peritext/#adding-control-characters-to-plain-text">Yjs&#39;s method of using control characters</a>
+for rich text, our algorithm pairs start and end anchors when they originate
+from the same style operation. This approach accurately handles the following
+scenarios:</p>
+<p><img src="./loro-richtext/overlap_bold.png" alt="overlap_bold"></p>
+<p>These special control characters are not exposed to the user; each control
+character is effectively of zero length from the user&#39;s perspective. Our data
+structure supports various methods of measuring text length for indexing text
+content. Besides Unicode, UTF-16, and UTF-8, we also measure our rich text
+length in <code>Entity length</code>. It treats each style anchor as an entity with a
+length of 1 and measures plain text in Unicode length.</p>
+<p><img src="./loro-richtext/len.png" alt="len"></p>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Style Anchors</td>
+<td>Control characters used in Loro denote style boundaries&#39; start and end. They are differentiated into start and end anchors, representing a style&#39;s beginning and end.</td>
+</tr>
+<tr>
+<td>Rich Text Element</td>
+<td>A rich text element is either a span of text or a style anchor. A list of rich text elements represents the internal state of Loro&#39;s rich text.</td>
+</tr>
+<tr>
+<td>Unicode Index</td>
+<td>A method of indexing text positions in rich text. In this method, the length of the text is measured in Unicode char length, and the length of style anchors is considered 0.</td>
+</tr>
+<tr>
+<td>Entity Index</td>
+<td>A method of indexing text positions in rich text. In this method, the length of the text is measured in Unicode char length, and the length of a style anchor is considered 1.</td>
+</tr>
+</tbody></table>
+<h4>Local Behavior</h4>
+<p>Multiple valid insertion points can exist when users insert text at a specific
+Unicode index. It occurs due to style anchors, which are zero-length elements
+from the user&#39;s perspective.</p>
+<p><img src="./loro-richtext/two_index.png" alt="Two Different Kinds of Indexes"></p>
+<p>For example, in the case of <code>&lt;b&gt;Hello&lt;/b&gt; world</code>, when a user inserts content at
+Unicode <code>index=5</code>, they face the choice of inserting to the left or right of
+<code>&lt;/b&gt;</code>. If the user sets the expand behavior of bold to expand forward, the new
+character will be inserted to the left of <code>&lt;/b&gt;</code>, making the inserted text bold
+as well.</p>
+<p>When users delete text, Loro uses an additional mapping layer to avoid deleting
+style anchors within the text range.</p>
+<p>To model the deletion of a style, a new style anchor pair with a null value is
+added.</p>
+<p>We can implement the following optimizations to remove redundant style anchors:</p>
+<ul>
+<li>The style anchors that include no text can be removed.</li>
+<li>When styles completely negate each other, like a span of bold is canceled by a
+span of unbold, we can remove their style anchors.</li>
+</ul>
+<p>All these behaviors happen locally, and the algorithm is independent of the
+specific List CRDT.</p>
+<h5>Behavior When Inserting Text at Style Boundaries</h5>
+<p>Most modern rich text editors (Google Doc, Microsoft Word, Notion) behave as
+follows: when new text is entered right after bold text, the new text should
+inherit the bold style; when entered after a hyperlink, the new content should
+not inherit the hyperlink style. Different styles have varying preferences for
+text insertion positions, leading to potential conflicts. This is reflected in
+the degree of freedom we have when inserting new text.</p>
+<p>Users interact with rich text based on text-based indexes, like the Unicode
+index. Since style anchors have a Unicode Length of 0, a Unicode index with n
+style anchors presents n + 1 potential insertion positions.</p>
+<p>We select the insertion position based on the following rules:</p>
+<ol>
+<li>Insertions occur before a start anchor of a style that should not expand
+backward.</li>
+<li>Insertions occur before style anchors that signify the end of bold-like marks
+(expand = &quot;after&quot; or expand = &quot;both&quot;).</li>
+<li>Insertions occur after style anchors that signify the end of link-like marks
+(expand = &quot;none&quot; or expand = &quot;before&quot;).</li>
+</ol>
+<p>Rule 1 should be prioritized over rules 2 and 3 to prevent
+<a href="https://github.com/inkandswitch/peritext/issues/32">the accidental creation of a new style</a>.</p>
+<p>The current method first scans forward to find the last position satisfying
+rules 1 and 2.</p>
+<p>Then, it scans backward to find the first position satisfying rule 3.</p>
+<h4>Merging Remote Updates</h4>
+<p>Loro treats style anchors as a special element and handles them using the same
+List CRDT for resolving concurrent conflicts. The logic related to rich text is
+independent of the particular List CRDT. Therefore, this algorithm can rely on
+any List CRDT algorithm for merging remote operations. Loro utilizes the <a href="https://arxiv.org/abs/2305.00583">Fugue</a>
+List CRDT algorithm.</p>
+<p>When new style anchors are inserted by remote updates, new styles are added; if
+old style anchors are deleted, the corresponding old styles are removed.</p>
+<h4>Strong Eventual Consistency</h4>
+<p>The internal state of this algorithm consists of a list of elements, each either
+a text segment or a style anchor. The rich text document is derived from this
+internal state.</p>
+<p>The internal state achieves strong eventual consistency through the upstream
+List CRDT.</p>
+<p>Identical internal states result in identical rich text documents. Hence, the
+same set of updates will produce the same rich text documents, evidencing the
+strong eventual consistency of this algorithm.</p>
+<h3>Criteria in Peritext</h3>
+<p><a href="https://www.inkandswitch.com/peritext/static/cscw-publication.pdf">The Peritext paper</a>
+specifies the intent-preserving merge behavior for rich text inline format.
+Loro&#39;s rich text algorithm successfully passes all test cases outlined therein.</p>
+<h4>1. Concurrent Formatting and Insertion</h4>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Text</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Origin</td>
+<td align="left">Hello World</td>
+</tr>
+<tr>
+<td align="left">Concurrent A</td>
+<td align="left"><strong>Hello World</strong></td>
+</tr>
+<tr>
+<td align="left">Concurrent B</td>
+<td align="left">Hello New World</td>
+</tr>
+<tr>
+<td align="left">Expected Result</td>
+<td align="left"><strong>Hello New World</strong></td>
+</tr>
+</tbody></table>
+<p>Loro easily supports this case by treating style anchors as special elements
+alongside text.</p>
+<h4>2. Overlapping Formatting</h4>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Text</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Origin</td>
+<td align="left">Hello World</td>
+</tr>
+<tr>
+<td align="left">Concurrent A</td>
+<td align="left"><strong>Hello</strong> World</td>
+</tr>
+<tr>
+<td align="left">Concurrent B</td>
+<td align="left">Hel<strong>lo World</strong></td>
+</tr>
+<tr>
+<td align="left">Expected Result</td>
+<td align="left"><strong>Hello World</strong></td>
+</tr>
+</tbody></table>
+<p>This case has been analyzed earlier. Since our style anchors contain style op ID
+information, we know there are two bold segments: one from 0 to 5 and another
+from 3 to 11, allowing us to merge them.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Text</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Origin</td>
+<td align="left">Hello World</td>
+</tr>
+<tr>
+<td align="left">Concurrent A</td>
+<td align="left"><strong>Hello</strong> World</td>
+</tr>
+<tr>
+<td align="left">Concurrent B</td>
+<td align="left">Hel<em>lo World</em></td>
+</tr>
+<tr>
+<td align="left">Expected Result</td>
+<td align="left"><strong>Hel<em>lo</em></strong> <em>World</em></td>
+</tr>
+</tbody></table>
+<p>Multiple style types are easily supported.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Text</th>
+<th align="left">Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Origin</td>
+<td align="left">Hello World</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">Concurrent A</td>
+<td align="left"><strong>Hello World</strong> <br /> Then <br /> <strong>Hello</strong> World</td>
+<td align="left">Bold, then unbold</td>
+</tr>
+<tr>
+<td align="left">Concurrent B</td>
+<td align="left">Hello Wor<strong>ld</strong></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">Expected Result</td>
+<td align="left"><strong>Hello</strong> Wor<strong>ld</strong> <br /> Or <br /> <strong>Hello</strong> World</td>
+<td align="left">Both are acceptable</td>
+</tr>
+</tbody></table>
+<p>Like Peritext, we model unbolding by adding a new style with the key <code>bold</code> and
+the value <code>null</code>. The final value of each style key on each character is
+determined by the style with the greatest <a href="https://en.wikipedia.org/wiki/Lamport_timestamp">Lamport</a> timestamp that includes the
+character. Thus, it easily supports this case.</p>
+<h4>3. Text Insertion at Span Boundaries</h4>
+<p>Insertion right after a bold style should result in the newly inserted text also
+being bold.</p>
+<div style={{ filter: "invert(1) hue-rotate(180deg)" }}>
+  ![bold_expand](./loro-richtext/bold_expand.png)
+</div>
+
+<p>However, insertion right after a link style should result in the newly inserted
+text not having the hyperlink style.</p>
+<div style={{ filter: "invert(1) hue-rotate(180deg)" }}>
+  ![Link style should not expand](./loro-richtext/link_expand.png)
+</div>
+
+<h4>4. Styles that Support Overlapping</h4>
+<div style={{ filter: "invert(1)" }}>![](./loro-richtext/overlap_mark.png)</div>
+
+<p>The problem of overlapping styles is related to how we represent them.</p>
+<p>We represent the rich text using
+<a href="https://quilljs.com/docs/delta/">Quill&#39;s Delta</a> format.</p>
+<pre><code class="language-ts">[
+  { insert: &quot;Gandalf&quot;, attributes: { bold: true } },
+  { insert: &quot; the &quot; },
+  { insert: &quot;Grey&quot;, attributes: { color: &quot;#cccccc&quot; } },
+];
+</code></pre>
+<p>An example of Quill&#39;s Delta format</p>
+<p>However, it cannot handle cases with multiple values assigned to the same key.
+So, it&#39;s a headache to handle the styles that support overlapping.</p>
+<p><img src="./loro-richtext/overlap_comments.png" alt=""></p>
+<p>For example, in the above case, the text &quot;fox&quot; is commented on by both Alice and
+Bob. We can&#39;t represent it with Quill&#39;s Delta format directly. So the possible
+workaround includes:</p>
+<p><strong>Turn the attribute value into a list</strong></p>
+<pre><code class="language-ts">[
+  { insert: &quot;The &quot;, attributes: { comment: [{ ...commentA }] } },
+  {
+    insert: &quot;fox&quot;,
+    attributes: { comment: [{ ...commentA }, { ...commentB }] },
+  },
+  { insert: &quot; jumped&quot;, attributes: { comment: [{ ...commentB }] } },
+];
+</code></pre>
+<p><strong>Use op ID that creates the op as the key of the attribute</strong></p>
+<pre><code class="language-ts">[
+  { insert: &quot;The &quot;, attributes: { &quot;id:0@A&quot;: { key: &quot;comment&quot;, ...commentA } } },
+  {
+    insert: &quot;fox&quot;,
+    attributes: {
+      &quot;id:0@A&quot;: { key: &quot;comment&quot;, ...commentA },
+      &quot;id:0@B&quot;: { key: &quot;comment&quot;, ...commentB },
+    },
+  },
+  {
+    insert: &quot; jumped&quot;,
+    attributes: { &quot;id:0@B&quot;: { key: &quot;comment&quot;, ...commentA } },
+  },
+];
+</code></pre>
+<p>But both require special behaviors for both CRDT lib and for application code,
+which are painful to work with.</p>
+<p>Finally, we found that the optimal approach to represent an overlappable style
+was to use <code>&lt;key&gt;:</code> as a prefix and allow users to assign a unique suffix to
+create a distinct style key. This method simplifies the CRDTs library code, as
+it doesn&#39;t require handling special cases. It effectively addresses scenarios
+where multiple comments overlap and is also user-friendly for application
+coding.</p>
+<pre><code class="language-ts">[
+  { insert: &quot;The &quot;, attributes: { &quot;comment:alice&quot;: &quot;Hi&quot; } },
+  {
+    insert: &quot;fox&quot;,
+    attributes: { &quot;comment:alice&quot;: &quot;Hi&quot;, &quot;comment:bob&quot;: &quot;Jump&quot; },
+  },
+  { insert: &quot; jumped&quot;, attributes: { &quot;comment:bob&quot;: &quot;Jump&quot; } },
+];
+</code></pre>
+<p>Following is the example code in Loro:</p>
+<pre><code class="language-ts">const doc = new Loro();
+doc.configTextStyle({
+  comment: { expand: &quot;none&quot; },
+});
+const text = doc.getText(&quot;text&quot;);
+text.insert(0, &quot;The fox jumped.&quot;);
+text.mark({ start: 0, end: 7 }, &quot;comment:alice&quot;, &quot;Hi&quot;);
+text.mark({ start: 4, end: 14 }, &quot;comment:bob&quot;, &quot;Jump&quot;);
+expect(text.toDelta()).toStrictEqual([
+  {
+    insert: &quot;The &quot;,
+    attributes: { &quot;comment:alice&quot;: &quot;Hi&quot; },
+  },
+  {
+    insert: &quot;fox&quot;,
+    attributes: {
+      &quot;comment:alice&quot;: &quot;Hi&quot;,
+      &quot;comment:bob&quot;: &quot;Jump&quot;,
+    },
+  },
+  {
+    insert: &quot; jumped&quot;,
+    attributes: { &quot;comment:bob&quot;: &quot;Jump&quot; },
+  },
+  {
+    insert: &quot;.&quot;,
+  },
+]);
+</code></pre>
+<h2>Implementation of Loro&#39;s Rich Text Algorithm</h2>
+<p>The following is an overview of Loro&#39;s implementation as of January, 2024.</p>
+<h3>Architecture of Loro</h3>
+<p>In line with the properties of Event Graph Walker, Loro uses <code>OpLog</code> and
+<code>DocState</code> as the internal state.</p>
+<p><code>OpLog</code> is dedicated to recording history, while <code>DocState</code> only records the
+current document state and does not include historical operation information.
+When applying updates from remote sources, Loro uses the relevant operations
+from <code>OpLog</code> and computes the diff through a <code>DiffCalculator</code>. This diff is then
+applied to <code>DocState</code>. This architecture also makes time travel easier to
+implement.</p>
+<p>For more details, see the documentation on
+<a href="https://loro.dev/docs/advanced/doc_state_and_oplog">DocState and OpLog</a>.</p>
+<p><img src="./loro-richtext/apply_updates.png" alt=""></p>
+<h3>Implementation of Loro&#39;s Rich Text CRDT</h3>
+<p>For rich text, Loro reuses the same <code>DiffCalculator</code> as Loro List, based on the
+<a href="https://arxiv.org/abs/2305.00583">Fugue</a> algorithm. As a result, the primary logic related to rich text is
+concentrated in <code>DocState</code>. This includes expressing styles, inserting new
+characters, and representing multiple index formats.</p>
+<p>In the representation of rich text state, we distinguish between the data
+structure <code>ContentTree</code>, which expresses the text (including style anchors), and
+<code>StyleRangeMap</code>, which expresses styles.</p>
+<p><img src="./loro-richtext/text_state_arch.png" alt=""></p>
+<p>Both structures are built on B+Trees.</p>
+<p><code>ContentTree</code> is responsible for efficient text finding, insertion, and
+deletion. It can index specific insertion/deletion positions using
+Unicode/UTF-8/UTF-16/Entity index. It does not store what specific style each
+text segment should have.</p>
+<p>We built the following B+Tree structure based on our
+<a href="https://github.com/loro-dev/generic-btree">generic-btree library</a> to express
+text in memory:</p>
+<ul>
+<li>Each internal node in the B+Tree stores the Unicode char length, UTF-16
+length, UTF-8 length, and Entity length of its subtree. The Entity length
+considers the length of style anchors as 1, otherwise 0.</li>
+<li>The leaf nodes of the B+Tree are text or style anchors.</li>
+</ul>
+<p><code>StyleRangeMap</code> is responsible for efficient updating/querying of style ranges.</p>
+<p>In the <code>StyleRangeMap</code> B+Tree expressing styles:</p>
+<ul>
+<li>Each internal node stores the <code>entity length</code> of its subtree.</li>
+<li>Each leaf node stores the collection of style information for the
+corresponding range and its `entity length.</li>
+</ul>
+<p>Separating the text <code>ContentTree</code> and style <code>StyleRangeMap</code> into two structures
+aims for better performance optimization. On rich text, style information is
+often not abundant and tends to have good continuity, such as several paragraphs
+having the same format, which can be expressed with a single leaf node. However,
+our structure for storing text is unsuitable for leaf nodes with large content,
+as conversion time between different encoding formats would become excessively
+long.</p>
+<p>When a user inserts a new character at <code>Unicode index</code> = i, the following
+occurs:</p>
+<ul>
+<li>Find the position at <code>Unicode index</code> = i in <code>ContentTree</code>.</li>
+<li>Check if there are any adjacent style anchors at this position. If not,
+directly insert.</li>
+<li>If there are, decide whether to insert to the left or right of the
+corresponding style anchor based on its type and properties. If there are
+multiple such style anchors, insert them according to the previous section on
+<a href="#behavior-when-inserting-text-at-style-boundaries">&quot;Behavior When Inserting Text at Style Boundaries&quot;</a>.</li>
+</ul>
+<h3>Testing</h3>
+<p>We have written tests for the criteria proposed by Peritext and passed all of
+them.</p>
+<p>To ensure the correctness of our CRDTs, we have added numerous fuzzing tests to
+simulate different collaborative behaviors, synchronization behaviors, and
+time-travel behaviors. These tests check for the strong eventual consistency and
+the correctness of internal invariants. We run these fuzzing tests continuously
+for several days after every critical modification to avoid oversights.</p>
+<h2>How to Use</h2>
+<p>Before using the Loro&#39;s rich text module, it is necessary to define the
+configuration for rich text styles, specifying the expand behavior for different
+keys and whether overlap is allowed.</p>
+<p>Here is an example of using Loro&#39;s rich text in JavaScript:</p>
+<pre><code class="language-typescript">const doc = new Loro();
+doc.configTextStyle({
+  bold: {
+    expand: &quot;after&quot;,
+  },
+  comment: {
+    expand: &quot;none&quot;,
+    overlap: true,
+  },
+  link: {
+    expand: &quot;none&quot;,
+  },
+});
+
+const text = doc.getText(&quot;text&quot;);
+text.insert(0, &quot;Hello world!&quot;);
+text.mark({ start: 0, end: 5 }, &quot;bold&quot;, true);
+expect(text.toDelta()).toStrictEqual([
+  {
+    insert: &quot;Hello&quot;,
+    attributes: { bold: true },
+  },
+  {
+    insert: &quot; world!&quot;,
+  },
+] as Delta&lt;string&gt;[]);
+
+text.insert(5, &quot;!&quot;);
+expect(text.toDelta()).toStrictEqual([
+  {
+    insert: &quot;Hello!&quot;,
+    attributes: { bold: true },
+  },
+  {
+    insert: &quot; world!&quot;,
+  },
+] as Delta&lt;string&gt;[]);
+</code></pre>
+<h2>Summary</h2>
+<p>This article presents Loro&#39;s rich text algorithm design and implementation. Its
+correctness is readily demonstrable. It can be built upon any existing List CRDT
+algorithm. It allows Loro to support rich text collaboration using
+<a href="#brief-introduction-to-replayable-event-graph">Eg-walker</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>, combining the
+strengths of multiple CRDT algorithms.</p>
+<p>We are continuously refining its design and actively seeking design partners. We
+are open to all forms of feedback and constructive criticism. Should you have
+any proposals for collaboration, please reach out to <a href="mailto:zx@loro.dev">zx@loro.dev</a></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Loro: Reimagine State Management with CRDTs]]></title>
+            <link>https://loro.dev/blog/loro-now-open-source</link>
+            <guid>https://loro.dev/blog/loro-now-open-source</guid>
+            <pubDate>Sun, 12 Nov 2023 16:00:00 GMT</pubDate>
+            <description><![CDATA[Loro, our high-performance CRDTs library, is now open source.  In this article, we share our vision for the local-first software development paradigm, why we're excited about it, and the current status of Loro.]]></description>
+            <content:encoded><![CDATA[<h1>Loro: Reimagine State Management with CRDTs</h1>
+<div>
+  <div style={{ display: "inline" }}>
+    Loro, our high-performance CRDTs library, is now open source
+  </div>
+
+  <div style={{ display: "inline" }}>.</div>
+</div>
+
+<p>In this article, we share our vision for the local-first software development
+paradigm, explain why we&#39;re excited about it, and discuss the current status of
+Loro.</p>
+<p>With better DevTools, documentation, and a friendly ecosystem, everyone can
+easily build local-first software.</p>
+<p><img src="./loro-now-open-source/colab_and_travel.gif" alt="Loro&#39;s &#39;time machine&#39; example"></p>
+<p>  You can build collaborative apps with time travel features easily using Loro.
+  <a href="https://loro-react-flow-example.vercel.app/">Play the example online</a>.</p>
+<h2>Envisioning the Local-First Development Paradigm</h2>
+<p>Distributed states are commonly found in numerous scenarios, such as multiplayer
+games, multi-device document synchronization, and edge networks. These scenarios
+require synchronization to achieve consistency, usually entailing elaborate
+design and coding. For instance, considerations for network issues or concurrent
+write operations are necessary. However, for a wide range of applications CRDTs
+can simplify the code significantly:</p>
+<ul>
+<li>CRDTs can automatically merge concurrent writes without conflicts.</li>
+<li>Fewer abstractions. There&#39;s no need to design specific backend database
+schemas, manually execute expected conflict merges, or implement interfaces to
+memory and memory to persistent structure conversions.</li>
+<li>Offline supports are right out of the box</li>
+</ul>
+<details>
+<summary>What are CRDTs</summary>
+
+<h3>What are Conflict-Free Replicated Data Types (CRDTs)?</h3>
+<p>CRDTs are data structures used in distributed systems that allow updates to be
+merged across multiple replicas without conflicts. In this context, &quot;replicas&quot;
+refer to different independent data instances within the system, such as the
+same collaborative document on various user devices.</p>
+<p>CRDTs enable users to operate independently on their replicas, like editing a
+document, without needing real-time communication with other replicas. The CRDTs
+merge these operations, ensuring all replicas achieve &quot;strong eventual
+consistency&quot;. As long as all nodes receive the same set of updates, regardless
+of the order, their data states will eventually be consistent.</p>
+<blockquote>
+<p>For more details, visit
+<a href="https://www.loro.dev/docs/concepts/crdt">What are CRDTs</a></p>
+</blockquote>
+</details>
+
+<details>
+<summary>When you can't use CRDTs</summary>
+### When you can't use CRDTs
+
+<p>CRDTs only guarantee <em>Strong Eventual Consistency</em>. You have to make sure it&#39;s
+suitable for your application.</p>
+<p>&quot;Strong Eventual Consistency&quot;: As long as all nodes receive the same set of
+updates, their data states will ultimately become consistent regardless of their
+sequence.</p>
+<p>Strong eventual consistency may not be acceptable in scenarios requiring
+immediate consistency or transactional integrity, such as financial
+transactions, exclusive resource access, or allocation.</p>
+</details>
+
+<p>Since the data resides locally, client applications can directly access and
+manipulate local data, offering both speed and availability. Additionally, due
+to CRDTs&#39; nature, synchronization / real-time collaboration can be achieved
+without relying on centralized servers (similar to Git, allowing migration to
+other platforms without data loss). With performance improvements, CRDTs
+increasingly replace traditional real-time collaboration solutions in various
+contexts.</p>
+<p>This represents a new paradigm. Local-first not only empowers users with control
+over their data, but also makes developers&#39; lives easier.</p>
+<p><img src="./loro-now-open-source/Untitled.png" alt="Local-first"></p>
+<p>  The annual growth rate of the <em>&quot;local-first&quot;</em> star count in GitHub has reached
+  40%+.</p>
+<h3>Integrating CRDTs with UI State Management</h3>
+<p><img src="./loro-now-open-source/richtext.gif" alt="Loro&#39;s rich text collaboration example"></p>
+<p>Loro&#39;s rich text collaboration example</p>
+<p>Since CRDTs enable conflict-free automatic merging, the challenge of managing
+distributed states shifts to &quot;how to express operations and states on CRDTs&quot;.</p>
+<p>Front-end state management libraries typically require developers to define how
+to retrieve State and specify Actions, as illustrated by this example from Vue&#39;s
+state management tool, Pinia:</p>
+<pre><code class="language-ts">export const useCartStore = defineStore({
+  id: &quot;cart&quot;,
+  state: () =&gt; ({
+    rawItems: [] as string[],
+  }),
+  getters: {
+    items: (state): Array&lt;{ name: string; amount: number }&gt; =&gt;
+      state.rawItems.reduce((items, item) =&gt; {
+        const existingItem = items.find((it) =&gt; it.name === item);
+
+        if (!existingItem) {
+          items.push({ name: item, amount: 1 });
+        } else {
+          existingItem.amount++;
+        }
+
+        return items;
+      }, [] as Array&lt;{ name: string; amount: number }&gt;),
+  },
+  actions: {
+    addItem(name: string) {
+      this.rawItems.push(name);
+    },
+
+    removeItem(name: string) {
+      const i = this.rawItems.lastIndexOf(name);
+      if (i &gt; -1) this.rawItems.splice(i, 1);
+    },
+
+    async purchaseItems() {
+      const user = useUserStore();
+      if (!user.name) return;
+
+      console.log(&quot;Purchasing&quot;, this.items);
+      const n = this.items.length;
+      this.rawItems = [];
+
+      return n;
+    },
+  },
+});
+</code></pre>
+<p>This paradigm and CRDTs are easily compatible: The state in the state management
+libraries corresponds to CRDT types, and Action corresponds to a set of CRDT
+operations.</p>
+<p>Thus, implementing UI state management through CRDTs does not require users to
+change their habits. It also has many advanced features:</p>
+<ul>
+<li>Make states automatically synchronizable / support real-time collaboration.</li>
+<li>Like Git, maintain a complete distributed editing history.</li>
+<li>It can store an extensively large editing history with a low memory footprint
+and a compact encoding size. Below is an example.</li>
+</ul>
+<p>With this, you can effortlessly implement products with real-time / async
+collaboration and time machine features.</p>
+<p><img src="./loro-now-open-source/Untitled.gif" alt="Tracing a document with 360,000 operations using Loro"></p>
+  <div style={{ display: "inline" }}>
+    Time travel a document with 360,000+ operations using Loro. To load the
+    whole history and playback, it only takes 8.4MB in memory. And the entire
+    history only takes 361KB in storage. The editing trace is from{" "}
+  </div>
+
+  <div style={{ display: "inline" }}>.</div>
+
+
+<h2>Introduction to Loro</h2>
+<p>Loro is our CRDTs library, now open-sourced under a permissive license. We
+believe a cooperative and friendly open-source community is key to creating
+outstanding developer experiences.</p>
+<p>We aim to make Loro simple to use, extensible, and maintain high performance.
+The following is the latest status of Loro.</p>
+<h3>CRDTs</h3>
+<p>We have explored extensively, supporting a range of CRDT algorithms that have
+yet to be widely used.</p>
+<h4>OT-like CRDTs</h4>
+<blockquote>
+<p>Update: This algorithm is now called Event Graph Walker (Eg-Walker)</p>
+</blockquote>
+<p>Our CRDTs library is built on the brilliant concept of OT-like CRDTs from Seph
+Gentle&#39;s <a href="https://github.com/josephg/diamond-types">Diamond-types</a>. Joseph Gentle
+is currently writing a paper on it, which is worth looking forward to. Its
+notable features include reducing the cost of local operations, easier
+historical data reclamation, and sometimes lower storage and memory overhead.
+However, it relies on high-performance algorithms to apply remote operations.
+This design has great potential and we are excited about its future.</p>
+<details>
+<summary>Brief Introduction to OT-like CRDT algorithms</summary>
+
+<p>To briefly introduce the concept of OT-like CRDTs, this part is complex and
+requires some prior knowledge. I might not encapsulate it well.</p>
+<p>The general idea of OT-like CRDTs is that they do not retain the CRDTs&#39; data
+structure (e.g., originLeft originRight information). When merging remote
+operations, they return to the lowest common ancestor in the directed acyclic
+graph history of local and remote, and from there, reapply each operation. This
+process reconstructs the CRDTs structure, resolving conflicts arising from
+parallel editing. Its advantage is that, since it doesn&#39;t need to retain these
+CRDTs Meta information, local operations are virtually cost-free, like OT, where
+only the index at which insertions and deletions occur needs to be saved. The
+trade-off is a longer time for merging remote operations, but this issue can be
+significantly mitigated with well-designed data structures and algorithms.
+Moreover, since most parallel edits last only a short time, the lowest common
+ancestor is not far, making the merging process quick.</p>
+<p>The image below shows an example of merging versions 2@1 and 1@2 using this
+algorithm on a DAG. The algorithm needs to revert to the lowest common ancestor
+version 0@1 and apply all subsequent operations from there (a total of four
+operations). For a better understanding of this image, refer to
+<a href="https://www.loro.dev/docs/advanced/version_deep_dive">https://www.loro.dev/docs/advanced/version_deep_dive</a></p>
+<p><img src="./loro-now-open-source/Untitled%201.png" alt="Untitled"></p>
+</details>
+
+<h4>Rich Text CRDTs</h4>
+<p>In May of this year, we open-sourced the
+<a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a> project, integrating
+the algorithms of <a href="https://loro.dev/blog/loro-richtext">the rich text CRDT</a> and the
+sequence CRDT <a href="https://arxiv.org/abs/2305.00583">Fugue by Matthew Weidner</a>. A
+brief introduction to these two algorithms can be found in
+<a href="https://www.notion.so/crdt-richtext-Rust-implementation-of-Peritext-and-Fugue-c49ef2a411c0404196170ac8daf066c0?pvs=21">our blog at the time</a>.</p>
+<p>Based on our experience from previous projects, we have integrated a rich text
+CRDT and Fugue into our framework in the current Loro. However, the biggest
+challenge was that
+<a href="https://github.com/inkandswitch/peritext/issues/31">Peritext did not integrate well with OT-like CRDTs</a>.
+We have recently overcome this issue. We developed a new rich text CRDT
+algorithm that can run on OT-like CRDTs and has passed the capabilities listed
+in the Peritext paper&#39;s Criteria for rich text CRDTs, with no new issues
+revealed in our current million fuzzing tests. We will write an article in the
+future specifically to introduce this algorithm.</p>
+<h4>Movable Tree</h4>
+<p>We have also supported a movable tree CRDT. Synchronizing tree movements is
+often complex due to the potential for circular references. Addressing this
+issue in the distributed environment is even more challenging.</p>
+<p>We implemented Martin Kleppmann&#39;s paper,
+<a href="https://ieeexplore.ieee.org/document/9563274/"><em>A Highly-Available Move Operation for Replicated Trees</em></a>.
+The idea of this algorithm is to sort all move operations, ensuring the ordering
+is consistent across the replicas. Then, each operation is applied sequentially.
+If an operation would cause a circular reference, it has no effect.</p>
+<p>We found it to be elegant in design and also performant. The time complexity of
+local operations is O(k) (k being the average tree depth, as circular reference
+detection is required). For applying remote operations, which entails inserting
+new operations into the sorted list, we must undo operations that are subsequent
+in the ordering, apply the remote operation, and then redo the undone
+operations, with a cost of O(km) (m being the number of operations to undo).</p>
+<p><img src="./loro-now-open-source/Untitled%201.gif" alt="Untitled"></p>
+<p>Visualization of applying a remote op</p>
+<p>Our tests show that local operations involving ten thousand random movements
+among a thousand nodes take less than 10ms (tested on an M2 MAX chip). Moreover,
+the cost of merging remote operations in this algorithm is similar to applying
+remote operations in OT-like CRDTs, making it adoptable. We&#39;ve also experimented
+with <a href="https://madebyevan.com/algos/log-spaced-snapshots/">log-spaced snapshots</a>
+and immutable data structure approaches in our
+<a href="https://github.com/loro-dev/movable-tree">movable-tree project</a>, concluding
+that the undo + redo method is the fastest and the most memory-efficient.</p>
+<h3>Data Structures</h3>
+<p>Designing and experimenting with data structures is routine in Loro&#39;s
+development process.</p>
+<p>We previously open-sourced
+<a href="https://github.com/loro-dev/generic-btree">generic-btree</a> and have redesigned
+its structure for a more compact memory layout and cache-friendliness. Besides
+its remarkable performance, its flexibility enables us to support various
+information types required for Text, like utf16/Unicode code points/utf8, with
+minimal code. We also extensively reuse it to fulfill various requirements,
+highlighting Rust&#39;s impressive type expression capabilities.</p>
+<p>Internally, we&#39;ve
+<a href="https://www.loro.dev/docs/advanced/doc_state_and_oplog">separated the document&#39;s state from its history</a>.
+The state represents the current form of the document, akin to Git&#39;s HEAD
+pointer, while the document&#39;s history resembles the complete operation history
+behind Git. Hence, multiple document states can correspond to the same history.
+This structure simplifies our code and facilitates future support for version
+control.</p>
+<p>Most of our optimizations thus far have focused on text manipulations,
+historically one of the thorniest problems in CRDTs. In the future, we plan
+optimizations for a wider range of real-world scenarios.</p>
+<h3>The Future</h3>
+<p><img src="./loro-now-open-source/Untitled%202.png" alt="Untitled"></p>
+<p>We aim to reach version 1.0 by mid-next year, with much work to complete.</p>
+<p>Given our limited workforce, we will first provide a WASM interface for web
+developers to experiment with. Optimizing the WASM size is one of our goals for
+this phase. Much of our design work is still ongoing, and we plan to stabilize
+it in the next quarter, aiming for a simple yet powerful and flexible API. We
+welcome ideas and suggestions in our
+<a href="https://discord.gg/tUsBSVfqzf">community discussions</a>.</p>
+<p>There&#39;s also extensive documentation work to make working with Loro enjoyable. A
+potential indicator of success would be GPT generating sufficiently good code
+based on our documentation.</p>
+<p>Developing tools for developers is a challenging and exciting task. Many
+developer tools and visualization methods in front-end development are
+exceptionally good, and we hope to bring such experiences into the world of
+CRDTs and local-first development. DevTools will reveal CRDTs&#39; hidden states and
+simplify control, making state maintenance and debugging a breeze.</p>
+<p>We also plan to support richer CRDT semantics, including Movable Lists and
+global undo/redo operations to support more diverse application scenarios.</p>
+<h2>Seeking Collaborative Project Opportunities</h2>
+<p>Our design and optimization efforts need feedback from real-world applications.
+If you are excited about a local-first future and think Loro can help you,
+please contact us directly at <a href="mailto:zx@loro.dev">zx@loro.dev</a>. We&#39;re open to
+collaboration and ready to help.</p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[crdt-richtext - Rust implementation of Peritext and Fugue]]></title>
+            <link>https://loro.dev/blog/crdt-richtext</link>
+            <guid>https://loro.dev/blog/crdt-richtext</guid>
+            <pubDate>Wed, 19 Apr 2023 16:00:00 GMT</pubDate>
+            <description><![CDATA[Presenting a new Rust crate that combines Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into Loro, a general-purpose CRDT library currently under development.]]></description>
+            <content:encoded><![CDATA[<h1><a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a>: Rust implementation of Peritext and Fugue</h1>
+<p>Presenting a new Rust crate that combines <a href="https://inkandswitch.com/peritext">Peritext</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>&#39;s power with impressive performance, tailored specifically for rich text. This crate&#39;s functionality is set to be incorporated into <strong><a href="https://www.loro.dev/">Loro</a></strong>, a general-purpose CRDT library currently under development.</p>
+<h1>What’s Peritext</h1>
+<p><a href="https://inkandswitch.com/peritext">Peritext: A CRDT for Rich-Text Collaboration</a></p>
+<p>Peritext is a novel rich-text CRDT (Conflict-free Replicated Data Type) algorithm. It is capable of merging concurrent edits in rich text format while <a href="https://www.inkandswitch.com/peritext/#preserving-the-authors-intent">preserving users&#39; intent as much as possible</a>. Its primary focus is on merging the formats and annotations of rich text content, such as bold, italic, and comments.</p>
+<blockquote>
+<p>💡 The specific definition of user intent in the context of concurrent rich text editing can&#39;t be clearly explained in a few words. it&#39;s best understood through specific examples.</p>
+</blockquote>
+<p>Peritext is designed to solve a couple of significant challenges:</p>
+<p>Firstly, it addresses the anticipated problems arising from conflicting style edits. For instance, consider a text example, &quot;The quick fox jumped.&quot; If User A highlights &quot;The quick&quot; in bold and User B highlights &quot;quick fox jumped,&quot; the ideal merge should result in the entire sentence, &quot;The quick fox jumped,&quot; being bold. However, existing algorithms might not meet this expectation, resulting in either &quot;The quick fox&quot; or &quot;The&quot; and &quot;jumped&quot; being bold instead.</p>
+<table>
+<thead>
+<tr>
+<th>Original Text</th>
+<th>The quick fox jumped</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Concurrent Edit from A</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+<tr>
+<td>Concurrent Edit from B</td>
+<td>The <strong>quick fox jumped</strong></td>
+</tr>
+<tr>
+<td>Expected Merged Result</td>
+<td><strong>The quick fox jumped</strong></td>
+</tr>
+<tr>
+<td>Bad case from merging Markdown text directly</td>
+<td><strong>The</strong> quick <strong>fox jumped</strong></td>
+</tr>
+<tr>
+<td>Bad case from Yjs</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+</tbody></table>
+<p>Additionally, Peritext manages conflicts between style and text edits. In the same example, if User A highlights &quot;The quick&quot; in bold, but User B changes the text to &quot;The fast fox jumped,&quot; the ideal merge should result in &quot;The fast&quot; being bold.</p>
+<table>
+<thead>
+<tr>
+<th>Original Text</th>
+<th>The quick fox jumped</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Concurrent Edit from A</td>
+<td><strong>The quick</strong> fox jumped</td>
+</tr>
+<tr>
+<td>Concurrent Edit from B</td>
+<td>The fast fox jumped</td>
+</tr>
+<tr>
+<td>Expected Merged Result</td>
+<td><strong>The fast</strong> fox jumped</td>
+</tr>
+</tbody></table>
+<p>What’s more, Peritext takes into account different expectations for expanding styles. For example, if you type after a bold text, you would typically want the new text to continue being bold. However, if you&#39;re typing after a hyperlink or a comment, you likely wouldn&#39;t want the new input to become part of the hyperlink or comment.</p>
+<h1>What’s Fugue</h1>
+<p>Fugue is a new CRDT text algorithm, presented in <em><a href="https://arxiv.org/abs/2305.00583">The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing</a></em> by <a href="https://arxiv.org/search/cs?searchtype=author&query=Weidner%2C+M">Matthew Weidner</a> et al., nicely solves <strong>the interleaving problem</strong>.</p>
+<h2>The interleaving problem</h2>
+<p>The interleaving problem was proposed in the paper <em><a href="https://martin.kleppmann.com/2019/03/25/papoc-interleaving-anomalies.html">Interleaving anomalies in collaborative text editors</a></em> by Martin Kleppmann et al.</p>
+<p>An example of interleaving:</p>
+<ul>
+<li>A type &quot;Hello &quot; from left to right/right to left</li>
+<li>B type &quot;Hi &quot; from left to right/right to left</li>
+<li>The expected result: &quot;Hello Hi &quot; or &quot;Hi Hello &quot;</li>
+<li>The interleaving result may look like: &quot;HHeil lo&quot;<ul>
+<li>This happens when typing from right to left in RGA.</li>
+</ul>
+</li>
+</ul>
+<p><img src="./images/richtext0.png" alt="An example of an interleaving anomaly when using [fractional indexing](https://madebyevan.com/algos/crdt-fractional-indexing/) CRDT on text content.
+Source: **Martin Kleppmann, Victor B. F. Gomes, Dominic P. Mulligan, and Alastair R. Beresford. 2019. Interleaving anomalies in collaborative text editors. [https://doi.org/10.1145/3301419.3323972](https://doi.org/10.1145/3301419.3323972)"></p>
+<p>An example of an interleaving anomaly when using <a href="https://madebyevan.com/algos/crdt-fractional-indexing/">fractional indexing</a> CRDT on text content.
+Source: **Martin Kleppmann, Victor B. F. Gomes, Dominic P. Mulligan, and Alastair R. Beresford. 2019. Interleaving anomalies in collaborative text editors. <a href="https://doi.org/10.1145/3301419.3323972">https://doi.org/10.1145/3301419.3323972</a></p>
+<p>The <a href="https://arxiv.org/abs/2305.00583">Fugue paper</a> summarizes the current state of the interleaving problems in the table.</p>
+<p><img src="./images/richtext1.png" alt="Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. *ArXiv*. /abs/2305.00583"></p>
+<p>Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. <em>ArXiv</em>. /abs/2305.00583</p>
+<p>The interleaving problem sometimes are unsolvable when there are more than 2 sites. See <a href="https://arxiv.org/abs/2305.00583">Fugue</a> paper Appendix B, Proof of Theorem 5 for detailed explanation.</p>
+<p><img src="./images/richtext2.png" alt="The case where the interleaving problem is unsolvable
+Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. *ArXiv*. /abs/2305.00583"></p>
+<p>The case where the interleaving problem is unsolvable
+Source: Weidner, M., Gentle, J., &amp; Kleppmann, M. (2023). The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing. <em>ArXiv</em>. /abs/2305.00583</p>
+<p>However, we can still minimize the chance of interleaving. Fugue introduces the concept of <strong>maximal non-interleaving</strong> and solves it with an elegant algorithm that is easy to optimize. The definition of <em>maximal non-interleaving</em> makes a lot of sense to me and leaves little room for ambiguity. I won&#39;t reiterate the definition here. But the basic idea is first to solve forward interleaving by leftOrigin. If there is still ambiguity, then solve the backward interleaving by rightOrigin. (The leftOrigin and rightOrigin refer to the ids of the original neighbors when the character is inserted, just like Yjs)</p>
+<h1>CRDT-Richtext</h1>
+<p>Based on the algorithms of Peritext and Fugue, we made <code>crdt-richtext</code>, a lib written in Rust that provides a wasm interface. It’s available on <a href="http://crates.io">crates.io</a> and npm now.</p>
+<h2>Example</h2>
+<pre><code class="language-tsx">
+const text = new RichText(BigInt(1));
+text.insert(0, &quot;你好，世界！&quot;);
+text.insert(2, &quot;呀&quot;);
+expect(text.toString()).toBe(&quot;你好呀，世界！&quot;);
+text.annotate(0, 3, &quot;bold&quot;, AnnotateType.BoldLike);
+const spans = text.getAnnSpans();
+expect(spans.length).toBe(2);
+expect(spans[0].text).toBe(&quot;你好呀&quot;);
+expect(spans[0].annotations.size).toBe(1);
+expect(spans[0].annotations.has(&quot;bold&quot;)).toBeTruthy();
+expect(spans[1].text.length).toBe(4);
+
+const b = new RichText(BigInt(2));
+b.import(text.export(new Uint8Array()));
+expect(b.toString()).toBe(&quot;你好呀，世界！&quot;);
+</code></pre>
+<h2>Data structure</h2>
+<p>We heavily use B-Trees to optimize our algorithm. We made a library called <a href="https://github.com/loro-dev/generic-btree">generic-btree</a>, which is written in safe Rust code, which provides a flexible foundation for our optimization efforts.</p>
+<p><a href="https://github.com/loro-dev/generic-btree">https://github.com/loro-dev/generic-btree</a></p>
+<p><img src="./images/richtext3.png" alt="The cached content inside B-Tree"></p>
+<p>The cached content inside B-Tree</p>
+<p>There are several common tasks we need to address in Text CRDT, including:</p>
+<ul>
+<li>Finding, inserting, or deleting content at a given index:<ul>
+<li>We use a BTree to look up and update the content</li>
+<li>The time complexity is O(logN), where N is the length of the content</li>
+</ul>
+</li>
+<li>Finding content with a given op ID:<ul>
+<li>We use a combination of HashMap and BTree</li>
+<li>The time complexity if O(logN), where N is the number of operations</li>
+</ul>
+</li>
+<li>Compressing content in memory:<ul>
+<li>To reduce the amount of memory used by storing every operation in raw format, we compress the content using the RLE tricks from Yjs and DiamondTypes.<ul>
+<li>The insight behind this compression is that neighboring inserts and deletions tend to be continuous, so we can merge them and store less metadata.</li>
+</ul>
+</li>
+<li>Commonly, every leaf node in the diagram contains a dozen of characters</li>
+</ul>
+</li>
+<li>Converting index between UTF-16 and UTF-8:<ul>
+<li>In JS, the default encoding of a string is utf16, but in Rust, the default one is utf8. Although the WASM interface can help us convert the encoding of the string, we still need to convert the <em>index</em> of the operation.</li>
+<li>To solve this, <code>crdt-richtext</code> also store the UTF-16 length of the content in B-Tree. So we can query the B-Tree with either the utf8 index or the utf16 index.</li>
+</ul>
+</li>
+<li>Storing the boundary of style/format/comments:<ul>
+<li>We use the same B-Tree to store the boundary, with each subtree corresponding to a span of text or tombstones. For each node in the tree, we store which annotations start before it, start after it, end before it, or end after it.<pre><code class="language-rust">#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub struct ElemAnchorSet {
+    start_before: FxHashSet&lt;AnnIdx&gt;,
+    end_before: FxHashSet&lt;AnnIdx&gt;,
+    start_after: FxHashSet&lt;AnnIdx&gt;,
+    end_after: FxHashSet&lt;AnnIdx&gt;,
+}
+</code></pre>
+</li>
+<li>This is basically the same optimization as Peritext, except we do it on the tree.</li>
+</ul>
+</li>
+</ul>
+<h2>Encoding</h2>
+<p>We use columnar encoding, which was first adopted to CRDTs by Martin Kelppmann <a href="https://github.com/automerge/automerge-classic/pull/253">in automerge</a>. To make it easier in Rust, we created the lib <a href="https://www.notion.so/Serde-Columnar-Ergonomic-columnar-storage-encoding-crate-7b0c86d6f8d24e4da45a1e2ebd86741c?pvs=21">Serde Columnar: Ergonomic columnar storage encoding crate</a>.</p>
+<h2>Heavily tested by libFuzzer</h2>
+<p>Test-Driven Development (TDD) provides an amazing development experience. If possible, I always write unit tests for a standalone module before moving forward. However, for algorithms like CRDTs, it is infeasible to list all possible cases manually but is easy to generate test cases automatically. This is where fuzzing tests come into play.</p>
+<p>Some fuzzers can track coverage information and generate mutations on the input data to maximize code coverage. LibFuzzer can also identify memory leaks and UAF problems.</p>
+<p><code>[cargo-fuzz</code>](<a href="https://www.notion.so/crdt-richtext-Rust-implementation-of-Peritext-and-Fugue-c49ef2a411c0404196170ac8daf066c0?pvs=21">https://www.notion.so/crdt-richtext-Rust-implementation-of-Peritext-and-Fugue-c49ef2a411c0404196170ac8daf066c0?pvs=21</a>) provides a user-friendly API for writing fuzzing tests, and it supports two fuzzers: libFuzzer and AFL. It makes the unstructured libFuzzer feel structured. So we’re able to write fuzzing tests in this way</p>
+<pre><code class="language-rust">use arbitrary::Arbitrary;
+
+#[derive(Arbitrary, Clone, Debug, Copy)]
+pub enum Action {
+    Insert {
+        actor: u8,
+        pos: u8,
+        content: u16,
+    },
+    Delete {
+        actor: u8,
+        pos: u8,
+        len: u8,
+    },
+    Annotate {
+        actor: u8,
+        pos: u8,
+        len: u8,
+        annotation: AnnotationType,
+    },
+    Sync(u8, u8),
+}
+
+pub fn fuzzing(actions: Vec&lt;Action&gt;) {
+	// run tests based on actions
+	...
+}
+
+#![no_main]
+use libfuzzer_sys::fuzz_target;
+
+fuzz_target!(|actions: [Action; 100]| { fuzzing(actions.to_vec()) });
+</code></pre>
+<p><img src="./images/richtext4.png" alt="We will run millions of Fuzzing Tests after making big changes. The fuzzer can help us extract the most useful thousands of tests to be included into the corpus. The minor changes can be verified by running the corpus."></p>
+<p>We will run millions of Fuzzing Tests after making big changes. The fuzzer can help us extract the most useful thousands of tests to be included into the corpus. The minor changes can be verified by running the corpus.</p>
+<p>We use fuzzing tests in Loro&#39;s CRDTs too. This test suite is like our safety net when we&#39;re making big tweaks to the code. It&#39;s great at spotting all our little slip-ups.</p>
+<h1>Performance</h1>
+<h2>Benchmark</h2>
+<ul>
+<li>Benchmark setup<h3><strong>B4: Real-world editing dataset</strong></h3>
+Replay a real-world editing dataset. This dataset contains the character-by-character editing trace of a large-ish text document, the LaTeX source of this paper: <a href="https://arxiv.org/abs/1608.03960">https://arxiv.org/abs/1608.03960(opens in a new tab)</a>
+Source: <a href="https://github.com/automerge/automerge-perf/tree/master/edit-by-index">https://github.com/automerge/automerge-perf/tree/master/edit-by-index(opens in a new tab)</a><ul>
+<li>182,315 single-character insertion operations</li>
+<li>77,463 single-character deletion operations</li>
+<li>259,778 operations totally</li>
+<li>104,852 characters in the final document
+We simulate one client replaying all changes and storing each update. We measure the time to replay the changes and the size of all update messages (<code>updateSize</code>), the size of the encoded document after the task is performed (<code>docSize</code>), the time to encode the document (<code>encodeTime</code>), the time to parse the encoded document (<code>parseTime</code>), and the memory used to hold the decoded document in memory (<code>memUsed</code>).</li>
+</ul>
+<h3><strong>[B4 x 100] Real-world editing dataset 100 times</strong></h3>
+<p>Replay the [B4] dataset one hundred times. The final document has a size of over 10 million characters. As comparison, the book &quot;Game of Thrones: A Song of Ice and Fire&quot; is only 1.6 million characters long (including whitespace).</p>
+<ul>
+<li>18,231,500 single-character insertion operations</li>
+<li>7,746,300 single-character deletion operations</li>
+<li>25,977,800 operations totally</li>
+<li>10,485,200 characters in the final document</li>
+</ul>
+</li>
+</ul>
+<p>The benchmark was conducted on a 2020 M1 MacBook Pro 13-inch on 2023-05-11.</p>
+<table>
+<thead>
+<tr>
+<th>N=6000</th>
+<th>crdt-richtext-wasm</th>
+<th>loro-wasm</th>
+<th>automerge-wasm</th>
+<th>tree-fugue</th>
+<th>yjs</th>
+<th>ywasm</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>[B4] Apply real-world editing dataset (time)</td>
+<td>176 +/- 10 ms</td>
+<td>141 +/- 15 ms</td>
+<td>821 +/- 7 ms</td>
+<td>721 +/- 15 ms</td>
+<td>1,114 +/- 33 ms</td>
+<td>23,419 +/- 102 ms</td>
+</tr>
+<tr>
+<td>[B4] Apply real-world editing dataset (memUsed)</td>
+<td>skipped</td>
+<td>skipped</td>
+<td>skipped</td>
+<td>2,373,909 +/- 13725 bytes</td>
+<td>3,480,708 +/- 168887 bytes</td>
+<td>skipped</td>
+</tr>
+<tr>
+<td>[B4] Apply real-world editing dataset (encodeTime)</td>
+<td>8 +/- 1 ms</td>
+<td>8 +/- 1 ms</td>
+<td>115 +/- 2 ms</td>
+<td>12 +/- 0 ms</td>
+<td>12 +/- 1 ms</td>
+<td>6 +/- 1 ms</td>
+</tr>
+<tr>
+<td>[B4] Apply real-world editing dataset (docSize)</td>
+<td>127,639 +/- 0 bytes</td>
+<td>255,603 +/- 8 bytes</td>
+<td>129,093 +/- 0 bytes</td>
+<td>167,873 +/- 0 bytes</td>
+<td>159,929 +/- 0 bytes</td>
+<td>159,929 +/- 0 bytes</td>
+</tr>
+<tr>
+<td>[B4] Apply real-world editing dataset (parseTime)</td>
+<td>11 +/- 0 ms</td>
+<td>2 +/- 0 ms</td>
+<td>620 +/- 5 ms</td>
+<td>8 +/- 0 ms</td>
+<td>43 +/- 3 ms</td>
+<td>40 +/- 3 ms</td>
+</tr>
+<tr>
+<td>[B4x100] Apply real-world editing dataset 100 times (time)</td>
+<td>15,324 +/- 3188 ms</td>
+<td>12,436 +/- 444 ms</td>
+<td>skipped</td>
+<td>91,902 +/- 863 ms</td>
+<td>112,563 +/- 3861 ms</td>
+<td>skipped</td>
+</tr>
+<tr>
+<td>[B4x100] Apply real-world editing dataset 100 times (memUsed)</td>
+<td>skipped</td>
+<td>skipped</td>
+<td>skipped</td>
+<td>224076566 +/- 2812359 bytes</td>
+<td>318807378 +/- 15737245 bytes</td>
+<td>skipped</td>
+</tr>
+<tr>
+<td>[B4x100] Apply real-world editing dataset 100 times (encodeTime)</td>
+<td>769 +/- 37 ms</td>
+<td>780 +/- 32 ms</td>
+<td>skipped</td>
+<td>943 +/- 52 ms</td>
+<td>297 +/- 16 ms</td>
+<td>skipped</td>
+</tr>
+<tr>
+<td>[B4x100] Apply real-world editing dataset 100 times (docSize)</td>
+<td>12,667,753 +/- 0 bytes</td>
+<td>26,634,606 +/- 80 bytes</td>
+<td>skipped</td>
+<td>17,844,936 +/- 0 bytes</td>
+<td>15,989,245 +/- 0 bytes</td>
+<td>skipped</td>
+</tr>
+<tr>
+<td>[B4x100] Apply real-world editing dataset 100 times (parseTime)</td>
+<td>1,252 +/- 14 ms</td>
+<td>170 +/- 15 ms</td>
+<td>skipped</td>
+<td>368 +/- 13 ms</td>
+<td>1,335 +/- 238 ms</td>
+<td>skipped</td>
+</tr>
+</tbody></table>
+<p>The complete benchmark result and code is available at <a href="https://github.com/https://twitter.com/zx_loro/fugue-bench">https://github.com/https://twitter.com/zx_loro/fugue-bench</a>.</p>
+<p>It is worth noting that:</p>
+<ul>
+<li>The benchmark for Automerge is based on <code>automerge-wasm</code>, which is not the latest version of Automerge 2.0.</li>
+<li><code>crdt-richtext</code> and <code>fugue</code> are special-purpose CRDTs that tend to be faster and have a smaller encoding size.</li>
+<li>The encoding of <code>yjs</code>, <code>ywasm</code>, and <code>loro-wasm</code> still contains redundancy that can be compressed significantly. For more details, see <a href="https://loro.dev/docs/performance/docsize">the full report</a>.</li>
+<li>loro-wasm and fugue only support plain text for now</li>
+</ul>
+<h1>Discussion</h1>
+<p><a href="https://news.ycombinator.com/item?id=35988046">CRDT-richtext: Rust implementation of Peritext and Fugue | Hacker News</a></p>
+]]></content:encoded>
+        </item>
+    </channel>
+</rss>

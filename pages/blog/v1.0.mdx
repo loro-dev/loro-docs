@@ -10,8 +10,11 @@ image: https://i.ibb.co/T1x1bSf/IMG-8191.jpg
 
 import Authors, { Author } from "../../components/authors";
 
-  <Author name="Zixuan Chen" link="https://twitter.com/zxch3n" />
-  <Author name="Liang Zhao" link="https://github.com/Leeeon233" />
+<Author
+  name="Zixuan Chen"
+  link="https://twitter.com/https://twitter.com/zx_loro"
+/>
+<Author name="Liang Zhao" link="https://github.com/Leeeon233" />
 
 import Image from "next/image";
 
@@ -26,11 +29,11 @@ in Rust, JS (via WASM), and Swift.
 <summary>What is CRDT? What is it used for?</summary>
 
 Distributed states are now ubiquitous in multi-user collaborative applications
-and applications that need multi-device synchronization. You need to ensure 
-consistency across devices. CRDTs provide a decentralized way to automatically 
+and applications that need multi-device synchronization. You need to ensure
+consistency across devices. CRDTs provide a decentralized way to automatically
 solve this problem.
 
-> CRDTs automatically resolve conflicts and ensure the consistency of the data. 
+> CRDTs automatically resolve conflicts and ensure the consistency of the data.
 > Some CRDT algorithms provide extra properties for merge results, which should align with user expectations as much as possible.
 
 CRDT provides a decentralized way to solve this problem. The decentralization here not only means that it can synchronize through P2P methods, but it also means:
@@ -59,17 +62,18 @@ Git's protocol doesn't support real-time collaboration. When there are concurren
 edits, Git needs to resolve conflicts manually; while CRDT can support real-time
 collaboration, can be extended to support rich text, and supports data with
 JSON-like schemas.
+
 </aside>
 
 CRDTs often also provides a simpler and easier-to-use sync method,
 because for Op-based CRDTs like Loro, as long as the sets of CRDT operations
 received by two peers are consistent, the CRDT document states of these two
 peers are consistent. You don't have to worry about idempotency, the order of
-operation application, and network exception handling. For Loro's CRDT document, 
+operation application, and network exception handling. For Loro's CRDT document,
 just two rounds of data exchange can transmit the missing operations between two
 documents to achieve final consistency:
 
-> You can find all the code samples in this blog [here](https://github.com/zxch3n/loro-blog-examples)
+> You can find all the code samples in this blog [here](https://github.com/https://twitter.com/zx_loro/loro-blog-examples)
 
 ```jsx
 import { LoroDoc, VersionVector } from "npm:loro-crdt@1.0.0-beta.3";
@@ -132,47 +136,47 @@ docA.import(bytesB);
 console.log(docA.getText("text").toString()); // Hello!Hi!
 console.log(docB.getText("text").toString()); // Hello!Hi!
 ```
-</details>
-</details>
 
+</details>
+</details>
 
 ## Features of Loro 1.0
 
 ### High-performance CRDTs
 
-High-performance, general-purpose CRDTs can significantly reduce data synchronization 
-complexity and are crucial for local-first development. 
+High-performance, general-purpose CRDTs can significantly reduce data synchronization
+complexity and are crucial for local-first development.
 
-However, large CRDT documents may face challenges with loading speed and memory consumption, 
-especially when dealing with those with extensive editing histories. 
-Loro 1.0 addresses this challenge through a new storage format, achieving a 10x improvement in 
-loading speed. In [benchmarks using Loro with real-world editing data](#document-import-speed-benchmarks), 
-we've reduced the loading time for a document with millions of operations from 16ms to 1ms. When utilizing the 
-shallow snapshot format (discussed later), the time can be further reduced to 0.37ms. 
+However, large CRDT documents may face challenges with loading speed and memory consumption,
+especially when dealing with those with extensive editing histories.
+Loro 1.0 addresses this challenge through a new storage format, achieving a 10x improvement in
+loading speed. In [benchmarks using Loro with real-world editing data](#document-import-speed-benchmarks),
+we've reduced the loading time for a document with millions of operations from 16ms to 1ms. When utilizing the
+shallow snapshot format (discussed later), the time can be further reduced to 0.37ms.
 As a result, Loro will not become a bottleneck for applications dealing with such large documents.
 It expands the potential use cases for CRDTs, making them viable for a wider range of applications.
 
 ### Rich CRDT types
 
 Loro now supports
-[rich text CRDT](https://loro.dev/blog/loro-richtext), 
+[rich text CRDT](https://loro.dev/blog/loro-richtext),
 which enhances the merge result of rich text (text with formatting and styling) to better align with user expectations.
-Our text/list CRDT is based on the [Fugue](https://arxiv.org/abs/2305.00583) algorithm. 
-It prevents interleaving issues when merging concurrent edits. For example, 
+Our text/list CRDT is based on the [Fugue](https://arxiv.org/abs/2305.00583) algorithm.
+It prevents interleaving issues when merging concurrent edits. For example,
 it can avoid unintended merges like "1H2i3" when "123" and "Hi" are inserted concurrently.
 
 We also support:
 
-- Movable List: Supports set, insert, delete, and move operations. The algorithm ensures that after 
+- Movable List: Supports set, insert, delete, and move operations. The algorithm ensures that after
   merging concurrent moves, each element occupies only one position.
 - Map: Similar to a JavaScript object.
-- [Movable Tree](https://loro.dev/blog/movable-tree): Used to model file directories, outliners, and 
-  other hierarchical structures that may need moving. It ensures no cyclic dependencies exist in the 
+- [Movable Tree](https://loro.dev/blog/movable-tree): Used to model file directories, outliners, and
+  other hierarchical structures that may need moving. It ensures no cyclic dependencies exist in the
   tree after merging concurrent move operations.
 
 Loro also supports nesting between types, so you can model edits on JSON documents through them:
 
-> You can find all the code samples in this blog [here](https://github.com/zxch3n/loro-blog-examples)
+> You can find all the code samples in this blog [here](https://github.com/https://twitter.com/zx_loro/loro-blog-examples)
 
 ```tsx
 import {
@@ -208,7 +212,7 @@ console.log(doc.toJSON());
 
 ### Version control
 
-Like Git, Loro saves a complete directed acyclic graph (DAG) of edit history. In Loro, the DAG is used to represent the dependencies between edits, similar to how Git represents commit history. 
+Like Git, Loro saves a complete directed acyclic graph (DAG) of edit history. In Loro, the DAG is used to represent the dependencies between edits, similar to how Git represents commit history.
 
 Loro supports primitives that allow users to switch between different versions, fork new branches, edit on new branches, and merge branches.
 
@@ -295,7 +299,7 @@ import Caption from "../../components/caption";
 
 <ReactPlayer
   url="/static/REG.mp4"
-  style={{maxWidth: "calc(100vw - 40px)"}}
+  style={{ maxWidth: "calc(100vw - 40px)" }}
   width={512}
   height={512}
   muted={true}
@@ -304,12 +308,11 @@ import Caption from "../../components/caption";
   playing={true}
 />
 
-
 [Event Graph Walker (Eg-walker)](/docs/advanced/event_graph_walker) is a pioneering collaboration algorithm that combines the strengths of
-Operational Transformation (OT) and CRDT, two widely used algorithms for real-time collaboration. 
+Operational Transformation (OT) and CRDT, two widely used algorithms for real-time collaboration.
 
-While OT is centralized and CRDT is decentralized, OT traditionally had an advantage 
-in terms of lower document overhead. CRDTs initially had higher overhead, but recent 
+While OT is centralized and CRDT is decentralized, OT traditionally had an advantage
+in terms of lower document overhead. CRDTs initially had higher overhead, but recent
 optimizations have significantly reduced this gap, making CRDTs increasingly competitive.
 Eg-walker leverages the best aspects of both approaches.
 
@@ -318,22 +321,23 @@ Loro's overall architecture has also been greatly inspired by Eg-walker. As a
 result, Loro closely resembles Eg-walker in terms of algorithmic properties.
 
 <aside>
-In terms of implementation details, Loro differs from the Eg-walker described 
+In terms of implementation details, Loro differs from the Eg-walker described
 in the paper. So it might be controversial to say Loro implements Eg-walker.
 
-For example, Loro supports types other than text, and in Loro we store the ID 
+For example, Loro supports types other than text, and in Loro we store the ID
 of each character in the document state (but do not store tombstones), and so on.
 
-But it implements the idea of Eg-walker that travels the graph to 
-construct temporary CRDTs for conflict resolution. And, like 
+But it implements the idea of Eg-walker that travels the graph to
+construct temporary CRDTs for conflict resolution. And, like
 Eg-walker, Loro doesn't need to keep the CRDT structures in memory to edit
 a document.
+
 </aside>
 
 [The Eg-walker paper](https://arxiv.org/abs/2409.14252) was released in
 September 2023. Prior to its official publication, Joseph Gentle shared an
-initial version of the algorithm in the Diamond-Type repository. Excited by 
-the design, I implemented a similar algorithm in Loro two years ago. A brief 
+initial version of the algorithm in the Diamond-Type repository. Excited by
+the design, I implemented a similar algorithm in Loro two years ago. A brief
 introduction to this algorithm can be found
 [here](https://loro.dev/docs/advanced/event_graph_walker).
 
@@ -352,7 +356,7 @@ The properties of Eg-walker includes:
   real-world scenario benchmarks, it's faster than other CRDTs.
 - Lower memory usage: Because it doesn't need to persistently store CRDT
   structures in memory, its memory usage is lower than general CRDTs
-- Faster import speed: CRDT documents often take a long time to load because 
+- Faster import speed: CRDT documents often take a long time to load because
   they need to parse the corresponding CRDT structures or operations to build the CRDT
   data structures. Without these structures, they cannot continue subsequent
   editing, resulting in long import times. Eg-walker, like OT algorithms, only
@@ -383,8 +387,8 @@ specific differences:
   formed these two plain text documents can be different. In Loro, however, it
   is necessary to ensure that the histories of the documents on which A and B
   collaborate are the same.
-- Our text supports not only plain text but also rich text, which includes formatting 
-  attributes like bold, italic, and font styles. This makes our text data format different 
+- Our text supports not only plain text but also rich text, which includes formatting
+  attributes like bold, italic, and font styles. This makes our text data format different
   from plain text and cannot be described directly using plain text description methods.
 - Loro's design supports not only real-time collaboration but also version
   control. Therefore, we have additional data structures and information for
@@ -412,12 +416,12 @@ import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.2";
 
 const doc = new LoroDoc();
 for (let i = 0; i < 10_000; i++) {
-    doc.getText("text").insert(0, "Hello, world!");
+  doc.getText("text").insert(0, "Hello, world!");
 }
 const snapshotBytes = doc.export({ mode: "snapshot" });
 const shallowSnapshotBytes = doc.export({
-    mode: "shallow-snapshot",
-    frontiers: doc.frontiers(),
+  mode: "shallow-snapshot",
+  frontiers: doc.frontiers(),
 });
 
 console.log(snapshotBytes.length); // 5421
@@ -429,27 +433,28 @@ For details on the implementation principle, see
 
 #### Optimized Document Format
 
-Loro version 1.0 has achieved a 10x to 100x improvement in document import speed 
-compared to version 0.16, which already has a fast import speed. 
-It makes it possible to load a large text document with several million operations 
-in under a frame time. 
+Loro version 1.0 has achieved a 10x to 100x improvement in document import speed
+compared to version 0.16, which already has a fast import speed.
+It makes it possible to load a large text document with several million operations
+in under a frame time.
 
-This is because we introduced a new snapshot format. 
-When a LoroDoc is initialized through this snapshot format, we don't 
-parse the corresponding document state and historical information until the user 
+This is because we introduced a new snapshot format.
+When a LoroDoc is initialized through this snapshot format, we don't
+parse the corresponding document state and historical information until the user
 actually needs that information.
 
 <aside>
 💡 **Loro performs integrity checks before importing updates/snapshots**
 
-We append a 4-byte xxhash32 checksum to each export to prevent data corruption. 
-While this doesn't protect against malicious tampering, it's fast and effective 
+We append a 4-byte xxhash32 checksum to each export to prevent data corruption.
+While this doesn't protect against malicious tampering, it's fast and effective
 at detecting issues caused by transmission errors or storage failures.
 
 Our main motivation for including integrity checks is to avoid bugs caused by
 data errors at a relatively low cost. Because Loro uses its own binary encoding
 format, which is different from user-understandable document formats like JSON,
 it would be extremely difficult to troubleshoot if data errors occur.
+
 </aside>
 
 In Loro 1.0's snapshot format, without compression algorithms, its document size
@@ -464,7 +469,7 @@ Trading twice the document size for ten times the import speed is worthwhile
 because import speed affects the performance of many aspects, and the import
 speed of CRDT documents
 [is often noticeable to users on large documents](https://loro.dev/docs/performance)
-(> 16ms). It also leaves possibilities for more optimizations in the future. 
+(> 16ms). It also leaves possibilities for more optimizations in the future.
 
 <aside>
 ❓ **Does this affect the efficiency of data transmission?**
@@ -485,7 +490,7 @@ It depends on the scenario:
 3. For local storage:
    - Users are generally less sensitive to local storage costs.
    - The snapshot format can be used for local persistence without significant impact.
-</aside>
+     </aside>
 
 Inspired by the design of Key-Value Databases, we have also divided the storage
 of document state and history into blocks, with each block roughly 4KB in size,
@@ -581,6 +586,7 @@ The only data that needs to be parsed in this entire process are:
 ❓ Do we still need to load the entire document blob with these optimizations?
 
 We still need to load the entire document blob into memory. However, our current architecture has implemented internal block-based loading and storage, making it easier for us to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we'll assess if there are practical scenarios that require this capability. For most documents, Loro's current performance is already quite sufficient.
+
 </aside>
 
 </details>
@@ -592,7 +598,7 @@ We still need to load the entire document blob into memory. However, our current
 Below is a comparison of Snapshot import and export speeds between Loro versions
 1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
 from the real world. Thanks to [latch.bio](http://latch.bio) for sharing the
-document data. The benchmark code is available [here](https://github.com/loro-dev/latch-bench). 
+document data. The benchmark code is available [here](https://github.com/loro-dev/latch-bench).
 The document contains 1,659,541 operations.
 
 > In Loro, a Snapshot stores the document history along with its current state.
@@ -601,23 +607,23 @@ The document contains 1,659,541 operations.
 > most recent operation history is retained, other historical operations are
 > removed)
 
-| task | Old Snapshot Format on 0.16.12 | New Snapshot Format | Shallow Snapshot Format |
-| ---- | ----------------------------- | ---------------------------------- | -------------------------------------- |
-| Import | 17.3ms +- 0.0298ms | 1.15ms +- 0.0101ms (15x) | 375µs +- 8.47µs (47x) |
-| Import+GetAllValues | 17.4ms +- 0.0437ms | 1.19ms +- 0.0122ms (14.5x) | 375µs +- 1.60µs (46x) |
-| Import+GetAllValues+Edit | 17.5ms +- 0.0263ms | 1.21ms +- 0.0120ms (14.5x) | 375µs +- 1.40µs (46.5x) |
-| Import+GetAllValues+Edit+Export | 32.4ms +- 0.0560ms | 5.46ms +- 0.0772ms (6x) | 844µs +- 5.12µs (38.5x) |
+| task                            | Old Snapshot Format on 0.16.12 | New Snapshot Format        | Shallow Snapshot Format |
+| ------------------------------- | ------------------------------ | -------------------------- | ----------------------- |
+| Import                          | 17.3ms +- 0.0298ms             | 1.15ms +- 0.0101ms (15x)   | 375µs +- 8.47µs (47x)   |
+| Import+GetAllValues             | 17.4ms +- 0.0437ms             | 1.19ms +- 0.0122ms (14.5x) | 375µs +- 1.60µs (46x)   |
+| Import+GetAllValues+Edit        | 17.5ms +- 0.0263ms             | 1.21ms +- 0.0120ms (14.5x) | 375µs +- 1.40µs (46.5x) |
+| Import+GetAllValues+Edit+Export | 32.4ms +- 0.0560ms             | 5.46ms +- 0.0772ms (6x)    | 844µs +- 5.12µs (38.5x) |
 
 Here are the key points of this benchmark:
 
 - The Shallow Snapshot has a depth of 1, meaning it only contains the document
   state and a single historical operation, which is why it's significantly
   faster
-- *GetAllValue* refers to calling `doc.get_deep_value()` (in JS, it's
+- _GetAllValue_ refers to calling `doc.get_deep_value()` (in JS, it's
   `doc.toJSON()` ). It loads the complete state of the document and
   obtains the corresponding JSON-like structure. This represents the time spent
   on CRDT parsing before a user loads a document.
-- *Edit* refers to making a local modification. As you can see, it has little
+- _Edit_ refers to making a local modification. As you can see, it has little
   impact on the time taken because Loro doesn't need to load the complete CRDT
   data structure for local operations.
 - _Export_ refers to exporting the complete document data again. We expect to
@@ -627,7 +633,7 @@ Here are the key points of this benchmark:
 The following shows the performance on a document after applying the editing
 history from the
 [Automerge Paper](https://github.com/automerge/automerge-perf/tree/master/edit-by-index)
-**100 times**. You can reproduce the results [here](https://github.com/zxch3n/automerge-paper-bench). 
+**100 times**. You can reproduce the results [here](https://github.com/https://twitter.com/zx_loro/automerge-paper-bench).
 The document contains:
 
 - 18,231,500 single-character insertion operations
@@ -644,12 +650,12 @@ The document contains:
 - The New snapshot data is smaller because it performs additional simple
   compression on each Block during encoding internally
 
-| task | Old Snapshot | New Snapshot | Shallow Snapshot |
-| ---------------- | -------------------------- | -------------------------- | -------------------------- |
-| Parse | 538ms +- 3.23ms | 17.9ms +- 48.5µs (30x) | 14.4ms +- 114µs (37x) |
-| Parse+ToString | 568ms +- 1.78ms | 20.2ms +- 57.2µs (28x) | 16.8ms +- 81.4µs (34x) |
-| Parse+ToString+Edit | 561ms +- 940µs | 119ms +- 180µs (4.5x) | 113ms +- 185µs (5x) |
-| Parse+ToString+Edit+Export | 1460ms +- 22.9ms | 251ms +- 1.60ms (6x) | 206ms +- 360µs (7x) |
+| task                       | Old Snapshot     | New Snapshot           | Shallow Snapshot       |
+| -------------------------- | ---------------- | ---------------------- | ---------------------- |
+| Parse                      | 538ms +- 3.23ms  | 17.9ms +- 48.5µs (30x) | 14.4ms +- 114µs (37x)  |
+| Parse+ToString             | 568ms +- 1.78ms  | 20.2ms +- 57.2µs (28x) | 16.8ms +- 81.4µs (34x) |
+| Parse+ToString+Edit        | 561ms +- 940µs   | 119ms +- 180µs (4.5x)  | 113ms +- 185µs (5x)    |
+| Parse+ToString+Edit+Export | 1460ms +- 22.9ms | 251ms +- 1.60ms (6x)   | 206ms +- 360µs (7x)    |
 
 ## Next Steps for Loro
 
@@ -657,7 +663,7 @@ The document contains:
 
 <ReactPlayer
   url="/static/loro-cli-import-repo.mp4"
-  style={{maxWidth: "calc(100vw - 40px)"}}
+  style={{ maxWidth: "calc(100vw - 40px)" }}
   muted={true}
   loop={true}
   controls={true}
@@ -672,7 +678,7 @@ collection of documents.
 
 We believe that CRDTs can create a Git for Everyone and Everything:
 
-- It's for Everyone because by leveraging the power of CRDTs, we can make version 
+- It's for Everyone because by leveraging the power of CRDTs, we can make version
   control much easier to reason about and use for the average person.
 - It's (nearly) for Everything because Loro provides a rich set of data
   synchronization types. We're no longer limited to synchronizing plain text
@@ -680,39 +686,40 @@ We believe that CRDTs can create a Git for Everyone and Everything:
   most needs of creative tools and collaborative tools.
 
 We've created a demo of the Loro version controller, which is based on our
-sub-document implementation (implemented in the application layer)  with Version information.
+sub-document implementation (implemented in the application layer) with Version information.
 It can import the entire React repository (about 20,000 commits, thousands of
 collaborators), and it supports real-time collaboration on such
 repositories. However, how to better manage versions and seamlessly integrate with Git still needs to be explored.
 
 <aside>
-When merging extensive concurrent edits, CRDTs can automatically merge changes,
-but the result may not always meet expectations. Fortunately, Loro stores the
-complete editing history. This allows us to offer Git-like manual conflict
-resolution at the application layer when needed.
+  When merging extensive concurrent edits, CRDTs can automatically merge
+  changes, but the result may not always meet expectations. Fortunately, Loro
+  stores the complete editing history. This allows us to offer Git-like manual
+  conflict resolution at the application layer when needed.
 </aside>
 
 Loro CRDTs still have significant room for optimization in these scenarios.
 Currently, the Loro CRDTs library doesn't involve network or disk I/O, which
 enhances its ease of use but also constrains its capabilities and potential
-optimizations.  
-For example, while we've implemented block-level storage, documents are still 
-imported and exported as whole units. Adding I/O capabilities to selectively 
+optimizations.
+For example, while we've implemented block-level storage, documents are still
+imported and exported as whole units. Adding I/O capabilities to selectively
 load/save blocks would enable significant performance optimizations.
 
 ## Conclusion
 
-Loro 1.0 features great performance improvements, rich CRDT types, and advanced 
-version control features. Our optimized document format has yielded promising 
+Loro 1.0 features great performance improvements, rich CRDT types, and advanced
+version control features. Our optimized document format has yielded promising
 results on the import speed and the memory usage.
 
-Now that Loro CRDTs are stable, we are able to develop a better ecosystem. 
-We're excited to see it being applied in various scenarios. 
-If you're interested in using Loro, welcome to join our 
+Now that Loro CRDTs are stable, we are able to develop a better ecosystem.
+We're excited to see it being applied in various scenarios.
+If you're interested in using Loro, welcome to join our
 [Discord community](https://discord.gg/tUsBSVfqzf) for discussions.
 
 <aside>
-🚀 **Want early access to our upcoming local-first apps built with Loro?**  
-[Sign up here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p) to be among the first to try them out!
+  🚀 **Want early access to our upcoming local-first apps built with Loro?**
+  [Sign up
+  here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p)
+  to be among the first to try them out!
 </aside>
-

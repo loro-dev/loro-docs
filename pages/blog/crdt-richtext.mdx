@@ -12,7 +12,10 @@ tag: richtext
 import Authors, { Author } from "../../components/authors";
 
 <Authors date="2023-04-20">
-  <Author name="Zixuan Chen" link="https://twitter.com/zxch3n" />
+  <Author
+    name="Zixuan Chen"
+    link="https://twitter.com/https://twitter.com/zx_loro"
+  />
 </Authors>
 
 Presenting a new Rust crate that combines [Peritext](https://inkandswitch.com/peritext) and [Fugue](https://arxiv.org/abs/2305.00583)'s power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into **[Loro](https://www.loro.dev/)**, a general-purpose CRDT library currently under development.
@@ -214,7 +217,7 @@ We use fuzzing tests in Loro's CRDTs too. This test suite is like our safety net
   - 77,463 single-character deletion operations
   - 259,778 operations totally
   - 104,852 characters in the final document
-  We simulate one client replaying all changes and storing each update. We measure the time to replay the changes and the size of all update messages (`updateSize`), the size of the encoded document after the task is performed (`docSize`), the time to encode the document (`encodeTime`), the time to parse the encoded document (`parseTime`), and the memory used to hold the decoded document in memory (`memUsed`).
+    We simulate one client replaying all changes and storing each update. We measure the time to replay the changes and the size of all update messages (`updateSize`), the size of the encoded document after the task is performed (`docSize`), the time to encode the document (`encodeTime`), the time to parse the encoded document (`parseTime`), and the memory used to hold the decoded document in memory (`memUsed`).
   ### **[B4 x 100] Real-world editing dataset 100 times**
   Replay the [B4] dataset one hundred times. The final document has a size of over 10 million characters. As comparison, the book "Game of Thrones: A Song of Ice and Fire" is only 1.6 million characters long (including whitespace).
   - 18,231,500 single-character insertion operations
@@ -237,7 +240,7 @@ The benchmark was conducted on a 2020 M1 MacBook Pro 13-inch on 2023-05-11.
 | [B4x100] Apply real-world editing dataset 100 times (docSize)    | 12,667,753 +/- 0 bytes | 26,634,606 +/- 80 bytes | skipped             | 17,844,936 +/- 0 bytes      | 15,989,245 +/- 0 bytes       | skipped             |
 | [B4x100] Apply real-world editing dataset 100 times (parseTime)  | 1,252 +/- 14 ms        | 170 +/- 15 ms           | skipped             | 368 +/- 13 ms               | 1,335 +/- 238 ms             | skipped             |
 
-The complete benchmark result and code is available at https://github.com/zxch3n/fugue-bench.
+The complete benchmark result and code is available at https://github.com/https://twitter.com/zx_loro/fugue-bench.
 
 It is worth noting that:
 

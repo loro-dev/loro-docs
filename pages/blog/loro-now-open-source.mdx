@@ -14,7 +14,10 @@ import GitHub from "../../components/github";
 import Authors, { Author } from "../../components/authors";
 
 <Authors date="2023-11-13">
-  <Author name="Zixuan Chen" link="https://twitter.com/zxch3n" />
+  <Author
+    name="Zixuan Chen"
+    link="https://twitter.com/https://twitter.com/zx_loro"
+  />
   <Author name="Liang Zhao" link="https://github.com/leeeon233" />
 </Authors>
 
@@ -132,17 +135,20 @@ export const useCartStore = defineStore({
   }),
   getters: {
     items: (state): Array<{ name: string; amount: number }> =>
-      state.rawItems.reduce((items, item) => {
-        const existingItem = items.find((it) => it.name === item);
+      state.rawItems.reduce(
+        (items, item) => {
+          const existingItem = items.find((it) => it.name === item);
 
-        if (!existingItem) {
-          items.push({ name: item, amount: 1 });
-        } else {
-          existingItem.amount++;
-        }
+          if (!existingItem) {
+            items.push({ name: item, amount: 1 });
+          } else {
+            existingItem.amount++;
+          }
 
-        return items;
-      }, [] as Array<{ name: string; amount: number }>),
+          return items;
+        },
+        [] as Array<{ name: string; amount: number }>,
+      ),
   },
   actions: {
     addItem(name: string) {

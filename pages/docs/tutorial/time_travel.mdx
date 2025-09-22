@@ -41,7 +41,6 @@ The first step is to load our document. Here we assume that you have a snapshot 
 or API.
 
 ```ts no_run
-
 // Get the snapshot for your doc from your database / API
 let snapshot = fetchSnapshot();
 
@@ -63,8 +62,8 @@ const timestamps = Array.from(
     [...changes.values()]
       .flat() // Flatten changes from all peers into one list
       .map((x) => x.timestamp) // Get the timestamp from each peer
-      .filter((x) => !!x)
-  )
+      .filter((x) => !!x),
+  ),
 );
 
 // Sort the timestamps
@@ -90,7 +89,7 @@ Here we make a helper function to do that.
 ```ts
 const getFrontiersForTimestamp = (
   changes: Map<string, Change>,
-  ts: number
+  ts: number,
 ): { peer: string; counter: number }[] => {
   const frontiers = [] as { peer: string; counter: number }[];
 
@@ -140,7 +139,7 @@ Below is a more complete example demonstrating Time Travel functionality with a 
     overflow: "hidden",
     filter: "invert(1) hue-rotate(180deg)",
   }}
-  title="zxch3n/loro-react-flow-example/main"
+  title="https://twitter.com/zx_loro/loro-react-flow-example/main"
   allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
   sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
 ></iframe>

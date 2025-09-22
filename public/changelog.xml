@@ -2,43 +2,152 @@
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
     <channel>
         <title>Loro Changelog</title>
-        <link>https://loro.dev</link>
-        <description>changelog of loro crdt</description>
-        <lastBuildDate>Sat, 09 Aug 2025 16:12:32 GMT</lastBuildDate>
+        <link>https://loro.dev/changelog/</link>
+        <description>Changelog of Loro CRDT.</description>
+        <lastBuildDate>Mon, 22 Sep 2025 13:16:41 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
-            <link>/changelog/_meta.js</link>
-            <guid>/changelog/_meta.js</guid>
-            <pubDate>Invalid Date</pubDate>
-            <content:encoded><![CDATA[<p>export default {}</p>
+            <title><![CDATA[Release Loro v1.8.0]]></title>
+            <link>https://loro.dev/changelog/v1.8.0</link>
+            <guid>https://loro.dev/changelog/v1.8.0</guid>
+            <pubDate>Sun, 21 Sep 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<p>Events now fire <strong>synchronously</strong></p>
+<p>In the JavaScript package <code>loro-crdt@1.8.0</code>, we changed event emission from <strong>“after a microtask”</strong> to <strong>synchronous</strong> dispatch. This makes event handling simpler and less error‑prone.</p>
+<h3>Why we changed it</h3>
+<p>Historically, the JS binding emitted events <strong>after a microtask</strong>. The reason was to avoid Rust borrow/aliasing issues: if an event triggered inside <code>doc.commit()</code> re‑entered the same <code>doc</code>, Rust could panic because <code>commit()</code> holds a borrow and reusing the object would violate borrowing rules. Deferring events to a microtask avoided that re‑entrancy. (Background: Loro’s JS API exposes subscriptions via <code>doc.subscribe(...)</code>; the docs note that events used to arrive after a microtask. ([Loro][1]))</p>
+<p>However, this deferral made app logic fragile. There was a window between the mutation and the event callback. Example: the app receives the event from CRDT “delete the 3rd character of <code>Hi!</code>”, but during the microtask gap the app state changed <code>Hi!</code> → <code>Hi</code>. When the deferred event arrives, applying a “delete index 2” delta can be wrong. In practice, users had to maintain an awkward invariant: <strong>don’t mutate the app state during that microtask</strong> if you consume delta updates.</p>
+<h3>What’s new in 1.8.0</h3>
+<p>Events are now <strong>dispatched synchronously</strong>—that is, your listeners run <strong>before</strong> the top‑level JS call (e.g., <code>doc.commit()</code>) returns. To keep this safe with Rust’s borrowing:</p>
+<ul>
+<li>We keep a <strong>global queue</strong> of “pending (listener, event)” pairs.</li>
+<li>JS wrappers decorate APIs that can borrow the Rust doc (e.g., <code>commit</code>, import/export, checkout).</li>
+<li>The wrapper calls into WASM/Rust, <strong>returns from the borrow</strong>, then <strong>flushes the queue</strong> and clears it.</li>
+<li>Because callbacks run <strong>outside</strong> the borrowed region, listeners can freely call <code>doc</code> APIs without triggering borrow violations.</li>
+</ul>
+<h3>What this means for your app</h3>
+<ul>
+<li><strong>Simpler state updates.</strong> No more microtask gap; event ordering matches your mutation order.</li>
+<li><strong>Fewer footguns with deltas.</strong> You no longer need to uphold “don’t touch the doc during the microtask” when applying delta‑style updates.</li>
+<li><strong>Listeners can still safely use <code>doc</code>.</strong></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Release Loro v1.6.0]]></title>
+            <link>https://loro.dev/changelog/v1.6.0</link>
+            <guid>https://loro.dev/changelog/v1.6.0</guid>
+            <pubDate>Thu, 28 Aug 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<p>Snapshot import speed is now 2x.</p>
+<p>This is implemented by skipping the scan when importing a snapshot, which avoids running the decompression during the import process (but we need to ensure the parent-child link is still accessible in Arena). It also skips the checksum check in the import_all method on MemKV because we already check the checksum in the header of the snapshot/update.</p>
+<h2>v1.0.0 vs v1.6.0</h2>
+<p>You can find the benchmark <a href="https://github.com/loro-dev/latch-bench/tree/cmp-loro-160">here</a>.</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>task</th>
+<th>time</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Shallow Snapshot on v1.0.0</td>
+<td>Import</td>
+<td>150.667µs +- 1.823µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues</td>
+<td>163.957µs +- 1.841µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit</td>
+<td>173.971µs +- 2.03µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit+Export</td>
+<td>488.848µs +- 3.621µs</td>
+</tr>
+<tr>
+<td>Shallow Snapshot on v1.6.0</td>
+<td>Import</td>
+<td>82.82µs +- 507ns</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues</td>
+<td>90.376µs +- 393ns</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit</td>
+<td>103.358µs +- 1.916µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit+Export</td>
+<td>419.463µs +- 2.316µs</td>
+</tr>
+<tr>
+<td>Snapshot on v1.0.0</td>
+<td>Import</td>
+<td>466.425µs +- 3.879µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues</td>
+<td>487.06µs +- 3.523µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit</td>
+<td>541.477µs +- 9.067µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit+Export</td>
+<td>2.98382ms +- 80.537µs</td>
+</tr>
+<tr>
+<td>Snapshot on v1.6.0</td>
+<td>Import</td>
+<td>201.934µs +- 854ns</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues</td>
+<td>370.108µs +- 4.049µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit</td>
+<td>386.497µs +- 3.509µs</td>
+</tr>
+<tr>
+<td></td>
+<td>Import+GetAllValues+Edit+Export</td>
+<td>2.362296ms +- 28.258µs</td>
+</tr>
+</tbody></table>
 ]]></content:encoded>
         </item>
         <item>
             <title><![CDATA[Release Loro Inspector v0.1.0]]></title>
-            <link>/changelog/inspector-v0.1.0</link>
-            <guid>/changelog/inspector-v0.1.0</guid>
+            <link>https://loro.dev/changelog/inspector-v0.1.0</link>
+            <guid>https://loro.dev/changelog/inspector-v0.1.0</guid>
             <pubDate>Tue, 29 Apr 2025 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<p>Try it here: <a href="https://inspector.loro.dev/">Loro Inspector</a></p>
 <p>Now you can directly browse the current state and complete edit history of your Loro 
 documents in the browser. You can also use this tool to time travel to any version 
 in the history of your Loro document.</p>
-<p>import { ReactPlayer } from &quot;../../components/video&quot;;</p>
-<p>&lt;ReactPlayer
-  url=&quot;/static/loro-inspector.mp4&quot;
-  style={{maxWidth: &quot;calc(100vw - 40px)&quot;, &quot;margin&quot;: &quot;2em auto&quot;}}
-  width={&quot;100%&quot;}
-  height={&quot;auto&quot;}
-  muted={true}
-  loop={true}
-  controls={true}
-/&gt;</p>
 ]]></content:encoded>
         </item>
         <item>
             <title><![CDATA[Release Loro v1.5.0]]></title>
-            <link>/changelog/v1.5.0</link>
-            <guid>/changelog/v1.5.0</guid>
+            <link>https://loro.dev/changelog/v1.5.0</link>
+            <guid>https://loro.dev/changelog/v1.5.0</guid>
             <pubDate>Thu, 03 Apr 2025 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <h3>1. New Hooks</h3>
@@ -99,8 +208,7 @@ expect(doc.getMap(&quot;users&quot;).get(&quot;0&quot;)).toBe(&quot;user-0&quot;
 });
 </code></pre>
 <p>Since Awareness is primarily used in real-time collaboration scenarios where consistency requirements are relatively low, we can make it more flexible. We&#39;ve introduced EphemeralStore as an alternative to Awareness. Think of it as a simple key-value store that uses timestamp-based last-write-wins for conflict resolution. You can choose the appropriate granularity for your key-value pairs based on your application&#39;s needs, and only modified key-value pairs are synchronized.</p>
-<pre><code class="language-ts">import {
-    EphemeralStore,
+<pre><code class="language-ts">    EphemeralStore,
     EphemeralListener,
     EphemeralStoreEvent,
 } from &quot;loro-crdt&quot;;
@@ -139,8 +247,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.4.7]]></title>
-            <link>/changelog/v1.4.7</link>
-            <guid>/changelog/v1.4.7</guid>
+            <link>https://loro.dev/changelog/v1.4.7</link>
+            <guid>https://loro.dev/changelog/v1.4.7</guid>
             <pubDate>Mon, 31 Mar 2025 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <ul>
@@ -163,8 +271,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.4.0]]></title>
-            <link>/changelog/v1.4.0</link>
-            <guid>/changelog/v1.4.0</guid>
+            <link>https://loro.dev/changelog/v1.4.0</link>
+            <guid>https://loro.dev/changelog/v1.4.0</guid>
             <pubDate>Wed, 12 Feb 2025 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <ul>
@@ -181,8 +289,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.3.0]]></title>
-            <link>/changelog/v1.3.0</link>
-            <guid>/changelog/v1.3.0</guid>
+            <link>https://loro.dev/changelog/v1.3.0</link>
+            <guid>https://loro.dev/changelog/v1.3.0</guid>
             <pubDate>Wed, 08 Jan 2025 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <ul>
@@ -208,8 +316,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.2.0]]></title>
-            <link>/changelog/v1.2.0</link>
-            <guid>/changelog/v1.2.0</guid>
+            <link>https://loro.dev/changelog/v1.2.0</link>
+            <guid>https://loro.dev/changelog/v1.2.0</guid>
             <pubDate>Mon, 09 Dec 2024 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <ul>
@@ -241,8 +349,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.1.0]]></title>
-            <link>/changelog/v1.1.0</link>
-            <guid>/changelog/v1.1.0</guid>
+            <link>https://loro.dev/changelog/v1.1.0</link>
+            <guid>https://loro.dev/changelog/v1.1.0</guid>
             <pubDate>Fri, 08 Nov 2024 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<h2>New</h2>
 <h3>LoroDoc</h3>
@@ -286,8 +394,8 @@ shared and accessed in parallel across multiple threads without triggering the p
         </item>
         <item>
             <title><![CDATA[Release Loro v1.0.0]]></title>
-            <link>/changelog/v1.0.0-beta</link>
-            <guid>/changelog/v1.0.0-beta</guid>
+            <link>https://loro.dev/changelog/v1.0.0-beta</link>
+            <guid>https://loro.dev/changelog/v1.0.0-beta</guid>
             <pubDate>Sun, 20 Oct 2024 16:00:00 GMT</pubDate>
             <content:encoded><![CDATA[<p>We are very excited to announce the release of Loro v1.0, a major milestone.</p>
 <p>It has a stable encoding format, faster document import and export speed, better version control capabilities, and a shallow snapshot. For more information, please check <a href="https://loro.dev/blog/v1.0">the blog</a>.</p>
