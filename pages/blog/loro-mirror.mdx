@@ -1,0 +1,250 @@
+---
+title: "Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs"
+date: 2025/09/22
+description: "Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history. "
+image: "https://i.ibb.co/bRM0JwMC/image.png"
+---
+
+# Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs
+
+import Caption from "../../components/caption";
+import GitHub from "../../components/github";
+import Authors, { Author } from "../../components/authors";
+
+<Authors date="2025-09-22">
+  <Author name="Zixuan Chen" link="https://twitter.com/zxch3n" />
+</Authors>
+
+**TL;DR.** Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history.
+
+> CRDT. A Conflict‑free Replicated Data Type lets multiple peers edit concurrently and still converge without central coordination.
+>
+> **Local‑first.** Data is usable offline and synced later; the device is the primary source of truth.
+
+## Overview
+
+**Loro** is a CRDT library for local‑first apps. It supports rich containers—`Text`, `Map`, `List`/`MovableList`, `Tree`—with versioning, time‑travel, and compact updates/snapshots.
+
+Apps still need glue code to map between CRDT documents and UI state. CRDTs ensure documents converge; they do not maintain your application state.
+
+**Loro Mirror** addresses this boundary. You declare a schema once. Mirror maintains an immutable app‑state view and handles both directions:
+
+- **Event → state.** Loro events update your state.
+- **State → CRDT.** `setState` diffs become container‑level CRDT ops (insert / delete / move / text edits).
+
+For an update, if **k** items change and each changed item affects **m** of its immediate fields, time complexity is **≈ O(k·m)**. _(k = number of changed items; m = average number of changed immediate fields per changed item.)_ This time complexity is quite similar to the time complexity of React’s render function.
+
+## Why this exists
+
+Without Mirror, projects that uses Loro need to:
+
+1. Map CRDT containers to UI data structures.
+2. Diff UI edits and translate them to CRDT operations.
+3. Subscribe to CRDT events and patch UI state.
+
+This code is repetitive and easy to get wrong. Mirror centralizes it behind a declarative schema.
+
+---
+
+## What Mirror provides
+
+- **Declarative schema.** Describe UI state in terms of Loro containers; Mirror maintains an immutable view.
+- **Typed and framework‑agnostic.** Works in plain TypeScript or React (via `loro-mirror-react`).
+- **Fine‑grained diffs.** Generates ops such as item moves in `MovableList` and character deltas in `Text`.
+- **Predictable subscriptions.** Emits focused updates for stable renders.
+- **Sync‑friendly.** Uses Loro updates/snapshots over any transport (HTTP, WebSocket, P2P).
+
+---
+
+## How to use
+
+1. Define a schema that describes your app state as Loro containers (Map/List/Text/MovableList/Tree).
+2. Create a `LoroDoc` and a Mirror store; provide `schema` and optional `initialState`.
+3. Update via `setState` (immutable return or Immer‑style draft). Subscribe for changes if needed.
+4. Sync across peers using Loro updates; Mirror applies remote changes back to your app state automatically.
+
+### Basic Example
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+import { schema, SyncDirection, Mirror } from "loro-mirror";
+
+// 1) Declare state shape – a MovableList of todos with stable Container ID `$cid`
+type TodoStatus = "todo" | "inProgress" | "done";
+const appSchema = schema({
+  todos: schema.LoroMovableList(
+    schema.LoroMap({
+      text: schema.String(),
+      status: schema.String<TodoStatus>(),
+    }),
+    // $cid is the container ID of LoroMap assigned by Loro
+    (t) => t.$cid,
+  ),
+});
+
+// 2) Create a Loro document and a Mirror store
+const doc = new LoroDoc();
+const store = new Mirror({
+  doc,
+  schema: appSchema,
+  // InitialState will not be written into LoroDoc
+  initialState: { todos: [] },
+});
+
+// 3) Subscribe (optional) – know whether updates came from local or remote
+const unsubscribe = store.subscribe((state, { direction, tags }) => {
+  if (direction === SyncDirection.FROM_LORO) {
+    console.log("Remote update", { state, tags });
+  } else {
+    console.log("Local update", { state, tags });
+  }
+});
+
+// 4) Either draft‑mutate or return a new state
+// Draft‑style (mutate a draft)
+store.setState((s) => {
+  s.todos.push({ text: "Draft add", status: "todo" });
+});
+
+// Immutable return (construct a new object)
+store.setState((s) => ({
+  ...s,
+  todos: [...s.todos, { text: "Immutable add", status: "todo" }],
+}));
+
+// 5) Sync across peers with Loro updates (transport‑agnostic)
+// Example: two docs in memory – in real apps, send `bytes` over WS/HTTP/WebRTC
+const other = new LoroDoc();
+other.import(doc.export({ mode: "snapshot" }));
+
+// Wire realtime sync (local updates → remote import)
+const stop = doc.subscribeLocalUpdates((bytes) => {
+  other.import(bytes);
+});
+
+// Any `store.setState(...)` on `doc` now appears in `other` as well
+```
+
+### React Example
+
+```ts
+import React, { useMemo } from "react";
+import { LoroDoc } from "loro-crdt";
+import { schema } from "loro-mirror";
+import { useLoroStore } from "loro-mirror-react";
+
+type TodoStatus = "todo" | "inProgress" | "done";
+
+const todoSchema = schema({
+  todos: schema.LoroMovableList(
+    schema.LoroMap({
+      text: schema.String(),
+      status: schema.String<TodoStatus>(),
+    }),
+    (t) => t.$cid,
+  ),
+});
+
+export function TodoApp() {
+  const doc = useMemo(() => new LoroDoc(), []);
+  const { state, setState } = useLoroStore({
+    doc,
+    schema: todoSchema,
+    initialState: { todos: [] },
+  });
+
+  function addTodo(text: string) {
+    setState((s) => {
+      s.todos.push({ text, status: "todo" });
+    });
+  }
+
+  return (
+    <>
+      <button onClick={() => addTodo("Write blog")}>Add</button>
+      <ul>
+        {state.todos.map((t) => (
+          <li key={t.$cid}>
+            <input
+              value={t.text}
+              onChange={(e) =>
+                setState((s) => {
+                  const i = s.todos.findIndex((x) => x.$cid === t.$cid);
+                  // Text delta will be calculated automatically
+                  if (i !== -1) s.todos[i].text = e.target.value;
+                })
+              }
+            />
+            <select
+              value={t.status}
+              onChange={(e) =>
+                setState((s) => {
+                  const i = s.todos.findIndex((x) => x.$cid === t.$cid);
+                  if (i !== -1)
+                    s.todos[i].status = e.target.value as TodoStatus;
+                })
+              }
+            >
+              <option value="todo">Todo</option>
+              <option value="inProgress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+```
+
+Undo/Redo
+
+```tsx
+import { UndoManager } from "loro-crdt";
+
+// Inside the same component, after creating `doc`:
+const undo = useMemo(() => new UndoManager(doc), [doc]);
+
+// Add controls anywhere in your UI:
+<div>
+  <button onClick={() => undo.undo()}>Undo</button>
+  <button onClick={() => undo.redo()}>Redo</button>
+  {/* UndoManager only reverts your local edits; remote edits stay. */}
+  {/* See docs: <https://loro.dev/docs/advanced/undo> */}
+  {/* For full time travel, see: <https://loro.dev/docs/tutorial/time_travel> */}
+</div>;
+```
+
+What you get
+
+- Type-safe, framework-agnostic state
+- Each mutation becomes a minimal change-set (CRDT delta)—no manual diffing
+- Fine-grained updates to subscribers for fast, predictable renders
+- [Built-in history and time travel](https://loro.dev/docs/tutorial/time_travel)
+- [Offline-first sync](https://loro.dev/docs/tutorial/sync) via updates or snapshots with deterministic conflict resolution over any transport (HTTP, WebSocket, P2P)
+- [Collaborative undo/redo](https://loro.dev/docs/advanced/undo) across clients
+
+import { ReactPlayer } from "../../components/video";
+
+<ReactPlayer
+  url="/static/recording-loro-todo.mp4"
+  style={{ maxWidth: "calc(100vw - 40px)" }}
+  muted={true}
+  loop={true}
+  controls={true}
+  playing={true}
+/>
+
+We built a example app here [https://todo.loro.dev](https://todo.loro.dev) . It’s open source at https://github.com/loro-dev/loro-todo. It’s collaborative and account-free. The data will be persisted locally and saved in the cloud for 7 days. You can share your todo list with others by just sharing the unique URL. In the codebase, only a tiny portion of the code is about Loro thanks to the help of loro-mirror.
+
+## Where we’re going
+
+Because Mirror owns the bidirectional mapping between application state and the Loro document, we can move value up the stack while lowering integration cost. For example:
+
+- Text. Many interfaces render by lines, yet LoroText’s low‑level API is index‑based. Teams typically re‑implement line segmentation and map edits back to lines by hand. With Mirror in the middle, it becomes feasible to surface optional line‑aware events on top of LoroText so the UI receives stable, line‑based diffs without custom conversion—while retaining the underlying CRDT guarantees.
+- Tree. LoroTree CRDT already ensures correct concurrent moves, but developers still translate tree operations into application‑state patches. Mirror carries first‑class mappings from tree events into your state shape, so consumers can work with natural “insert/move/delete node” updates.
+- Lists at scale. Large collections benefit from virtualization. One possibility unlocked by Mirror is slice/window helpers so subscribers can focus on a moving window of list state without traversing or diffing the entire list—enabling infinite scroll and virtual tables with predictable performance.
+
+// TODO: mention AI
+
+If this work helps you build collaborative, local‑first experiences, we’d be grateful for your sponsorship—it lets us keep investing in these higher‑level ergonomics. You can support us via [GitHub Sponsors](https://github.com/sponsors/loro-dev).

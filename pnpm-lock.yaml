@@ -189,6 +189,12 @@ importers:
       feed:
         specifier: ^4.2.2
         version: 4.2.2
+      loro-mirror:
+        specifier: ^1.0.0
+        version: 1.0.0(loro-crdt@1.5.10)
+      loro-mirror-react:
+        specifier: ^1.0.0
+        version: 1.0.0(loro-crdt@1.5.10)(loro-mirror@1.0.0(loro-crdt@1.5.10))(react@18.3.1)
       marked:
         specifier: ^14.1.3
         version: 14.1.4
@@ -4743,6 +4749,9 @@ packages:
     engines: {node: '>=16.x'}
     hasBin: true
 
+  immer@10.1.3:
+    resolution: {integrity: sha512-tmjF/k8QDKydUlm3mZU+tjM6zeq9/fFpPqH9SzWmBnVVKsPBg/V66qsMwb3/Bo90cgUN+ghdVBess+hPsxUyRw==}
+
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -5261,6 +5270,18 @@ packages:
 
   loro-crdt@1.5.10:
     resolution: {integrity: sha512-dBAw3Hh9EJLaS5MqyNMoZRq7r01UxLWUdm3go2v2EtYIrH658IG0vcktHuZqeEwyTMvE5eUtyHhLx3lgUyDFfw==}
+
+  loro-mirror-react@1.0.0:
+    resolution: {integrity: sha512-GjA2P9i6Vd3tgnAk9LyCdmsHgybMi0/AKLc8q4oCYNssz2O6Jf8zY4th6N3vl+NQgHxZ9eJC08DeilNORE9gcw==}
+    peerDependencies:
+      loro-crdt: ^1.8.0
+      loro-mirror: 1.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+
+  loro-mirror@1.0.0:
+    resolution: {integrity: sha512-77PyZxkA/xyq8igmVO2bH6U3EkrKICz7Gnhu2fQ/L5UO61JC+zisUwy/8Hy26DXrVE07jih0WbwVZ7sMJLRcbg==}
+    peerDependencies:
+      loro-crdt: ^1.8.0
 
   lower-case@2.0.2:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
@@ -13420,6 +13441,8 @@ snapshots:
     dependencies:
       queue: 6.0.2
 
+  immer@10.1.3: {}
+
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -13940,6 +13963,17 @@ snapshots:
       js-tokens: 4.0.0
 
   loro-crdt@1.5.10: {}
+
+  loro-mirror-react@1.0.0(loro-crdt@1.5.10)(loro-mirror@1.0.0(loro-crdt@1.5.10))(react@18.3.1):
+    dependencies:
+      loro-crdt: 1.5.10
+      loro-mirror: 1.0.0(loro-crdt@1.5.10)
+      react: 18.3.1
+
+  loro-mirror@1.0.0(loro-crdt@1.5.10):
+    dependencies:
+      immer: 10.1.3
+      loro-crdt: 1.5.10
 
   lower-case@2.0.2:
     dependencies:
