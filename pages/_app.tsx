@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { AppProps } from "next/app";
+import Head from "next/head";
 import Script from "next/script";
 import "@fontsource/poppins/100.css";
 import "@fontsource/poppins/200.css";
@@ -20,6 +21,20 @@ export default function Nextra({
 }: AppProps): ReactElement {
   return (
     <>
+      <Head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Loro Blog"
+          href="/blog.xml"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Loro Changelog"
+          href="/changelog.xml"
+        />
+      </Head>
       <Script
         strategy="afterInteractive"
         src="https://www.googletagmanager.com/gtag/js?id=G-M8FTP4QZ81"

@@ -1,4 +1,5 @@
 import { getPagesUnderRoute } from "nextra/context";
+import Link from "next/link";
 import BlogPostCard from "../components/BlogPostCard";
 
 export function BlogHeader() {
@@ -8,6 +9,14 @@ export function BlogHeader() {
         <span className="font-bold leading-tight lg:text-5xl">Loro Blog</span>
       </h1>
       <p className="text-center text-gray-500 dark:text-gray-400 font-space-grotesk"></p>
+      <div className="mt-4">
+        <Link
+          href="/blog.xml"
+          className="text-sm font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400"
+        >
+          Subscribe via RSS
+        </Link>
+      </div>
     </div>
   );
 }
