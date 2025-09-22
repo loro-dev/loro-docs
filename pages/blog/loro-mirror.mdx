@@ -210,7 +210,7 @@ export function TodoApp() {
 
 Undo/Redo
 
-```tsx twoslash
+```tsx
 import { UndoManageker } from "loro-crdt";
 
 // Inside the same component, after creating `doc`:
@@ -254,8 +254,8 @@ Because Mirror owns the bidirectional mapping between application state and the 
 
 - Text. Many interfaces render by lines, yet LoroText’s low‑level API is index‑based. Teams typically re‑implement line segmentation and map edits back to lines by hand. With Mirror in the middle, it becomes feasible to surface optional line‑aware events on top of LoroText so the UI receives stable, line‑based diffs without custom conversion—while retaining the underlying CRDT guarantees.
 - Tree. LoroTree CRDT already ensures correct concurrent moves, but developers still translate tree operations into application‑state patches. Mirror carries first‑class mappings from tree events into your state shape, so consumers can work with natural “insert/move/delete node” updates.
-- Lists at scale. Large collections benefit from virtualization. One possibility unlocked by Mirror is slice/window helpers so subscribers can focus on a moving window of list state without traversing or diffing the entire list—enabling infinite scroll and virtual tables with predictable performance.
+- Ephemeral patches. We'll add [`setStateWithEphemeralPatch`](https://github.com/loro-dev/loro-mirror/issues/35) so Mirror can stream temporary drag or scale interactions through an `EphemeralStore`, letting collaborators see live previews while the persisted history stays clean and deduplicated once the change finalizes.
 
 By using loro-mirror to bridge CRDTs and application state consistency, and by expressing schemas declaratively, we can let AI help developers get more done correctly. This makes Loro not only suitable for professional creative tools with real-time collaboration, but also for enabling people to build practical mini-tools for themselves and their communities.
 
-If this work helps you build collaborative, local‑first experiences, we’d be grateful for your sponsorship—it lets us keep investing in these higher‑level ergonomics. You can support us via [GitHub Sponsors](https://github.com/sponsors/loro-dev).
+If this work helps you build collaborative, local‑first experiences, we’d be grateful for your sponsorship. You can support us via [GitHub Sponsors](https://github.com/sponsors/loro-dev).
