@@ -1,0 +1,30 @@
+---
+version: "v1.8.0"
+title: "Release Loro v1.8.0"
+date: 2025/09/22
+---
+
+Events now fire **synchronously**
+
+In the JavaScript package `loro-crdt@1.8.0`, we changed event emission from **“after a microtask”** to **synchronous** dispatch. This makes event handling simpler and less error‑prone.
+
+### Why we changed it
+
+Historically, the JS binding emitted events **after a microtask**. The reason was to avoid Rust borrow/aliasing issues: if an event triggered inside `doc.commit()` re‑entered the same `doc`, Rust could panic because `commit()` holds a borrow and reusing the object would violate borrowing rules. Deferring events to a microtask avoided that re‑entrancy. (Background: Loro’s JS API exposes subscriptions via `doc.subscribe(...)`; the docs note that events used to arrive after a microtask. ([Loro][1]))
+
+However, this deferral made app logic fragile. There was a window between the mutation and the event callback. Example: the app receives the event from CRDT “delete the 3rd character of `Hi!`”, but during the microtask gap the app state changed `Hi!` → `Hi`. When the deferred event arrives, applying a “delete index 2” delta can be wrong. In practice, users had to maintain an awkward invariant: **don’t mutate the app state during that microtask** if you consume delta updates.
+
+### What’s new in 1.8.0
+
+Events are now **dispatched synchronously**—that is, your listeners run **before** the top‑level JS call (e.g., `doc.commit()`) returns. To keep this safe with Rust’s borrowing:
+
+- We keep a **global queue** of “pending (listener, event)” pairs.
+- JS wrappers decorate APIs that can borrow the Rust doc (e.g., `commit`, import/export, checkout).
+- The wrapper calls into WASM/Rust, **returns from the borrow**, then **flushes the queue** and clears it.
+- Because callbacks run **outside** the borrowed region, listeners can freely call `doc` APIs without triggering borrow violations.
+
+### What this means for your app
+
+- **Simpler state updates.** No more microtask gap; event ordering matches your mutation order.
+- **Fewer footguns with deltas.** You no longer need to uphold “don’t touch the doc during the microtask” when applying delta‑style updates.
+- **Listeners can still safely use `doc`.**
