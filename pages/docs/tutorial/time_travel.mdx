@@ -88,7 +88,7 @@ Here we make a helper function to do that.
 
 ```ts
 const getFrontiersForTimestamp = (
-  changes: Map<string, Change>,
+  changes: Map<string, Change[]>,
   ts: number,
 ): { peer: string; counter: number }[] => {
   const frontiers = [] as { peer: string; counter: number }[];
