@@ -241,6 +241,33 @@ const undoManager = new UndoManager(doc, {
    - An item is popped from the redo stack (triggers `onPop` with `isUndo=false`)
    - A corresponding item is pushed to the undo stack (triggers `onPush` with `isUndo=true`)
 
+### Manual Grouping with `groupStart` and `groupEnd`
+
+Sometimes you need tighter control over how undo units are formed than `mergeInterval` alone can provide. The `UndoManager.groupStart()` and `UndoManager.groupEnd()` methods let you explicitly wrap a sequence of commits so they become a single undo step.
+
+- Call `groupStart()` before you begin a batch of related edits. Any commits that happen before the matching `groupEnd()` will undo together.
+- Calling `groupStart()` while another group is active throws an error and leaves the original group in place, which helps catch accidental nesting.
+- Remote updates can influence grouping: a conflicting import may force the current group to end early, while non-conflicting imports are merged without breaking the group. Always finish with `groupEnd()`—if the group already auto-closed, the call becomes a no-op.
+
+```ts twoslash no_run
+import { LoroDoc, UndoManager } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+const text = doc.getText("text");
+const undoManager = new UndoManager(doc, {});
+
+undoManager.groupStart();
+
+text.update("hello", undefined);
+doc.commit();
+text.update("hello world", undefined);
+doc.commit();
+
+undoManager.groupEnd();
+
+undoManager.undo(); // Reverts both commits in one step
+```
+
 ### Example: Text Editing with Undo/Redo
 
 Consider a simple text editor that uses Loro for collaboration. Let's walk through what happens during typical editing operations:

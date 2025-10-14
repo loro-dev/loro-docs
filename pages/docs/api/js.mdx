@@ -5030,6 +5030,91 @@ undo.setMergeInterval(2000); // 2 seconds
 ```
 </Indent>
 
+<Method id="UndoManager.groupStart">
+```typescript no_run
+groupStart(): void
+```
+</Method>
+<Indent>
+Begin a manual grouping of subsequent commits into a single undo step.
+
+**Behavior:**
+- Wrap consecutive `doc.commit()` calls so they undo together
+- Calling `groupStart` again before `groupEnd` throws and leaves the current group unchanged
+- Conflicting remote imports may automatically end the group and split the undo item
+
+**Example:**
+```ts threeslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+const text = doc.getText("text");
+
+undo.groupStart();
+
+text.update("hello", undefined);
+doc.commit();
+
+text.update("hello world", undefined);
+doc.commit();
+
+undo.groupEnd();
+
+undo.undo();
+
+console.log(text.toString()); // ""
+```
+</Indent>
+
+<Method id="UndoManager.groupEnd">
+```typescript no_run
+groupEnd(): void
+```
+</Method>
+<Indent>
+Close the active manual group and enqueue the grouped operations as a single undo item.
+
+**Behavior:**
+- Must be paired with a prior `groupStart`
+- Safe to call after the group was auto-closed by a conflicting remote import (becomes a no-op)
+- Non-conflicting remote updates from other peers remain outside the undo item but do not break the group
+
+**Example:**
+```ts threeslash
+import { LoroDoc, UndoManager } from "loro-crdt";
+
+const doc = new LoroDoc();
+const undo = new UndoManager(doc, {});
+const text = doc.getText("text");
+
+undo.groupStart();
+
+text.update("hello", undefined);
+doc.commit();
+text.update("hello world", undefined);
+doc.commit();
+
+const snapshot = doc.export({ mode: "snapshot" });
+const doc2 = new LoroDoc();
+doc2.import(snapshot);
+doc2.getText("text2").update("hello world world", undefined); // touches a different container
+doc2.commit();
+const update = doc2.export({ mode: "update" });
+
+doc.import(update); // remote, non-conflicting change
+
+text.update("hello world world world", undefined);
+doc.commit();
+
+undo.groupEnd();
+
+undo.undo();
+
+console.log(text.toString()); // ""
+```
+</Indent>
+
 <Method id="UndoManager.addExcludeOriginPrefix">
 ```typescript no_run
 addExcludeOriginPrefix(prefix: string): void
