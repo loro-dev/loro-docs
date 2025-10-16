@@ -9,6 +9,10 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - **Website**: https://loro.dev
 - **GitHub**: https://github.com/loro-dev/loro
 
+ ## API Reference & SDKs
+[JavaScript & TypeScript API Reference](https://loro.dev/docs/api/js): Complete documentation for LoroDoc, containers, events, cursors, and utility helpers.
+[Rust API Reference](https://docs.rs/loro/latest/loro/)
+
 ## Core Features
 
 - **Automatic Conflict Resolution**: All concurrent edits converge to the same state using CRDTs
