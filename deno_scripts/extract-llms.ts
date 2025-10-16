@@ -9,6 +9,7 @@ const workspaceDir = args.dir || Deno.cwd();
 const outputFile = join(workspaceDir, "public", "llms-full.txt");
 const toIgnore = [
     "/README.md",
+    "/AGENTS.md",
     "pages/changelog.mdx",
     "pages/blog.mdx",
     "pages/index.mdx"
