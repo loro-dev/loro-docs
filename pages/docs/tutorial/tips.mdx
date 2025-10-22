@@ -20,6 +20,8 @@ from an identical baseline without generating unnecessary operations.
 
 When using `setPeerId`, you must avoid having two parallel peers use the same PeerId. This can cause serious consistency problems in your application.
 
+If you plan to reuse a PeerId across sessions, make sure that you persist the document's local state together with that PeerId and load it before applying any remote updates. Otherwise, the same `peerId + counter` combination could end up referring to two different operations, producing divergence that cannot be resolved automatically.
+
 <details>
 <summary>Why</summary>
 
@@ -33,6 +35,8 @@ It's because Loro determines whether an operation has already been included by c
 Be careful when reusing PeerIds (this optimization is often unnecessary). You should not assign a fixed PeerId to a user, as one user might use multiple devices. Similarly, you shouldn't assign a fixed PeerId to a device, because even on a single browser, multiple tabs might open the same document simultaneously.
 
 If you must reuse PeerIds, you need to carefully manage your local PeerId cache with proper locking mechanisms. This would allow only one tab to "take" a specific PeerId, while other tabs use random IDs. The PeerId should be returned to the cache when no longer in use.
+
+In addition to locking, avoid having multiple browser tabs (or apps on different processes) use the same PeerId concurrently. Coordinating access in this way ensures that a reused PeerId never emits two different operations with the same operation ID.
 
 </details>
 

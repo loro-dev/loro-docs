@@ -41,6 +41,8 @@ doc.setPeerId("123123123");  // You can only set 64 bit integers as peer IDs
 
 ⚠️ **Warning**: Manual assignment requires careful conflict avoidance.
 
+If you intentionally reuse a Peer ID, persist the document's local data (snapshot, updates, or durable cache) alongside that ID and load it before fetching or applying any remote updates. This ensures the `(peerId, counter)` pairs continue to reference the same operations. Skipping this step risks generating a new operation that reuses an existing operation ID, which leads to inconsistent replicas.
+
 ## Counter System
 
 Each peer maintains a monotonic counter starting at 0:
@@ -65,6 +67,7 @@ console.log(doc.version()); // { "1": 2 }
 - Use user IDs as peer IDs, because an user can have multiple devices
 - Use fixed IDs
 - Reuse IDs without proper management
+- Allow multiple browser tabs or processes to operate on the same reused Peer ID in parallel—coordinate access with locks so that only one session emits operations for that ID at a time
 
 ## Related Documentation
 
