@@ -1,0 +1,122 @@
+## Loro の紹介
+
+データの同期やリアルタイム協調アプリの構築は、デバイスがオフラインになったり P2P ネットワークに属したりする場合には特に難しいことがよく知られています。Loro はそのプロセスをシンプルにします。
+
+私たちは、[ローカルファーストアプリ](https://www.inkandswitch.com/local-first/)の開発を簡単で楽しいものにするために、より良い開発者ツールを提供したいと考えています。
+
+Loro は[コンフリクトフリー複製データ型（CRDT）](/docs/concepts/crdt)を用いて並行編集を解決します。Loro のデータ型を利用すると、アプリケーションにコラボレーション機能を持たせ、低いオーバーヘッドで編集履歴を保持できます。
+
+Loro でアプリの状態をモデリングした後は、同期はとても簡単です。
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.getText("text").insert(0, "Hello world!");
+docB.getText("text").insert(0, "Hi!");
+// docA と docB が別々のデバイス上にあると仮定します
+const bytesA = docA.export({ mode: "update" });
+// 任意の方法で bytes を docB に送信します
+docB.import(bytesA);
+// docB には docA の変更がすべて反映されます
+
+const bytesB = docB.export({ mode: "update" });
+// 任意の方法で bytes を docA に送信します
+docA.import(bytesB);
+// docA と docB は同期され、同じ状態になります
+```
+
+アプリの状態を保存するのも同様に簡単です。
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "Hello world!");
+const bytes = doc.export({ mode: "snapshot" });
+// Bytes はローカルストレージやデータベースに保存したり、ネットワーク経由で送信できます
+```
+
+アプリの状態を読み込むには：
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const bytes = new Uint8Array([1, 2, 3]);
+// ---cut---
+const newDoc = new LoroDoc();
+newDoc.import(bytes);
+```
+
+Loro を使えば履歴のタイムトラベルやアプリへのバージョン管理の追加も簡単です。[タイムトラベルについて詳しく見る](/docs/tutorial/time_travel)。
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const version = doc.frontiers();
+// ---cut---
+doc.checkout(version); // 指定したバージョンにドキュメントをチェックアウト
+```
+
+Loro は JSON スキーマと互換性があります。アプリの状態を JSON で表現できるなら、おそらく Loro で同期できます。JSON スキーマに従う必要があるため、Map で数値キーを使用することはできず、循環参照は避けてください。
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.toJSON(); // ドキュメントの JSON 表現を取得
+```
+
+import { Cards } from "nextra/components";
+
+<Cards num={1}>
+  <Cards.Card
+    image
+    arrow
+    title="はじめに"
+    href="/docs/tutorial/get_started"
+    style={{
+      maxWidth: 400,
+    }}
+  >
+    <>![はじめに](/images/GettingStarted.png)</>
+  </Cards.Card>
+</Cards>
+
+## Loro はあなたに向いていますか？
+
+### ✅ 次のようなニーズがあるなら Loro を選びましょう：
+
+- ドキュメントのリアルタイム共同編集
+- 競合する編集の自動解決
+- オフライン編集と後での同期
+- 完全な編集履歴とタイムトラベル
+- P2P 同期機能
+
+### ⚠️ 次の場合は別のアプローチを検討してください：
+
+- アプリケーションが強い一貫性を必要とする
+- データが JSON 的な構造ではない（大きなバイナリ／メディアストリーミングなど）
+- シンプルなクライアント・サーバー同期で十分（基本的な WebSocket など）
+- パッケージサイズに非常に敏感（Loro WASM バイナリは gzip 後で約 970KB）
+
+[CRDT を使うべきでない場合について詳しく見る →](/docs/concepts/when_not_crdt)
+
+## 他の CRDT ライブラリとの違い
+
+以下の表は、他の CRDT ライブラリにはない可能性がある Loro の機能をまとめたものです。
+
+| 機能／主要な設計判断                                                   | Loro | Diamond-types | Yjs         | Automerge |
+| :---------------------------------------------------------------------- | :--- | :------------ | :---------- | :-------- |
+| [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅   | ✅ Inventor   | ❌          | ❌        |
+| Rich Text CRDT                                                          | ✅   | ❌            | ❌          | ✅        |
+| [Movable Tree](https://ieeexplore.ieee.org/document/9563274)            | ✅   | ❌            | ❌          | ❌ Inventor |
+| [Movable List](https://loro.dev/docs/tutorial/list)                     | ✅   | ❌            | ❌          | ❌ Inventor |
+| Time Travel                                                             | ✅   | ✅            | ✅[1]       | ✅        |
+| [Fugue](https://arxiv.org/abs/2305.00583) / 最大非インタリーブ          | ✅   | ✅            | ❌          | ❌        |
+| JSON Types                                                              | ✅   | ❓            | ✅          | ✅        |
+| ランレングス圧縮によるメモリ内の要素結合                              | ✅   | ✅            | ✅ Inventor | ❌        |
+| ビザンチン耐性                                                          | ❌   | ❌            | ❌          | ✅        |
+| バージョン管理                                                         | ✅   | ❌            | ❌          | ✅        |
+
+- [1] 他のライブラリと異なり、Yjs では特定の時点に戻るためにバージョンベクターと削除セットを保持する必要があります。
+- [Fugue](https://arxiv.org/abs/2305.00583) はテキスト／リスト向けの CRDT で、インタリーブ異常の発生確率を最小化できます。

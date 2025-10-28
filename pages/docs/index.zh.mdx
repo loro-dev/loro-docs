@@ -1,0 +1,122 @@
+## Loro 简介
+
+众所周知，同步数据或构建实时协作应用是一项艰巨的任务，尤其当设备可能离线或处于点对点网络中时。Loro 可以为你简化这一过程。
+
+我们希望提供更好的开发者工具，让构建[本地优先应用](https://www.inkandswitch.com/local-first/)变得轻松而愉悦。
+
+Loro 使用[无冲突复制数据类型（CRDT）](/docs/concepts/crdt)来处理并发编辑。通过使用 Loro 的数据类型，你的应用可以实现协作，并以很小的开销保留编辑历史。
+
+当你用 Loro 建模应用状态后，同步就非常简单：
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.getText("text").insert(0, "Hello world!");
+docB.getText("text").insert(0, "Hi!");
+// 假设 docA 和 docB 位于两台不同的设备
+const bytesA = docA.export({ mode: "update" });
+// 通过任意方式将 bytes 发送到 docB
+docB.import(bytesA);
+// docB 现在包含来自 docA 的全部更改
+
+const bytesB = docB.export({ mode: "update" });
+// 通过任意方式将 bytes 发送到 docA
+docA.import(bytesB);
+// docA 和 docB 现在已同步，拥有相同的状态
+```
+
+保存应用状态同样简单：
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "Hello world!");
+const bytes = doc.export({ mode: "snapshot" });
+// Bytes 可以保存到本地存储、数据库或通过网络传输
+```
+
+加载应用状态：
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const bytes = new Uint8Array([1, 2, 3]);
+// ---cut---
+const newDoc = new LoroDoc();
+newDoc.import(bytes);
+```
+
+Loro 还让你轻松回溯历史，为应用添加版本控制。[了解更多关于时间旅行](/docs/tutorial/time_travel)。
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const version = doc.frontiers();
+// ---cut---
+doc.checkout(version); // 将文档检出到指定版本
+```
+
+Loro 与 JSON 模型兼容。如果你可以用 JSON 来建模应用状态，就大概率可以使用 Loro 进行同步。由于需要遵循 JSON 模型，不允许在 Map 中使用数字作为键，并且应避免循环引用。
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.toJSON(); // 获取文档的 JSON 表示
+```
+
+import { Cards } from "nextra/components";
+
+<Cards num={1}>
+  <Cards.Card
+    image
+    arrow
+    title="快速开始"
+    href="/docs/tutorial/get_started"
+    style={{
+      maxWidth: 400,
+    }}
+  >
+    <>![快速开始](/images/GettingStarted.png)</>
+  </Cards.Card>
+</Cards>
+
+## Loro 适合你吗？
+
+### ✅ 当你需要以下能力时请选择 Loro：
+
+- 文档的实时协作
+- 并发编辑的自动冲突解决
+- 支持离线编辑并在稍后同步
+- 完整的编辑历史与时间旅行
+- 点对点同步能力
+
+### ⚠️ 在以下情况下可以考虑其他方案：
+
+- 你的应用需要强一致性
+- 数据不是类似 JSON 的结构（例如大型二进制/媒体流）
+- 简单的客户端-服务器同步已经足够（例如基础的 WebSocket）
+- 你的应用对包体积非常敏感（Loro WASM 二进制压缩后约 970KB）
+
+[了解更多何时不应使用 CRDT →](/docs/concepts/when_not_crdt)
+
+## 与其他 CRDT 库的区别
+
+下表总结了 Loro 的特性，这些特性在其他 CRDT 库中可能不存在。
+
+| 特性 / 重要设计决策                                                     | Loro | Diamond-types | Yjs         | Automerge |
+| :---------------------------------------------------------------------- | :--- | :------------ | :---------- | :-------- |
+| [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅   | ✅ Inventor   | ❌          | ❌        |
+| Rich Text CRDT                                                          | ✅   | ❌            | ❌          | ✅        |
+| [Movable Tree](https://ieeexplore.ieee.org/document/9563274)            | ✅   | ❌            | ❌          | ❌ Inventor |
+| [Movable List](https://loro.dev/docs/tutorial/list)                     | ✅   | ❌            | ❌          | ❌ Inventor |
+| Time Travel                                                             | ✅   | ✅            | ✅[1]       | ✅        |
+| [Fugue](https://arxiv.org/abs/2305.00583) / 最大非交错                   | ✅   | ✅            | ❌          | ❌        |
+| JSON Types                                                              | ✅   | ❓            | ✅          | ✅        |
+| 内存中通过游程编码合并元素                                             | ✅   | ✅            | ✅ Inventor | ❌        |
+| 拜占庭容错能力                                                         | ❌   | ❌            | ❌          | ✅        |
+| 版本控制                                                               | ✅   | ❌            | ❌          | ✅        |
+
+- [1] 与其他库不同，Yjs 要求用户存储版本向量和删除集合，才能回到特定时间点。
+- [Fugue](https://arxiv.org/abs/2305.00583) 是一种文本/列表 CRDT，可最大程度减少交错异常的概率。

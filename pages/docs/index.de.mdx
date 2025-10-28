@@ -1,0 +1,122 @@
+## Einführung in Loro
+
+Es ist allgemein bekannt, dass das Synchronisieren von Daten oder der Aufbau von Echtzeit-Collaboration-Apps herausfordernd ist – insbesondere, wenn Geräte offline sein können oder Teil eines Peer-to-Peer-Netzwerks sind. Loro vereinfacht diesen Prozess für dich.
+
+Wir möchten bessere Entwickler-Tools bereitstellen, damit das Erstellen von [Local-First-Apps](https://www.inkandswitch.com/local-first/) einfach und angenehm wird.
+
+Loro nutzt [Conflict-free Replicated Data Types (CRDTs)](/docs/concepts/crdt), um parallele Änderungen aufzulösen. Mit den Datentypen von Loro kannst du deine Anwendungen kollaborativ machen und den Bearbeitungsverlauf mit geringem Overhead behalten.
+
+Sobald du den Zustand deiner App mit Loro modelliert hast, ist das Synchronisieren ganz simpel:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+const docA = new LoroDoc();
+const docB = new LoroDoc();
+docA.getText("text").insert(0, "Hello world!");
+docB.getText("text").insert(0, "Hi!");
+// Angenommen, docA und docB befinden sich auf zwei verschiedenen Geräten
+const bytesA = docA.export({ mode: "update" });
+// Sende bytes auf beliebige Weise an docB
+docB.import(bytesA);
+// docB enthält jetzt alle Änderungen von docA
+
+const bytesB = docB.export({ mode: "update" });
+// Sende bytes auf beliebige Weise an docA
+docA.import(bytesB);
+// docA und docB sind nun synchron und haben denselben Zustand
+```
+
+Das Speichern deines App-Zustands ist ebenso unkompliziert:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "Hello world!");
+const bytes = doc.export({ mode: "snapshot" });
+// Bytes können im lokalen Speicher, in einer Datenbank oder über das Netzwerk gespeichert bzw. versendet werden
+```
+
+So lädst du deinen App-Zustand:
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const bytes = new Uint8Array([1, 2, 3]);
+// ---cut---
+const newDoc = new LoroDoc();
+newDoc.import(bytes);
+```
+
+Mit Loro kannst du außerdem ganz einfach in der Historie zurückspringen und deiner App Versionskontrolle hinzufügen. [Mehr über Time Travel erfahren](/docs/tutorial/time_travel).
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+const version = doc.frontiers();
+// ---cut---
+doc.checkout(version); // Checke das Dokument auf die angegebene Version aus
+```
+
+Loro ist mit dem JSON-Schema kompatibel. Wenn du den Zustand deiner App mit JSON modellieren kannst, kannst du deine App sehr wahrscheinlich mit Loro synchronisieren. Da wir uns an das JSON-Schema halten müssen, dürfen Zahlen nicht als Schlüssel in einer Map verwendet werden, und zyklische Referenzen sollten vermieden werden.
+
+```ts no_run twoslash
+import { LoroDoc } from "loro-crdt";
+const doc = new LoroDoc();
+// ---cut---
+doc.toJSON(); // JSON-Darstellung des Dokuments abrufen
+```
+
+import { Cards } from "nextra/components";
+
+<Cards num={1}>
+  <Cards.Card
+    image
+    arrow
+    title="Erste Schritte"
+    href="/docs/tutorial/get_started"
+    style={{
+      maxWidth: 400,
+    }}
+  >
+    <>![Erste Schritte](/images/GettingStarted.png)</>
+  </Cards.Card>
+</Cards>
+
+## Ist Loro das Richtige für dich?
+
+### ✅ Verwende Loro, wenn du Folgendes brauchst:
+
+- Echtzeit-Zusammenarbeit an Dokumenten
+- Automatische Konfliktlösung bei parallelen Änderungen
+- Offline-Bearbeitung mit späterer Synchronisation
+- Vollständige Bearbeitungshistorie und Time Travel
+- Peer-to-Peer-Synchronisation
+
+### ⚠️ Ziehe Alternativen in Betracht, wenn:
+
+- deine Anwendung starke Konsistenz verlangt
+- deine Daten nicht JSON-ähnlich sind (z. B. große Binärdaten oder Medienstreams)
+- einfache Client-Server-Synchronisation ausreicht (z. B. grundlegende WebSockets)
+- deine Anwendung extrem empfindlich auf die Bundle-Größe reagiert (Loro-WASM-Binary ~970KB, gzipped)
+
+[Erfahre mehr darüber, wann du keine CRDTs verwenden solltest →](/docs/concepts/when_not_crdt)
+
+## Unterschiede zu anderen CRDT-Bibliotheken
+
+Die folgende Tabelle fasst die Funktionen von Loro zusammen, die in anderen CRDT-Bibliotheken möglicherweise fehlen.
+
+| Funktionen / wichtige Designentscheidungen                              | Loro | Diamond-types | Yjs         | Automerge |
+| :---------------------------------------------------------------------- | :--- | :------------ | :---------- | :-------- |
+| [Event Graph Walker](https://loro.dev/docs/advanced/replayable_event_graph) | ✅   | ✅ Inventor   | ❌          | ❌        |
+| Rich Text CRDT                                                          | ✅   | ❌            | ❌          | ✅        |
+| [Movable Tree](https://ieeexplore.ieee.org/document/9563274)            | ✅   | ❌            | ❌          | ❌ Inventor |
+| [Movable List](https://loro.dev/docs/tutorial/list)                     | ✅   | ❌            | ❌          | ❌ Inventor |
+| Time Travel                                                             | ✅   | ✅            | ✅[1]       | ✅        |
+| [Fugue](https://arxiv.org/abs/2305.00583) / maximale Nicht-Interleaving | ✅   | ✅            | ❌          | ❌        |
+| JSON Types                                                              | ✅   | ❓            | ✅          | ✅        |
+| Zusammenführen von Elementen im Speicher per Run-Length-Encoding        | ✅   | ✅            | ✅ Inventor | ❌        |
+| Byzantinische Fehlertoleranz                                            | ❌   | ❌            | ❌          | ✅        |
+| Versionskontrolle                                                       | ✅   | ❌            | ❌          | ✅        |
+
+- [1] Anders als andere Bibliotheken verlangt Yjs, dass Nutzer:innen einen Versionsvektor und eine Delete-Set speichern, um zu einem bestimmten Zeitpunkt zurückzukehren.
+- [Fugue](https://arxiv.org/abs/2305.00583) ist ein Text-/Listen-CRDT, das die Wahrscheinlichkeit von Interleaving-Anomalien minimieren kann.
