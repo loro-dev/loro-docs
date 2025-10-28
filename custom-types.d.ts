@@ -4,4 +4,9 @@ declare global {
   }
 }
 
-export { };
+export {};
+
+declare module "*.mdx" {
+  let MDXComponent: (props: unknown) => JSX.Element;
+  export default MDXComponent;
+}

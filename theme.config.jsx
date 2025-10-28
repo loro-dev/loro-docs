@@ -39,6 +39,7 @@ export default {
   },
   head: () => {
     const config = useConfig();
+    const { locale } = useRouter();
     // Nextra v3 moves reserved fields like `title`, `description`, `image`
     // out of `frontMatter` into top-level config. Fallback to frontMatter for
     // older content that still sets them there.
@@ -48,6 +49,7 @@ export default {
     const metaImage = config.image ?? config.frontMatter?.image;
     const pageTitle = metaTitle ? `${metaTitle} – Loro` : "Loro";
     const DEFAULT_IMAGE = "https://i.ibb.co/T1x1bSf/IMG-8191.jpg";
+    const contentLanguage = (locale ?? "en").split("-")[0];
 
     return (
       <>
@@ -60,7 +62,7 @@ export default {
         <meta name="msapplication-TileColor" content="#fff" />
         <meta name="theme-color" content="#fff" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta httpEquiv="Content-Language" content="en" />
+        <meta httpEquiv="Content-Language" content={contentLanguage} />
         <meta name="description" content={metaDescription} />
         <meta name="og:description" content={metaDescription} />
         <meta name="twitter:card" content="summary_large_image" />

@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,36 +14,25 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "baseUrl": ".",
     "paths": {
-      "@components/*": [
-        "./components/*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/lib/utils/*": [
-        "./lib/utils/*"
-      ],
-      "flexsearch": [
-        "./node_modules/@types/flexsearch"
-      ]
+      "@components/*": ["./components/*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/lib/utils/*": ["./lib/utils/*"],
+      "flexsearch": ["./node_modules/@types/flexsearch"]
     },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
     "custom-types.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.mdx",
     "gen-rss.js",
-    ".next/types/**/*.ts"
-, "theme.config.jsx"  ],
-  "exclude": [
-    "node_modules",
-    "deno_scripts"
-  ]
+    ".next/types/**/*.ts",
+    "theme.config.jsx"
+  ],
+  "exclude": ["node_modules", "deno_scripts"]
 }
