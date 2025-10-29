@@ -43,6 +43,16 @@ export default {
   },
   head: () => {
     const config = useConfig();
+    const { asPath } = useRouter();
+    const rawPath =
+      !asPath || asPath === "/"
+        ? "/"
+        : asPath.startsWith("/")
+          ? asPath
+          : `/${asPath}`;
+    const normalizedPath = rawPath.split("#")[0] || "/";
+    const canonicalUrl = `https://loro.dev${normalizedPath}`;
+    const chineseUrl = `https://cn.loro.dev${normalizedPath}`;
     // Nextra v3 moves reserved fields like `title`, `description`, `image`
     // out of `frontMatter` into top-level config. Fallback to frontMatter for
     // older content that still sets them there.
@@ -75,6 +85,10 @@ export default {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:image" content={metaImage || DEFAULT_IMAGE} />
         <meta name="apple-mobile-web-app-title" content="Loro" />
+        <link rel="canonical" href={canonicalUrl} />
+        <link rel="alternate" hrefLang="en" href={canonicalUrl} />
+        <link rel="alternate" hrefLang="zh" href={chineseUrl} />
+        <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
       </>
     );
   },
