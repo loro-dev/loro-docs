@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useConfig } from "nextra-theme-docs";
 import Image from "next/image";
 import Footer from "./components/landing/Footer";
+import LanguageDropdown from "./components/LanguageDropdown";
 
 export default {
   logo: (
@@ -31,6 +32,9 @@ export default {
   },
   chat: {
     link: "https://discord.gg/tUsBSVfqzf",
+  },
+  navbar: {
+    extraContent: <LanguageDropdown />,
   },
   docsRepositoryBase: "https://github.com/loro-dev/loro-docs/tree/main",
   footer: {
