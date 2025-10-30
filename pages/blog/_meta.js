@@ -1,4 +1,10 @@
 export default {
+  "loro-protocol": {
+    theme: {
+      toc: true,
+      pagination: false,
+    },
+  },
   "loro-mirror": {
     theme: {
       toc: true,

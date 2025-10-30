@@ -1,0 +1,118 @@
+---
+title: "Loro Protocol"
+date: 2025/10/30
+description: "The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection with adaptors for Loro documents, EphemeralStore, and Yjs interoperability."
+image: "/images/blog-loro-protocol.png"
+---
+
+## Loro Protocol
+
+import Authors, { Author } from "../../components/authors";
+
+<Authors date="2025-10-30">
+  <Author name="Zixuan Chen" link="https://www.loro.dev/" />
+</Authors>
+
+![](/images/blog-loro-protocol.png)
+
+The [**Loro Protocol**](https://github.com/loro-dev/protocol) is a wire protocol designed for real-time CRDT synchronization. Learn about the design in detail [here](https://github.com/loro-dev/protocol/blob/main/protocol.md).
+
+It efficiently runs multiple, independent "rooms" over a single WebSocket connection.
+
+This allows you to synchronize your application state, such as a Loro document, ephemeral cursor positions, and end-to-end encrypted documents, over one connection. It is also compatible with Yjs.
+
+### Quick Start: Server & Client Example
+
+The protocol is implemented by the `loro-websocket` client and a minimal `SimpleServer` for testing. These components are bridged to your CRDT state using `loro-adaptors`.
+
+**Server**
+
+For development, you can run the `SimpleServer` (from `loro-websocket`) in a Node.js environment.
+
+```tsx
+// server.ts
+import { SimpleServer } from "loro-websocket/server";
+
+const server = new SimpleServer({
+  port: 8787,
+  // SimpleServer accepts hooks for authentication and data persistence:
+  // authenticate: async (roomId, crdt, auth) => { ... },
+  // onLoadDocument: async (roomId, crdt) => { ... },
+  // onSaveDocument: async (roomId, crdt, data) => { ... },
+});
+
+server.start().then(() => {
+  console.log("SimpleServer listening on ws://localhost:8787");
+});
+```
+
+**Client**
+
+On the client side, you connect once and then join multiple rooms using different adaptors.
+
+```tsx
+// client.ts
+import { LoroWebsocketClient } from "loro-websocket";
+import { LoroAdaptor, LoroEphemeralAdaptor } from "loro-adaptors";
+
+// 1. Create and connect the client
+const client = new LoroWebsocketClient({ url: "ws://localhost:8787" });
+await client.waitConnected();
+console.log("Client connected!");
+
+// --- Room 1: A Loro Document (%LOR) ---
+const docAdaptor = new LoroAdaptor();
+const docRoom = await client.join({
+  roomId: "doc:123",
+  crdtAdaptor: docAdaptor,
+});
+
+// Local edits are now automatically synced
+const text = docAdaptor.getDoc().getText("content");
+text.insert(0, "Hello, Loro!");
+docAdaptor.getDoc().commit();
+
+// --- Room 2: Ephemeral Presence (%EPH) on the SAME socket ---
+const ephAdaptor = new LoroEphemeralAdaptor();
+const presenceRoom = await client.join({
+  roomId: "doc:123", // Can be the same room ID, but different magic bytes
+  crdtAdaptor: ephAdaptor,
+});
+
+// Ephemeral state syncs, but is not persisted by the server
+ephAdaptor.getStore().set("cursor", { x: 100, y: 100 });
+```
+
+---
+
+### Key Protocol Features
+
+#### Multiplexing
+
+Each binary message is prefixed with four magic bytes that identify the data type, followed by the `roomId`. This structure allows the server to route messages to the correct handler. A single client can join:
+
+- `%LOR` (Loro Document)
+- `%EPH` (Loro Ephemeral Store, for cursors and presence)
+- `%ELO` (End-to-End Encrypted Loro Document)
+- `%YJS` and `%YAW` (for Yjs Document and Awareness interoperability)
+
+All traffic runs on the same socket.
+
+#### Compatibility
+
+The Loro Protocol is designed to accommodate environments like Cloudflare:
+
+- Fragmentation: Large updates are automatically split into fragments under 256 KiB and reassembled by the receiver. This addresses platforms that enforce WebSocket message size limits.
+- Application-level keepalive: The protocol defines simple `"ping"` and `"pong"` text frames. These bypass the binary envelope and allow the client to check connection liveness, which is useful in browser or serverless environments where transport-level TCP keepalives are not exposed.
+
+This repository also ships Rust clients and servers that mirror the TypeScript packages.
+
+### Experimental E2E Encryption
+
+End-to-end encrypted Loro is included in `loro-protocol`, but the feature is currently experimental: expect wire formats and key-management APIs to change, and do not rely on it for production-grade security audits yet. When paired with `EloLoroAdaptor` on the client, the server relays encrypted records without decrypting them.
+
+### Status and Licensing
+
+The Loro Protocol is mostly stable. We welcome community feedback and contributions, especially regarding use cases that are difficult to satisfy with the current design.
+
+All the packages in inside https://github.com/loro-dev/protocol are open-sourced under the permissive MIT license.
