@@ -2,6 +2,7 @@
 title: "Loro Protocol"
 date: 2025/10/30
 description: "The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection with adaptors for Loro documents, EphemeralStore, and Yjs interoperability."
+image: "/images/blog-loro-protocol.png"
 ---
 
 ## Loro Protocol
@@ -12,7 +13,9 @@ import Authors, { Author } from "../../components/authors";
   <Author name="Zixuan Chen" link="https://www.loro.dev/" />
 </Authors>
 
-The **Loro Protocol** ([GitHub Link](https://github.com/loro-dev/protocol)) is a wire protocol designed for real-time CRDT synchronization. Learn about the design [here](https://github.com/loro-dev/protocol/blob/main/protocol.md).
+![](/images/blog-loro-protocol.png)
+
+The [**Loro Protocol**](https://github.com/loro-dev/protocol) is a wire protocol designed for real-time CRDT synchronization. Learn about the design in detail [here](https://github.com/loro-dev/protocol/blob/main/protocol.md).
 
 It efficiently runs multiple, independent "rooms" over a single WebSocket connection.
 
@@ -22,7 +25,7 @@ This allows you to synchronize your application state, such as a Loro document, 
 
 The protocol is implemented by the `loro-websocket` client and a minimal `SimpleServer` for testing. These components are bridged to your CRDT state using `loro-adaptors`.
 
-### 1. The Server
+**Server**
 
 For development, you can run the `SimpleServer` (from `loro-websocket`) in a Node.js environment.
 
@@ -43,7 +46,7 @@ server.start().then(() => {
 });
 ```
 
-### 2. The Client
+**Client**
 
 On the client side, you connect once and then join multiple rooms using different adaptors.
 
@@ -112,8 +115,4 @@ End-to-end encrypted Loro is included in `loro-protocol`, but the feature is cur
 
 The Loro Protocol is mostly stable. We welcome community feedback and contributions, especially regarding use cases that are difficult to satisfy with the current design.
 
-The core packages are open-sourced under the permissive MIT license:
-
-- `packages/loro-protocol`
-- `packages/loro-websocket`
-- `packages/loro-adaptors`
+All the packages in inside https://github.com/loro-dev/protocol are open-sourced under the permissive MIT license.
