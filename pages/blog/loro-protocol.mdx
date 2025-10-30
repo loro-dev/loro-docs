@@ -1,7 +1,7 @@
 ---
 title: "Loro Protocol"
 date: 2025/10/30
-description: "The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection with adaptors for Loro documents, EphemeralStore, and Yjs interoperability."
+description: "The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection and ships the open-source loro-websocket, loro-adaptors, plus Rust client and server implementations that speak the same protocol."
 image: "/images/blog-loro-protocol.png"
 ---
 
@@ -14,6 +14,8 @@ import Authors, { Author } from "../../components/authors";
 </Authors>
 
 ![](/images/blog-loro-protocol.png)
+
+The open-source Loro Protocol project includes the `loro-websocket` package, the adaptor suite in `loro-adaptors`, and matching Rust client and server implementations that all interoperate on the same wire format.
 
 The [**Loro Protocol**](https://github.com/loro-dev/protocol) is a wire protocol designed for real-time CRDT synchronization. Learn about the design in detail [here](https://github.com/loro-dev/protocol/blob/main/protocol.md).
 
@@ -85,7 +87,7 @@ ephAdaptor.getStore().set("cursor", { x: 100, y: 100 });
 
 ---
 
-### Key Protocol Features
+### Features
 
 #### Multiplexing
 
@@ -107,7 +109,7 @@ The Loro Protocol is designed to accommodate environments like Cloudflare:
 
 This repository also ships Rust clients and servers that mirror the TypeScript packages.
 
-### Experimental E2E Encryption
+#### Experimental E2E Encryption
 
 End-to-end encrypted Loro is included in `loro-protocol`, but the feature is currently experimental: expect wire formats and key-management APIs to change, and do not rely on it for production-grade security audits yet. When paired with `EloLoroAdaptor` on the client, the server relays encrypted records without decrypting them.
 
