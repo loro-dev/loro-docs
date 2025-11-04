@@ -37,9 +37,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 - Initialize all child containers for a LoroMap upfront when possible
 - Operations on the root containers will not override each other  
 
-**Events & Transactions**
-
-- Events emit asynchronously after a microtask in JS API
+- Events emit synchronously during commit/import/checkout in JS API (v1.8+). Stay on <=1.7.x? Await a microtask before reading batched events.
 - Import/export/checkout trigger automatic commits
 - Loro transactions are NOT ACID - no rollback/isolation
 
@@ -799,7 +797,7 @@ const forkedDoc = doc.forkAt(frontiers);
 
 ## Events & Transactions
 
-React to changes and group local operations into transactions. Events are delivered asynchronously after a microtask. See [Event Handling](/docs/tutorial/event) and [Transaction Model](/docs/concepts/transaction_model).
+React to changes and group local operations into transactions. Starting in v1.8, events are delivered synchronously; older releases require awaiting a microtask. See [Event Handling](/docs/tutorial/event) and [Transaction Model](/docs/concepts/transaction_model).
 
 ### Subscription Methods
 
@@ -844,11 +842,11 @@ const unsubscribe = doc.subscribe((event) => {
 // Later: unsubscribe();
 ```
 
-**⚠️ Important:** Events are emitted asynchronously after a microtask. 
+**⚠️ Important:** Events are emitted synchronously as of v1.8. If you are pinned to <=1.7.x, await a microtask before reading the batch.
 ```ts no_run
 doc.commit();
-await Promise.resolve();
-// Now events have been emitted
+// Events have already been delivered in v1.8+
+// await Promise.resolve(); // Only needed on <=1.7.x
 ```
 
 **📝 Note:** Multiple operations before a commit are batched into a single event. See [Event Handling](/docs/tutorial/event).

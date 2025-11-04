@@ -19,7 +19,7 @@ with changes in the document state.
    - When `LoroDoc.commit()` is explicitly called
    - Automatically before an import or export operation
 
-   Note that events are emitted asynchronously after a microtask. If you need to handle events immediately after a commit, you should await a microtask:
+Starting from `loro-crdt@1.8.0`, events are emitted synchronously during the commit cycle. If you are using an older version (<=1.7.x), you will still need to await a microtask for the callbacks to fire.
 
 ```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
@@ -32,9 +32,7 @@ doc.subscribe((event) => {
 const text = doc.getText("text");
 text.insert(0, "Hello");
 doc.commit();
-// Event hasn't been emitted yet
-await Promise.resolve();
-// Now the event has been emitted
+// Event has already been emitted synchronously
 ```
 
 3. **Import**: When importing changes from a remote source using the `import()`
@@ -50,21 +48,19 @@ doc.subscribe((event) => {
   console.log("Event:", event);
 });
 
-doc.import(remoteChanges); // This will trigger events after a microtask
-await Promise.resolve(); // Wait for events to be emitted
+doc.import(remoteChanges); // This immediately triggers events (v1.8+)
 ```
 
 4. **Version Checkout**: When you switch document state to a different version
    using `doc.checkout(frontiers)`, Loro emits an event to reflect this change.
-   Like other events, these are also emitted after a microtask.
+   As of v1.8, checkout events fire synchronously alongside the state change.
 
 ```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
 // ---cut---
 const doc = new LoroDoc();
 const frontiers = doc.frontiers();
-doc.checkout(frontiers); // This will trigger events after a microtask
-await Promise.resolve(); // Wait for events to be emitted
+doc.checkout(frontiers); // This triggers events immediately (v1.8+)
 ```
 
 ## Transaction Behavior
