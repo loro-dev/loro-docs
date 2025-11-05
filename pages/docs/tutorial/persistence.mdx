@@ -21,6 +21,7 @@ To achieve both quick saves and resource efficiency:
   keystroke or with debounce/throttle). Store these binary data in fast-write
   storage like user disks or a key-value database. This ensures quick saves with
   low resource cost.
+- Loro validates the checksum embedded in every snapshot/update header during import, so corrupted binary payloads (for example, from bit flips in queues or object storage) are rejected before they touch your document state.
 - When loading a document, import the snapshot and all related updates to get
   the latest version.
 - After importing, export a new snapshot to replace the old one and remove
