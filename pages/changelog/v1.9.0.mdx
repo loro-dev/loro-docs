@@ -1,0 +1,33 @@
+---
+version: "v1.9.0"
+title: "Release Loro v1.9.0"
+date: 2025/11/10
+---
+
+## Highlights
+
+- JSONPath queries are now RFC 9535 compliant across both Rust and WASM bindings. A new parser, evaluator, and conformance test suite (PR #848, commit `21d13218`) unlock richer filters like `in` and `contains` while delivering clearer error messages. Thanks @zolero!
+- Source maps become first-class in the WASM toolchain. `loro-wasm-tools` now embeds symbols during bundling (#836) and the new `loro-wasm-map` package publishes maps next to the runtime bundle (#844), drastically simplifying debugging in browsers, Vite, and other build systems.
+
+## Breaking change
+
+- **Removed legacy v0.x encoding path (#849, `10a405b4`)**. Legacy serializers, compatibility fuzz tests, and decoding shims are gone. All runtimes now rely on the v1.* encoding format. Documents created with v0.x must be migrated via an intermediate ≤1.8.x release before installing 1.9.0.
+
+## New features & improvements
+
+- **Spec-compliant JSONPath (#848, `21d13218`)**. Ships a Pest-based parser, richer AST, the `in`/`contains` filter operators, better existence checks, and shared tests/benchmarks to keep Rust and WASM perfectly aligned.
+- **WASM debugging experience (#836, `6f987022`; #844, `53f55331`)**. Adds `loro-wasm-tools` for embedding sourcemaps, automates sourcemap publishing in CI, and hosts the maps in a dedicated workspace package so source-level debugging works without manual steps.
+- **Better bundler support (#852 `3af6a857`, #851 `366f0161`)**. Patches the JS entry points so esbuild and rsbuild can import the WASM bundle with zero loader overrides.
+- **Bun runtime improvements (#829 `b8c070fd`, #828 `cf123453`, #827 `8b622619`, #834 `865bccba`)**. Streams the WASM binary during bundling, pre-seeds the externref table, integrates Bun into CI, and removes earlier hacks that hid loader bugs.
+- **JavaScript performance (#820 `c2c535c1`)**. Event conversion now runs exactly once per callback invocation, trimming overhead during heavy real-time editing sessions.
+- **Core dependency refresh (`e8f79de8`, `b2f5e107`)**. Upgrades `generic-btree` and the columnar storage crate to pick up the latest bug fixes and perf wins.
+
+## Bug fixes & stability
+
+- Fixed tree undo operations that moved nodes between siblings (#821 `76a8728e`).
+- Resolved container ID bookkeeping when exporting shallow snapshots (#823 `b72a759a`) and ensured pending containers now return `None` instead of leaking state (#840 `35d9064d`).
+- Prevented `LoroMap` entries from turning into `null` after `applyDiff` (#825 `3afc4d52`).
+- Ensured undo manager callbacks fire without tripping Rust aliasing violations (#831 `a39daf85`).
+- Guarded against panics when cursors point to deleted entries (#835 `e97e6056`) and when fetching unknown cursors in JS integration tests.
+- Cleaned up WASM loader glue so we no longer rely on an extra patch (#834 `865bccba`) and added multiple Bun regression tests (#828 `cf123453`).
+- Tightened CI release scripts (`74b78514`, `2383cdc1`, `4740a04c`, `3373e046`, `24f93249`) to keep `loro-wasm` artifacts and sourcemaps publishing in sync.
