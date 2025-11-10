@@ -19,7 +19,7 @@ with changes in the document state.
    - When `LoroDoc.commit()` is explicitly called
    - Automatically before an import or export operation
 
-Starting from `loro-crdt@1.8.0`, events are emitted synchronously during the commit cycle. If you are using an older version (<=1.7.x), you will still need to await a microtask for the callbacks to fire.
+Starting from `loro-crdt@1.8.0`, events are emitted synchronously during the commit cycle. If you are using an older version (`<=1.7.x`), you will still need to await a microtask for the callbacks to fire.
 
 ```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";

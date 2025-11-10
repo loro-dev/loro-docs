@@ -4,9 +4,95 @@
         <title>Loro Blog</title>
         <link>https://loro.dev/blog/</link>
         <description>Updates and stories from the Loro team.</description>
-        <lastBuildDate>Mon, 22 Sep 2025 13:16:41 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 10 Nov 2025 08:29:34 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[Loro Protocol]]></title>
+            <link>https://loro.dev/blog/loro-protocol</link>
+            <guid>https://loro.dev/blog/loro-protocol</guid>
+            <pubDate>Wed, 29 Oct 2025 16:00:00 GMT</pubDate>
+            <description><![CDATA[The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection and ships the open-source loro-websocket, loro-adaptors, plus Rust client and server implementations that speak the same protocol.]]></description>
+            <content:encoded><![CDATA[<h2>Loro Protocol</h2>
+<p><img src="/images/blog-loro-protocol.png" alt=""></p>
+<p>The open-source Loro Protocol project includes the <code>loro-websocket</code> package, the adaptor suite in <code>loro-adaptors</code>, and matching Rust client and server implementations that all interoperate on the same wire format.</p>
+<p>The <a href="https://github.com/loro-dev/protocol"><strong>Loro Protocol</strong></a> is a wire protocol designed for real-time CRDT synchronization. Learn about the design in detail <a href="https://github.com/loro-dev/protocol/blob/main/protocol.md">here</a>.</p>
+<p>It efficiently runs multiple, independent &quot;rooms&quot; over a single WebSocket connection.</p>
+<p>This allows you to synchronize your application state, such as a Loro document, ephemeral cursor positions, and end-to-end encrypted documents, over one connection. It is also compatible with Yjs.</p>
+<h3>Quick Start: Server &amp; Client Example</h3>
+<p>The protocol is implemented by the <code>loro-websocket</code> client and a minimal <code>SimpleServer</code> for testing. These components are bridged to your CRDT state using <code>loro-adaptors</code>.</p>
+<p><strong>Server</strong></p>
+<p>For development, you can run the <code>SimpleServer</code> (from <code>loro-websocket</code>) in a Node.js environment.</p>
+<pre><code class="language-tsx">// server.ts
+
+const server = new SimpleServer({
+  port: 8787,
+  // SimpleServer accepts hooks for authentication and data persistence:
+  // authenticate: async (roomId, crdt, auth) =&gt; { ... },
+  // onLoadDocument: async (roomId, crdt) =&gt; { ... },
+  // onSaveDocument: async (roomId, crdt, data) =&gt; { ... },
+});
+
+server.start().then(() =&gt; {
+  console.log(&quot;SimpleServer listening on ws://localhost:8787&quot;);
+});
+</code></pre>
+<p><strong>Client</strong></p>
+<p>On the client side, you connect once and then join multiple rooms using different adaptors.</p>
+<pre><code class="language-tsx">// client.ts
+
+// 1. Create and connect the client
+const client = new LoroWebsocketClient({ url: &quot;ws://localhost:8787&quot; });
+await client.waitConnected();
+console.log(&quot;Client connected!&quot;);
+
+// --- Room 1: A Loro Document (%LOR) ---
+const docAdaptor = new LoroAdaptor();
+const docRoom = await client.join({
+  roomId: &quot;doc:123&quot;,
+  crdtAdaptor: docAdaptor,
+});
+
+// Local edits are now automatically synced
+const text = docAdaptor.getDoc().getText(&quot;content&quot;);
+text.insert(0, &quot;Hello, Loro!&quot;);
+docAdaptor.getDoc().commit();
+
+// --- Room 2: Ephemeral Presence (%EPH) on the SAME socket ---
+const ephAdaptor = new LoroEphemeralAdaptor();
+const presenceRoom = await client.join({
+  roomId: &quot;doc:123&quot;, // Can be the same room ID, but different magic bytes
+  crdtAdaptor: ephAdaptor,
+});
+
+// Ephemeral state syncs, but is not persisted by the server
+ephAdaptor.getStore().set(&quot;cursor&quot;, { x: 100, y: 100 });
+</code></pre>
+<hr>
+<h3>Features</h3>
+<h4>Multiplexing</h4>
+<p>Each binary message is prefixed with four magic bytes that identify the data type, followed by the <code>roomId</code>. This structure allows the server to route messages to the correct handler. A single client can join:</p>
+<ul>
+<li><code>%LOR</code> (Loro Document)</li>
+<li><code>%EPH</code> (Loro Ephemeral Store, for cursors and presence)</li>
+<li><code>%ELO</code> (End-to-End Encrypted Loro Document)</li>
+<li><code>%YJS</code> and <code>%YAW</code> (for Yjs Document and Awareness interoperability)</li>
+</ul>
+<p>All traffic runs on the same socket.</p>
+<h4>Compatibility</h4>
+<p>The Loro Protocol is designed to accommodate environments like Cloudflare:</p>
+<ul>
+<li>Fragmentation: Large updates are automatically split into fragments under 256 KiB and reassembled by the receiver. This addresses platforms that enforce WebSocket message size limits.</li>
+<li>Application-level keepalive: The protocol defines simple <code>&quot;ping&quot;</code> and <code>&quot;pong&quot;</code> text frames. These bypass the binary envelope and allow the client to check connection liveness, which is useful in browser or serverless environments where transport-level TCP keepalives are not exposed.</li>
+</ul>
+<p>This repository also ships Rust clients and servers that mirror the TypeScript packages.</p>
+<h4>Experimental E2E Encryption</h4>
+<p>End-to-end encrypted Loro is included in <code>loro-protocol</code>, but the feature is currently experimental: expect wire formats and key-management APIs to change, and do not rely on it for production-grade security audits yet. When paired with <code>EloLoroAdaptor</code> on the client, the server relays encrypted records without decrypting them.</p>
+<h3>Status and Licensing</h3>
+<p>The Loro Protocol is mostly stable. We welcome community feedback and contributions, especially regarding use cases that are difficult to satisfy with the current design.</p>
+<p>All the packages in inside <a href="https://github.com/loro-dev/protocol">https://github.com/loro-dev/protocol</a> are open-sourced under the permissive MIT license.</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs]]></title>
             <link>https://loro.dev/blog/loro-mirror</link>
@@ -339,11 +425,10 @@ console.log(docB.getText(&quot;text&quot;).toString()); // Hello!Hi!
 </details>
 </details>
 
-
 <h2>Features of Loro 1.0</h2>
 <h3>High-performance CRDTs</h3>
 <p>High-performance, general-purpose CRDTs can significantly reduce data synchronization
-complexity and are crucial for local-first development. </p>
+complexity and are crucial for local-first development.</p>
 <p>However, large CRDT documents may face challenges with loading speed and memory consumption,
 especially when dealing with those with extensive editing histories.
 Loro 1.0 addresses this challenge through a new storage format, achieving a 10x improvement in
@@ -402,7 +487,7 @@ firstNote.insert(0, &quot;Hello, world!&quot;);
 console.log(doc.toJSON());
 </code></pre>
 <h3>Version control</h3>
-<p>Like Git, Loro saves a complete directed acyclic graph (DAG) of edit history. In Loro, the DAG is used to represent the dependencies between edits, similar to how Git represents commit history. </p>
+<p>Like Git, Loro saves a complete directed acyclic graph (DAG) of edit history. In Loro, the DAG is used to represent the dependencies between edits, similar to how Git represents commit history.</p>
 <p>Loro supports primitives that allow users to switch between different versions, fork new branches, edit on new branches, and merge branches.</p>
 <p>Based on this operation primitive, applications can build various Git-like capabilities:</p>
 <ul>
@@ -474,7 +559,7 @@ solved through additional libraries.</p>
 
 <h3>Leveraging the potential of the <a href="https://arxiv.org/abs/2409.14252">Eg-walker</a></h3>
 <p><a href="/docs/advanced/event_graph_walker">Event Graph Walker (Eg-walker)</a> is a pioneering collaboration algorithm that combines the strengths of
-Operational Transformation (OT) and CRDT, two widely used algorithms for real-time collaboration. </p>
+Operational Transformation (OT) and CRDT, two widely used algorithms for real-time collaboration.</p>
 <p>While OT is centralized and CRDT is decentralized, OT traditionally had an advantage
 in terms of lower document overhead. CRDTs initially had higher overhead, but recent
 optimizations have significantly reduced this gap, making CRDTs increasingly competitive.
@@ -570,12 +655,12 @@ an example usage:</p>
 <pre><code class="language-jsx">
 const doc = new LoroDoc();
 for (let i = 0; i &lt; 10_000; i++) {
-    doc.getText(&quot;text&quot;).insert(0, &quot;Hello, world!&quot;);
+  doc.getText(&quot;text&quot;).insert(0, &quot;Hello, world!&quot;);
 }
 const snapshotBytes = doc.export({ mode: &quot;snapshot&quot; });
 const shallowSnapshotBytes = doc.export({
-    mode: &quot;shallow-snapshot&quot;,
-    frontiers: doc.frontiers(),
+  mode: &quot;shallow-snapshot&quot;,
+  frontiers: doc.frontiers(),
 });
 
 console.log(snapshotBytes.length); // 5421
@@ -587,7 +672,7 @@ console.log(shallowSnapshotBytes.length); // 869
 <p>Loro version 1.0 has achieved a 10x to 100x improvement in document import speed
 compared to version 0.16, which already has a fast import speed.
 It makes it possible to load a large text document with several million operations
-in under a frame time. </p>
+in under a frame time.</p>
 <p>This is because we introduced a new snapshot format.
 When a LoroDoc is initialized through this snapshot format, we don&#39;t
 parse the corresponding document state and historical information until the user
@@ -615,7 +700,7 @@ state of the document (the old version&#39;s encoding learned from
 because import speed affects the performance of many aspects, and the import
 speed of CRDT documents
 <a href="https://loro.dev/docs/performance">is often noticeable to users on large documents</a>
-(&gt; 16ms). It also leaves possibilities for more optimizations in the future. </p>
+(&gt; 16ms). It also leaves possibilities for more optimizations in the future.</p>
 <aside>
 ❓ **Does this affect the efficiency of data transmission?**
 
@@ -641,10 +726,12 @@ speed of CRDT documents
 <li><p>For local storage:</p>
 <ul>
 <li>Users are generally less sensitive to local storage costs.</li>
-<li>The snapshot format can be used for local persistence without significant impact.</aside></li>
+<li>The snapshot format can be used for local persistence without significant impact.</li>
 </ul>
 </li>
 </ol>
+</aside>
+
 <p>Inspired by the design of Key-Value Databases, we have also divided the storage
 of document state and history into blocks, with each block roughly 4KB in size,
 so that when users really need a piece of history, we only need to decompress
@@ -898,21 +985,22 @@ data, but can solve semantic automatic merging of JSON-like schema, which can me
 most needs of creative tools and collaborative tools.</li>
 </ul>
 <p>We&#39;ve created a demo of the Loro version controller, which is based on our
-sub-document implementation (implemented in the application layer)  with Version information.
+sub-document implementation (implemented in the application layer) with Version information.
 It can import the entire React repository (about 20,000 commits, thousands of
 collaborators), and it supports real-time collaboration on such
 repositories. However, how to better manage versions and seamlessly integrate with Git still needs to be explored.</p>
 <aside>
-When merging extensive concurrent edits, CRDTs can automatically merge changes,
-but the result may not always meet expectations. Fortunately, Loro stores the
-complete editing history. This allows us to offer Git-like manual conflict
-resolution at the application layer when needed.
+  When merging extensive concurrent edits, CRDTs can automatically merge
+  changes, but the result may not always meet expectations. Fortunately, Loro
+  stores the complete editing history. This allows us to offer Git-like manual
+  conflict resolution at the application layer when needed.
 </aside>
 
 <p>Loro CRDTs still have significant room for optimization in these scenarios.
 Currently, the Loro CRDTs library doesn&#39;t involve network or disk I/O, which
 enhances its ease of use but also constrains its capabilities and potential
-optimizations.<br>For example, while we&#39;ve implemented block-level storage, documents are still
+optimizations.
+For example, while we&#39;ve implemented block-level storage, documents are still
 imported and exported as whole units. Adding I/O capabilities to selectively
 load/save blocks would enable significant performance optimizations.</p>
 <h2>Conclusion</h2>
@@ -924,8 +1012,10 @@ We&#39;re excited to see it being applied in various scenarios.
 If you&#39;re interested in using Loro, welcome to join our
 <a href="https://discord.gg/tUsBSVfqzf">Discord community</a> for discussions.</p>
 <aside>
-🚀 **Want early access to our upcoming local-first apps built with Loro?**
-[Sign up here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p) to be among the first to try them out!
+  🚀 **Want early access to our upcoming local-first apps built with Loro?**
+  [Sign up
+  here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p)
+  to be among the first to try them out!
 </aside>]]></content:encoded>
         </item>
         <item>
@@ -1270,7 +1360,8 @@ CRDTs. Thus, the simplest solution is not to perform any tombstone collection.</
 <h3>Brief Introduction to Event Graph Walker</h3>
 <p>Eg-walker is a novel CRDT algorithm introduced in:</p>
 <blockquote>
-<p><a href="https://arxiv.org/abs/2409.14252">Collaborative Text Editing with Eg-walker: Better, Faster, Smaller</a><br>By: Joseph Gentle, Martin Kleppmann</p>
+<p><a href="https://arxiv.org/abs/2409.14252">Collaborative Text Editing with Eg-walker: Better, Faster, Smaller</a>
+By: Joseph Gentle, Martin Kleppmann</p>
 </blockquote>
 <p>Eg-walker is a novel CRDT algorithm that combines the strengths of both OT and CRDTs.
 It has the distributed nature of CRDT that enables P2P collaboration and data
@@ -1924,7 +2015,7 @@ any proposals for collaboration, please reach out to <a href="mailto:zx@loro.dev
   <div style={{ display: "inline" }}>
     Loro, our high-performance CRDTs library, is now open source
   </div>
-
+  
   <div style={{ display: "inline" }}>.</div>
 </div>
 
@@ -2010,17 +2101,20 @@ state management tool, Pinia:</p>
   }),
   getters: {
     items: (state): Array&lt;{ name: string; amount: number }&gt; =&gt;
-      state.rawItems.reduce((items, item) =&gt; {
-        const existingItem = items.find((it) =&gt; it.name === item);
+      state.rawItems.reduce(
+        (items, item) =&gt; {
+          const existingItem = items.find((it) =&gt; it.name === item);
 
-        if (!existingItem) {
-          items.push({ name: item, amount: 1 });
-        } else {
-          existingItem.amount++;
-        }
+          if (!existingItem) {
+            items.push({ name: item, amount: 1 });
+          } else {
+            existingItem.amount++;
+          }
 
-        return items;
-      }, [] as Array&lt;{ name: string; amount: number }&gt;),
+          return items;
+        },
+        [] as Array&lt;{ name: string; amount: number }&gt;,
+      ),
   },
   actions: {
     addItem(name: string) {
@@ -2064,7 +2158,7 @@ collaboration and time machine features.</p>
     whole history and playback, it only takes 8.4MB in memory. And the entire
     history only takes 361KB in storage. The editing trace is from{" "}
   </div>
-
+  
   <div style={{ display: "inline" }}>.</div>
 
 

@@ -4,9 +4,44 @@
         <title>Loro Changelog</title>
         <link>https://loro.dev/changelog/</link>
         <description>Changelog of Loro CRDT.</description>
-        <lastBuildDate>Mon, 22 Sep 2025 13:16:41 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 10 Nov 2025 08:29:34 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[Release Loro v1.9.0]]></title>
+            <link>https://loro.dev/changelog/v1.9.0</link>
+            <guid>https://loro.dev/changelog/v1.9.0</guid>
+            <pubDate>Sun, 09 Nov 2025 16:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<h2>Highlights</h2>
+<ul>
+<li>JSONPath queries are now RFC 9535 compliant across both Rust and WASM bindings. A new parser, evaluator, and conformance test suite (PR #848, commit <code>21d13218</code>) unlock richer filters like <code>in</code> and <code>contains</code> while delivering clearer error messages. Thanks @zolero!</li>
+<li>Source maps become first-class in the WASM toolchain. <code>loro-wasm-tools</code> now embeds symbols during bundling (#836) and the new <code>loro-wasm-map</code> package publishes maps next to the runtime bundle (#844), drastically simplifying debugging in browsers, Vite, and other build systems.</li>
+</ul>
+<h2>Breaking change</h2>
+<ul>
+<li><strong>Removed legacy v0.x encoding path (#849, <code>10a405b4</code>)</strong>. Legacy serializers, compatibility fuzz tests, and decoding shims are gone. All runtimes now rely on the v1.* encoding format. Documents created with v0.x must be migrated via an intermediate ≤1.8.x release before installing 1.9.0.</li>
+</ul>
+<h2>New features &amp; improvements</h2>
+<ul>
+<li><strong>Spec-compliant JSONPath (#848, <code>21d13218</code>)</strong>. Ships a Pest-based parser, richer AST, the <code>in</code>/<code>contains</code> filter operators, better existence checks, and shared tests/benchmarks to keep Rust and WASM perfectly aligned.</li>
+<li><strong>WASM debugging experience (#836, <code>6f987022</code>; #844, <code>53f55331</code>)</strong>. Adds <code>loro-wasm-tools</code> for embedding sourcemaps, automates sourcemap publishing in CI, and hosts the maps in a dedicated workspace package so source-level debugging works without manual steps.</li>
+<li><strong>Better bundler support (#852 <code>3af6a857</code>, #851 <code>366f0161</code>)</strong>. Patches the JS entry points so esbuild and rsbuild can import the WASM bundle with zero loader overrides.</li>
+<li><strong>Bun runtime improvements (#829 <code>b8c070fd</code>, #828 <code>cf123453</code>, #827 <code>8b622619</code>, #834 <code>865bccba</code>)</strong>. Streams the WASM binary during bundling, pre-seeds the externref table, integrates Bun into CI, and removes earlier hacks that hid loader bugs.</li>
+<li><strong>JavaScript performance (#820 <code>c2c535c1</code>)</strong>. Event conversion now runs exactly once per callback invocation, trimming overhead during heavy real-time editing sessions.</li>
+<li><strong>Core dependency refresh (<code>e8f79de8</code>, <code>b2f5e107</code>)</strong>. Upgrades <code>generic-btree</code> and the columnar storage crate to pick up the latest bug fixes and perf wins.</li>
+</ul>
+<h2>Bug fixes &amp; stability</h2>
+<ul>
+<li>Fixed tree undo operations that moved nodes between siblings (#821 <code>76a8728e</code>).</li>
+<li>Resolved container ID bookkeeping when exporting shallow snapshots (#823 <code>b72a759a</code>) and ensured pending containers now return <code>None</code> instead of leaking state (#840 <code>35d9064d</code>).</li>
+<li>Prevented <code>LoroMap</code> entries from turning into <code>null</code> after <code>applyDiff</code> (#825 <code>3afc4d52</code>).</li>
+<li>Ensured undo manager callbacks fire without tripping Rust aliasing violations (#831 <code>a39daf85</code>).</li>
+<li>Guarded against panics when cursors point to deleted entries (#835 <code>e97e6056</code>) and when fetching unknown cursors in JS integration tests.</li>
+<li>Cleaned up WASM loader glue so we no longer rely on an extra patch (#834 <code>865bccba</code>) and added multiple Bun regression tests (#828 <code>cf123453</code>).</li>
+<li>Tightened CI release scripts (<code>74b78514</code>, <code>2383cdc1</code>, <code>4740a04c</code>, <code>3373e046</code>, <code>24f93249</code>) to keep <code>loro-wasm</code> artifacts and sourcemaps publishing in sync.</li>
+</ul>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Release Loro v1.8.0]]></title>
             <link>https://loro.dev/changelog/v1.8.0</link>

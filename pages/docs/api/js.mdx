@@ -37,7 +37,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 - Initialize all child containers for a LoroMap upfront when possible
 - Operations on the root containers will not override each other  
 
-- Events emit synchronously during commit/import/checkout in JS API (v1.8+). Stay on <=1.7.x? Await a microtask before reading batched events.
+- Events emit synchronously during commit/import/checkout in JS API (v1.8+). Stay on `<=1.7.x`? Await a microtask before reading batched events.
 - Import/export/checkout trigger automatic commits
 - Loro transactions are NOT ACID - no rollback/isolation
 
@@ -842,7 +842,7 @@ const unsubscribe = doc.subscribe((event) => {
 // Later: unsubscribe();
 ```
 
-**⚠️ Important:** Events are emitted synchronously as of v1.8. If you are pinned to <=1.7.x, await a microtask before reading the batch.
+**⚠️ Important:** Events are emitted synchronously as of v1.8. If you are pinned to `<=1.7.x`, await a microtask before reading the batch.
 ```ts no_run
 doc.commit();
 // Events have already been delivered in v1.8+
