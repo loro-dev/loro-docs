@@ -1,0 +1,121 @@
+---
+keywords: "jsonpath, querying, loro, crdt, advanced"
+description: "Learn how to query Loro documents using RFC 9535 JSONPath support."
+---
+
+# JSONPath Queries
+
+[JSONPath](https://www.rfc-editor.org/rfc/rfc9535.html) queries integrate
+directly with Loro documents so you can traverse complex data without writing
+ad hoc tree walkers. This guide outlines the query surface, highlights
+supported syntax, and walks through examples that you can adapt to your own
+application.
+
+> JSONPath functions such as `count()`, `length()`, `value()`, `match()`, and
+> `search()` are parsed but not evaluated at runtime. Each currently returns
+> `JsonPathError::EvaluationError::Unimplemented`.
+
+## Preparing Sample Data
+
+The snippets below use the WASM bindings, but the same structure works with the
+Rust API. We create a bookstore dataset inside a `LoroDoc` so we can run queries
+against it.
+
+> ⚠️ **Illustration only**: This approach stuffs plain JavaScript objects into a
+> document for convenience. In production code prefer composing `LoroMap` and
+> `LoroList` instances explicitly so you can control how data enters the CRDT and
+> benefit from fine-grained updates.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+const testData = {
+  books: [
+    { title: "1984", author: "George Orwell", price: 10, available: true, isbn: "978-0451524935" },
+    { title: "Animal Farm", author: "George Orwell", price: 8, available: true },
+    { title: "Brave New World", author: "Aldous Huxley", price: 12, available: false },
+    { title: "Fahrenheit 451", author: "Ray Bradbury", price: 9, available: true, isbn: "978-1451673318" },
+    { title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: null, available: true },
+    { title: "To Kill a Mockingbird", author: "Harper Lee", price: 11, available: true },
+    { title: "The Catcher in the Rye", author: "J.D. Salinger", price: 10, available: false },
+    { title: "Lord of the Flies", author: "William Golding", price: 9, available: true },
+    { title: "Pride and Prejudice", author: "Jane Austen", price: 7, available: true },
+    { title: "The Hobbit", author: "J.R.R. Tolkien", price: 14, available: true }
+  ],
+  featured_author: "George Orwell",
+  min_price: 10,
+  featured_authors: ["George Orwell", "Jane Austen"],
+};
+
+const store = doc.getMap("store");
+Object.entries(testData).forEach(([key, value]) => store.set(key, value));
+doc.commit();
+```
+
+## Executing JSONPath Queries
+
+Run a query with the `JSONPath` method on WASM or `jsonpath` on Rust. The API
+returns a list of values for any matches. Container results currently surface as
+handlers internally, but that interface is still evolving and treated as
+opaque in this guide.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+// ---cut---
+const doc = new LoroDoc();
+// setup omitted for brevity
+const results = doc.JSONPath("$.store.books[*].title");
+console.log(results);
+// => ["1984", "Animal Farm", ...]
+```
+
+```rust
+use loro::prelude::*;
+
+let doc = LoroDoc::new();
+// setup omitted for brevity
+let titles = doc.jsonpath("$.store.books[*].title")?;
+for title in titles {
+    if let ValueOrHandler::Value(value) = title {
+        println!("{value}");
+    }
+}
+```
+
+### Supported Selectors and Filters
+
+RFC 9535 syntax works end-to-end, including:
+
+- **Selectors** – names, indices (positive/negative), slices, unions, wildcards,
+  and recursive descent (`..`).
+- **Filters** – logical operators (`&&`, `||`, `!`), comparisons, membership via
+  `in`, substring checks with `contains`, property existence, and nested
+  subqueries through `$` (root) or `@` (current node).
+- **Functions** – `count()`, `length()`, and `value()` are parsed, while `match()`
+  and `search()` are reserved for expansion. All functions currently return an
+  unimplemented evaluation error at runtime.
+
+## Cookbook Examples
+
+Once the document is populated you can combine selectors and filters to extract
+precisely what you need.
+
+| Query | Description | Result |
+| ----- | ----------- | ------ |
+| `$.store.books[*].title` | All book titles. | `["1984", "Animal Farm", "Brave New World", "Fahrenheit 451", "The Great Gatsby", "To Kill a Mockingbird", "The Catcher in the Rye", "Lord of the Flies", "Pride and Prejudice", "The Hobbit"]` |
+| `$.store.books[?(@.available)].title` | Titles of books in stock. | `["1984", "Animal Farm", "The Great Gatsby", "To Kill a Mockingbird", "Lord of the Flies", "Pride and Prejudice", "The Hobbit"]` |
+| `$.store.books[?(@.author in $.store.featured_authors)].title` | Books by featured authors. | `["1984", "Animal Farm", "Pride and Prejudice"]` |
+| `$.store.books[?(@.price > 12)].title` | Books priced above 12. | `["The Hobbit"]` |
+| `$..price` | All price fields via recursive descent. | `[10, 8, 12, 9, null, 11, 10, 9, 7, 14]` |
+| `$.store.books[0:3].title` | Slice syntax for the first three titles. | `["1984", "Animal Farm", "Brave New World"]` |
+| `$.store.books[0,2,-1].title` | Union of specific indices. | `["1984", "Brave New World", "The Hobbit"]` |
+| `count($.store.books[?(@.available)])` | Planned helper to count available books *(currently returns an unimplemented error)*. | `JsonPathError::EvaluationError::Unimplemented` |
+| `length($.store.featured_authors)` | Planned array length helper *(currently returns an unimplemented error)*. | `JsonPathError::EvaluationError::Unimplemented` |
+| `$.store.books[?(@.isbn && @.price >= $.store.min_price)].title` | Filter by field existence and comparison. | `["1984"]` |
+| `$.store.books[?(!@.available)].title` | Negated availability filter. | `["Brave New World", "The Catcher in the Rye"]` |
+| `$.store.books[?(@.title contains "The")].author` | Authors with "The" in the title. | `["F. Scott Fitzgerald", "J.R.R. Tolkien"]` |
+
+> JSONPath always returns values in document order. When a filter references
+> another query (such as `$.store.featured_authors`), the subquery is evaluated
+> for each candidate element.
