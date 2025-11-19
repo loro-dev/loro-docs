@@ -10,7 +10,10 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "extract-llms": "deno run -A ./deno_scripts/extract-llms.ts",
-    "changelog": "node gen-rss.js"
+    "changelog": "node gen-rss.js",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "repository": {
     "type": "git",
@@ -23,6 +26,7 @@
     "@fontsource/poppins": "^5.0.8",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@opennextjs/cloudflare": "^1.13.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-slider": "^1.1.2",
     "@radix-ui/react-slot": "^1.0.2",
@@ -87,6 +91,7 @@
     "storybook-addon-next": "^1.7.1",
     "tailwindcss": "^3.2.4",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "wrangler": "^4.49.0"
   }
 }
