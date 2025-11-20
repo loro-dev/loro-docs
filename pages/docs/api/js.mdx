@@ -71,6 +71,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 - **Create rich text**: [`getText`](#LoroDoc.getText) - Initialize a collaborative text container
 - **Edit text**: [`insert`](#LoroText.insert), [`delete`](#LoroText.delete), [`applyDelta`](#LoroText.applyDelta)
 - **Apply formatting**: [`mark`](#LoroText.mark) - Add bold, italic, links, custom styles
+- **Copy styled snippets**: [`sliceDelta`](#LoroText.sliceDelta) - Get a Delta for a range (UTF-16; use `sliceDeltaUtf8` for byte offsets)
 - **Track cursor positions**: [`getCursor`](#LoroText.getCursor) + [`getCursorPos`](#LoroDoc.getCursorPos) - Stable positions across edits
 - **Configure styles**: [`configTextStyle`](#LoroDoc.configTextStyle) - Define expand behavior for marks
 
@@ -2192,6 +2193,71 @@ text.insert(0, "Hello World");
 text.mark({ start: 0, end: 5 }, "bold", true);
 const delta = text.toDelta();
 // [{ insert: "Hello", attributes: { bold: true } }, { insert: " World" }]
+```
+</Indent>
+
+<Method id="LoroText.sliceDelta">
+```typescript no_run
+sliceDelta(start: number, end: number): Delta<string>[]
+```
+</Method>
+<Indent>
+Returns a Quill-style Delta for a subsection of the text, using UTF-16 indices. Useful for copying a styled span. Use `sliceDeltaUtf8` if you need UTF-8 byte offsets instead.
+
+**Parameters:**
+- `start` - Start UTF-16 code unit index (inclusive)
+- `end` - End UTF-16 code unit index (exclusive)
+
+**Example:**
+```ts threeslash
+import { LoroDoc } from "loro-crdt";
+import { expect } from "expect";
+const doc = new LoroDoc();
+doc.configTextStyle({
+  bold: { expand: "after" },
+  comment: { expand: "none" },
+});
+const text = doc.getText("text");
+
+text.insert(0, "Hello World!");
+text.mark({ start: 0, end: 5 }, "bold", true);
+text.mark({ start: 6, end: 11 }, "comment", "greeting");
+
+const snippet = text.sliceDelta(1, 8);
+expect(snippet).toStrictEqual([
+  { insert: "ello", attributes: { bold: true } },
+  { insert: " " },
+  { insert: "Wo", attributes: { comment: "greeting" } },
+]);
+```
+</Indent>
+
+<Method id="LoroText.sliceDeltaUtf8">
+```typescript no_run
+sliceDeltaUtf8(start: number, end: number): Delta<string>[]
+```
+</Method>
+<Indent>
+Returns a Quill-style Delta for a subsection of the text using **UTF-8 byte offsets**. Choose this when your offsets come from UTF-8 encoded buffers.
+
+**Parameters:**
+- `start` - Start byte offset (inclusive)
+- `end` - End byte offset (exclusive)
+
+**Example:**
+```ts threeslash
+import { LoroDoc } from "loro-crdt";
+import { expect } from "expect";
+const doc = new LoroDoc();
+const text = doc.getText("text");
+text.insert(0, "Hi 👋");
+
+const enc = new TextEncoder();
+const start = enc.encode("Hi ").length;   // 3 bytes
+const end = enc.encode("Hi 👋").length;   // 7 bytes
+
+const delta = text.sliceDeltaUtf8(start, end);
+expect(delta).toStrictEqual([{ insert: "👋" }]);
 ```
 </Indent>
 

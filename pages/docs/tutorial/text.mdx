@@ -224,6 +224,15 @@ Delete text at the given range.
 
 Get a string slice.
 
+### `sliceDelta(start: number, end: number): Delta<string>[]`
+
+Get a Quill-style Delta slice for the given UTF-16 range. Use
+`sliceDeltaUtf8` to slice by UTF-8 byte offsets instead.
+
+### `sliceDeltaUtf8(start: number, end: number): Delta<string>[]`
+
+Get a Quill-style Delta slice for the given UTF-8 byte range.
+
 ### `toString(): string`
 
 Get the plain text value.
@@ -350,6 +359,33 @@ console.log(text.toDelta());
 //   { insert: "Hello", attributes: { bold: true } },
 //   { insert: " World!" }
 // ]
+```
+
+### Slice a Delta snippet
+
+Use `sliceDelta(start, end)` when you only need a portion of the Delta (for example, to copy a styled snippet). It uses UTF-16 indices just like other text APIs; use `sliceDeltaUtf8` if you need to slice by UTF-8 byte offsets instead.
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+import { expect } from "expect";
+// ---cut---
+const doc = new LoroDoc();
+doc.configTextStyle({
+  bold: { expand: "after" },
+  comment: { expand: "none" },
+});
+const text = doc.getText("text");
+
+text.insert(0, "Hello World!");
+text.mark({ start: 0, end: 5 }, "bold", true);
+text.mark({ start: 6, end: 11 }, "comment", "greeting");
+
+const snippet = text.sliceDelta(1, 8);
+expect(snippet).toStrictEqual([
+  { insert: "ello", attributes: { bold: true } },
+  { insert: " " },
+  { insert: "Wo", attributes: { comment: "greeting" } },
+]);
 ```
 
 ### `mark(range: {start: number, end: number}, key: string, value: any): void`
