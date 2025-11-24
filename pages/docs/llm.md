@@ -1,4 +1,4 @@
-# LLM Resouces
+# LLM Resources
 
 - [llms.txt](/llms.txt)
 - [llms-full.txt](/llms-full.txt)
