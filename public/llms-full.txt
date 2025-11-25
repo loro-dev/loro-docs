@@ -211,8 +211,8 @@ date: 2025/04/30
 
 Try it here: [Loro Inspector](https://inspector.loro.dev/)
 
-Now you can directly browse the current state and complete edit history of your Loro 
-documents in the browser. You can also use this tool to time travel to any version 
+Now you can directly browse the current state and complete edit history of your Loro
+documents in the browser. You can also use this tool to time travel to any version
 in the history of your Loro document.
 
 import { ReactPlayer } from "../../components/video";
@@ -349,7 +349,7 @@ console.log(newStore.get("user-alice"))
 
 - Fixed text styling at end "\n" character
 - Added JSON support for current transaction operations
-- For environments that support multi-threading such as Rust and Swift, LoroDoc can now be directly and safely 
+- For environments that support multi-threading such as Rust and Swift, LoroDoc can now be directly and safely
   shared and accessed in parallel across multiple threads without triggering the previous WouldBlock panic.
 
 
@@ -928,7 +928,7 @@ The `onPush` and `onPop` callbacks are triggered when these stacks change:
 
 The `mergeInterval` option in the UndoManager controls how closely spaced operations are grouped:
 
-```ts twoslash no_run 
+```ts twoslash no_run
 import { UndoManager, LoroDoc } from "loro-crdt";
 // ---cut---
 declare const doc: LoroDoc;
@@ -986,7 +986,7 @@ undoManager.undo(); // Reverts both commits in one step
 
 Consider a simple text editor that uses Loro for collaboration. Let's walk through what happens during typical editing operations:
 
-```ts twoslash no_run 
+```ts twoslash no_run
 import { LoroDoc, UndoManager } from "loro-crdt";
 // ---cut---
 // Create document and undo manager
@@ -1008,17 +1008,17 @@ const undoManager = new UndoManager(doc, {
       cursors: [/* your cursor positions */]
     };
   },
-  
+
   onPop: (isUndo, storedData) => {
     // Access the data you stored during onPush
     const { value, cursors } = storedData;
-    
+
     if (isUndo) {
       console.log("Retrieving data for undo");
     } else {
       console.log("Retrieving data for redo");
     }
-    
+
     // Use the stored cursors to restore selection
     // applyStoredCursors(cursors);
   },
@@ -1059,8 +1059,8 @@ This approach ensures that local changes can be undone without affecting other u
 
 ### Cursor Efficiency
 
-The built-in cursor solution is optimized for performance and handles collaborative scenarios efficiently, including situations where peers may 
-change the document concurrently during undo/redo operations. For complex editors like rich text editors, the cursor implementation provides the 
+The built-in cursor solution is optimized for performance and handles collaborative scenarios efficiently, including situations where peers may
+change the document concurrently during undo/redo operations. For complex editors like rich text editors, the cursor implementation provides the
 best balance of performance and correctness.
 
 
@@ -4919,7 +4919,7 @@ Op IDs:  1 2 3 4 5 6 7 8 9 A B
 Cursor:  References ID 5 (after 'o')
 
 After concurrent insert at start:
-Text:    N e w   H e l l o   W o r l d  
+Text:    N e w   H e l l o   W o r l d
 Op IDs:  C D E F 1 2 3 4 5 6 7 8 9 A B
 Cursor:  Still references ID 5 - position automatically adjusted
 ```
@@ -4987,8 +4987,8 @@ description: "When CRDTs are not the right tool: hard invariants, exclusivity, o
 
 # When Not to Use CRDTs
 
-CRDTs shine for collaborative editing and offline-friendly applications. 
-But they are not a universal replacement for coordination, transactions, 
+CRDTs shine for collaborative editing and offline-friendly applications.
+But they are not a universal replacement for coordination, transactions,
 or authorization. Use this guide to recognize when CRDTs are a poor fit and what to use instead.
 
 ## Quick Reference
@@ -5117,7 +5117,7 @@ async function handleImport(
   fetchMissing: (from: VersionVector) => Promise<Uint8Array>
 ) {
   const status = doc.import(update);
-  
+
   if (status.pending) {
     const missing = await fetchMissing(doc.version());
     doc.import(missing);
@@ -5458,7 +5458,7 @@ One of Eg-Walker's most significant advantages is **safe garbage collection**:
 
 Eg-Walker is based on rigorous academic research:
 
-> [Collaborative Text Editing with Eg-walker: Better, Faster, Smaller](https://arxiv.org/abs/2409.14252)  
+> [Collaborative Text Editing with Eg-walker: Better, Faster, Smaller](https://arxiv.org/abs/2409.14252)
 > By: Joseph Gentle, Martin Kleppmann
 
 The algorithm has been proven to:
@@ -6009,13 +6009,13 @@ async function archiveAndTrim(doc: LoroDoc) {
   // 1. Archive full history
   const full = doc.export({ mode: "snapshot" });
   await saveToArchive(full);
-  
+
   // 2. Create shallow for active use
   const shallow = doc.export({
     mode: "shallow-snapshot",
     frontiers: doc.frontiers(),
   });
-  
+
   return shallow;
 }
 
@@ -6030,11 +6030,11 @@ import { LoroDoc } from "loro-crdt";
 // ---cut---
 class PrivacyDoc {
   constructor(private doc: LoroDoc) {}
-  
+
   async redactSensitive() {
     // Delete sensitive content
     this.doc.getText("private").delete(0, this.doc.getText("private").length);
-    
+
     // Create clean snapshot
     return this.doc.export({
       mode: "shallow-snapshot",
@@ -6164,7 +6164,7 @@ class RelayServer {
 ## Best Practices
 
 - **Export modes**: Updates for sync, snapshots for persistence, shallow for startup
-- **Optimize by use case**: 
+- **Optimize by use case**:
   - Editors: Both in memory
   - Relays: OpLog only
 
@@ -6227,7 +6227,7 @@ doc.commit();  // Merges with #1 (same peer, consecutive)
 
 1. **Cross-peer dependencies**: After importing remote operations
 2. **Time separation**: When timestamps enabled and > the merge interval (default 1000s) between commits
-3. **Different commit messages**: 
+3. **Different commit messages**:
 
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
@@ -6550,7 +6550,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 
 - Concurrent child container creation inside the same LoroMap at same key causes overwrites
 - Initialize all child containers for a LoroMap upfront when possible
-- Operations on the root containers will not override each other  
+- Operations on the root containers will not override each other
 
 **Events & Transactions**
 
@@ -6731,7 +6731,7 @@ setPeerId(peer: number | bigint | `${number}`): void
 ```
 </Method>
 <Indent>
-Sets the peer ID for this document. It must be a number, a BigInt, or a decimal string that fits into an unsigned 64-bit integer. 
+Sets the peer ID for this document. It must be a number, a BigInt, or a decimal string that fits into an unsigned 64-bit integer.
 See [PeerID Management](/docs/concepts/peerid_management) for why uniqueness matters in distributed systems.
 
 **Parameters:**
@@ -6896,7 +6896,7 @@ getList(name: string): LoroList
 Gets or creates a list container with the given name. Unsure whether to use List or MovableList? See [List and Movable List](/docs/tutorial/list) and the type selection guide [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 **Parameters:**
-- `name` - The container name  
+- `name` - The container name
 
 **Returns:** A `LoroList` instance
 
@@ -7044,7 +7044,7 @@ Exports the document in various formats for synchronization or persistence. For 
 
 **ExportMode Options:**
 ```typescript no_run
-type ExportMode = 
+type ExportMode =
   | { mode: "snapshot" }
   | { mode: "update", from?: VersionVector }
   | { mode: "shallow-snapshot", frontiers: Frontiers }
@@ -7071,13 +7071,13 @@ const snapshot = doc.export({ mode: "snapshot" });
 // Export updates from a specific version
 const lastSyncVersion = doc.version(); // Get current version
 // ... make more changes ...
-const updates = doc.export({ 
-  mode: "update", 
-  from: lastSyncVersion 
+const updates = doc.export({
+  mode: "update",
+  from: lastSyncVersion
 });
 
 // Export shallow snapshot at current version
-const shallowSnapshot = doc.export({ 
+const shallowSnapshot = doc.export({
   mode: "shallow-snapshot",
   frontiers: doc.frontiers()
 });
@@ -7214,7 +7214,7 @@ doc.checkout(frontiers); // Go back to previous version
 </Indent>
 
 <Indent>
-**⚠️ Important:** In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations. 
+**⚠️ Important:** In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations.
 
 **📝 Note:** After `checkout()`, the document enters "detached" mode and becomes read-only by default. Use `attach()` or `checkoutToLatest()` to return to editing mode. See [Version Deep Dive](/docs/advanced/version_deep_dive) and [Attached vs Detached States](/docs/concepts/attached_detached).
 </Indent>
@@ -7359,7 +7359,7 @@ const unsubscribe = doc.subscribe((event) => {
 // Later: unsubscribe();
 ```
 
-**⚠️ Important:** Events are emitted asynchronously after a microtask. 
+**⚠️ Important:** Events are emitted asynchronously after a microtask.
 ```ts no_run
 doc.commit();
 await Promise.resolve();
@@ -7424,7 +7424,7 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
 ```
 </Indent>
 
- 
+
 
 ### Transaction Methods
 
@@ -7582,7 +7582,7 @@ Calculates differences between two versions. Understanding how Loro computes dif
 
 **Parameters:**
 - `from` - Starting frontiers
-- `to` - Ending frontiers  
+- `to` - Ending frontiers
 - `for_json` - If true, returns JsonDiff format (default: true)
 
 **Returns:** Array of container IDs and their diffs
@@ -8555,9 +8555,9 @@ Common CRDT containers for modeling JSON-like structures. See [Choosing CRDT Typ
 
 ### LoroText
 
-A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and 
-stable cursors. The merge semantics avoid interleaving artifacts under concurrency (Fugue + Eg-walker ideas); you use simple index 
-APIs and Loro handles index transformation. 
+A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and
+stable cursors. The merge semantics avoid interleaving artifacts under concurrency (Fugue + Eg-walker ideas); you use simple index
+APIs and Loro handles index transformation.
 See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
 **⚠️ Critical: UTF-16 String Encoding**
@@ -9213,8 +9213,8 @@ console.log(text.length); // 8 (space + emoji which counts as 2)
 
 ### LoroList
 
-An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices 
-by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list), 
+An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices
+by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list),
 [Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
 
 **⚠️ Important: List vs Map for Coordinates**
@@ -9263,7 +9263,7 @@ insertContainer<T extends Container>(pos: number, container: T): T
 Inserts a new container at the position.
 
 **Parameters:**
-- `pos` - Insert position  
+- `pos` - Insert position
 - `container` - Container instance
 
 **Returns:** The inserted container
@@ -9869,7 +9869,7 @@ getLastEditor(key: string): PeerID | undefined
 ```
 </Method>
 <Indent>
-```ts threeslash  
+```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const map = doc.getMap("map");
@@ -10223,7 +10223,7 @@ const rootNodes = tree.roots();
 has(target: TreeID): boolean
 ```
 </Method>
-<Indent>  
+<Indent>
 Checks if a node exists.
 
 **Parameters:**
@@ -10583,7 +10583,7 @@ const sibling = tree.createNode();
 // Usage example:
 node.moveAfter(sibling);
 ```
-</Indent> 
+</Indent>
 
 <Method id="LoroTreeNode.moveBefore">
 ```typescript no_run
@@ -10771,7 +10771,7 @@ const lastMove = node.getLastMoveId();
 isDeleted(): boolean
 ```
 </Method>
-<Indent>  
+<Indent>
 Checks if this node has been deleted.
 
 **Returns:** Boolean deletion status
@@ -10858,7 +10858,7 @@ console.log(`Counter value: ${counter.value}`);
 
 ### LoroMovableList
 
-A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under 
+A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under
 concurrent moves (concurrent moves resolve to one final position). See [List and Movable List](/docs/tutorial/list).
 
 **📝 MovableList vs List:**
@@ -10898,7 +10898,7 @@ movableList.move(0, 3); // Move first element to fourth position
 set(pos: number, value: Value | Container): void
 ```
 </Method>
-<Indent>  
+<Indent>
 Replaces the value at a position.
 
 **Parameters:**
@@ -10921,7 +10921,7 @@ movableList.set(0, "Updated value");
 setContainer<T extends Container>(pos: number, container: T): T
 ```
 </Method>
-<Indent>  
+<Indent>
 Replaces the value with a container.
 
 **Parameters:**
@@ -10939,7 +10939,7 @@ movableList.push("placeholder");
 
 const text = movableList.setContainer(0, new LoroText());
 ```
-</Indent> 
+</Indent>
 
 ## Synchronization
 
@@ -10987,7 +10987,7 @@ doc2.subscribeLocalUpdates((updates) => {
 Performance tips:
 - Prefer `mode: "update"` with a `VersionVector` to sync incrementally.
 - Use `mode: "shallow-snapshot"` when you only need current state; it strips history for faster import/load.
-- Loro’s LSM-based encoding and Eg-walker-inspired merge keep import/export fast, even for large histories. 
+- Loro’s LSM-based encoding and Eg-walker-inspired merge keep import/export fast, even for large histories.
   See [Encoding](/docs/tutorial/encoding) and v1.0 performance notes: https://loro.dev/blog/v1.0
 
 #### Network Sync with WebSocket
@@ -10996,7 +10996,7 @@ Performance tips:
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have:
-declare const ws: { 
+declare const ws: {
   send: (data: Uint8Array) => void;
   on: (event: string, handler: (data: any) => void) => void;
 };
@@ -11692,7 +11692,7 @@ const undo = new UndoManager(doc, {
       cursors: cursors
     };
   },
-  
+
   onPop: (isUndo, { value, cursors }, counterRange) => {
     // Restore cursor positions when undoing
     restoreCursorPositions(cursors);
@@ -11713,7 +11713,7 @@ Reference for core types used across the API. For conceptual background, see [Co
 type PeerID = `${number}`
 
 // Container identifier
-type ContainerID = 
+type ContainerID =
   | `cid:root-${string}:${ContainerType}`
   | `cid:${number}@${PeerID}:${ContainerType}`
 
@@ -11721,9 +11721,9 @@ type ContainerID =
 type TreeID = `${number}@${PeerID}`
 
 // Operation identifier
-type OpId = { 
+type OpId = {
   peer: PeerID
-  counter: number 
+  counter: number
 }
 
 // Container types
@@ -11961,7 +11961,7 @@ console.log("Blob metadata:", metadata);
 
 Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns. Each entry uses timestamp-based LWW (Last-Write-Wins) for conflict resolution.
 
-**⚠️ Important:** 
+**⚠️ Important:**
 - EphemeralStore is a separate CRDT without history - history/operations are NOT persisted
 - Perfect for temporary state: cursor positions, selections, typing indicators
 - Each peer's state auto-expires after the timeout period
@@ -12294,7 +12294,7 @@ store2.apply(encoded);
 
 # FILE: pages/docs/llm.md
 
-# LLM Resouces
+# LLM Resources
 
 - [llms.txt](/llms.txt)
 - [llms-full.txt](/llms-full.txt)
@@ -12728,13 +12728,13 @@ To globally sort events, we first look at the Lamport Timestamps: smaller number
 
 #### Apply a Remote Operation
 
-An op's safety depends on the tree's state when applied, avoiding cycles. Insertion requires evaluating the state formed by all preceding ops. For remote updates, we may need to:  
+An op's safety depends on the tree's state when applied, avoiding cycles. Insertion requires evaluating the state formed by all preceding ops. For remote updates, we may need to:
 
 1. Undo recent ops
-2. Insert the new op  
-3. Reapply undone ops  
+2. Insert the new op
+3. Reapply undone ops
 
-This ensures proper integration of new ops into the existing sequence.  
+This ensures proper integration of new ops into the existing sequence.
 
 ##### Undo Recent Ops
 
