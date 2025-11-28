@@ -1,13 +1,13 @@
-import styles from './api-reference.module.css'
-import Indent from './indent';
-import Method from './method';
-import CopyRawMdxButton from '@/components/CopyRawMdxButton';
+import styles from "./api-reference.module.css";
+import Indent from "./indent";
+import Method from "./method";
+import CopyRawMdxButton from "@/components/CopyRawMdxButton";
 
 <div className={styles.apiReference}>
 
 # API Reference
 
-> *Last updated: 2025-08-09 loro-crdt@1.5.10*
+> _Last updated: 2025-08-09 loro-crdt@1.5.10_
 
 <CopyRawMdxButton />
 
@@ -35,7 +35,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 
 - Concurrent child container creation inside the same LoroMap at same key causes overwrites
 - Initialize all child containers for a LoroMap upfront when possible
-- Operations on the root containers will not override each other  
+- Operations on the root containers will not override each other
 
 - Events emit synchronously during commit/import/checkout in JS API (v1.8+). Stay on `<=1.7.x`? Await a microtask before reading batched events.
 - Import/export/checkout trigger automatic commits
@@ -129,12 +129,13 @@ The `LoroDoc` class manages containers, sync, versions, and events.
 **Constructor**
 
 ```typescript no_run
-new LoroDoc()
+new LoroDoc();
 ```
 
 Creates a new Loro document with a randomly generated peer ID.
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -152,11 +153,13 @@ static fromSnapshot(snapshot: Uint8Array): LoroDoc
 Creates a new LoroDoc from a snapshot. This is useful for loading a document from a previously exported snapshot.
 
 **Parameters:**
+
 - `snapshot` - Binary snapshot data
 
 **Returns:** A new LoroDoc instance
 
 **Example:**
+
 ```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -167,6 +170,7 @@ const snapshot: Uint8Array = prevDoc.export({ mode: "snapshot" });
 
 const doc = LoroDoc.fromSnapshot(snapshot);
 ```
+
 </Indent>
 
 **Properties**
@@ -182,12 +186,14 @@ Gets the peer ID of the current writer as a bigint.
 **See Also:** [PeerID Management](/docs/concepts/peerid_management)
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const id = doc.peerId;
 ```
+
 </Indent>
 
 <Method id="LoroDoc.peerIdStr">
@@ -199,12 +205,14 @@ readonly peerIdStr: `${number}`
 Gets the peer ID as a decimal string.
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const idStr = doc.peerIdStr;
 ```
+
 </Indent>
 
 ### Configuration Methods
@@ -219,9 +227,11 @@ Sets the peer ID for this document. It must be a number, a BigInt, or a decimal 
 See [PeerID Management](/docs/concepts/peerid_management) for why uniqueness matters in distributed systems.
 
 **Parameters:**
+
 - `peer` - Peer ID as number, bigint, or decimal string
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -230,12 +240,14 @@ doc.setPeerId("42");
 ```
 
 **⚠️ Critical Pitfall:** Never let two parallel peers (e.g., multiple tabs/devices) share the same PeerID — it creates duplicate op IDs and causes document divergence. Common mistakes:
+
 - Don't assign a fixed PeerId to a user (users have multiple devices)
 - Don't assign a fixed PeerId to a device (multiple tabs can open the same document)
 - If you must reuse PeerIDs, enforce single ownership with strict locking mechanisms
 - Best practice: Use random IDs (default behavior) unless you have a strong reason not to
 
 See [PeerID reuse](/docs/tutorial/tips) for safe reuse patterns.
+
 </Indent>
 
 <Method id="LoroDoc.setRecordTimestamp">
@@ -247,17 +259,20 @@ setRecordTimestamp(auto_record: boolean): void
 Configures whether to automatically record timestamps for changes. Timestamps use Unix time (seconds since epoch). Learn more about storing timestamps and typical use cases in [Storing Timestamps](/docs/advanced/timestamp).
 
 **Parameters:**
+
 - `auto_record` - Whether to automatically record timestamps
 
 **⚠️ Important:** This setting doesn't persist in exported Updates or Snapshots. You must reapply this configuration each time you initialize a document.
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setRecordTimestamp(true);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.setChangeMergeInterval">
@@ -269,15 +284,18 @@ setChangeMergeInterval(interval: number): void
 Sets the interval in milliseconds for merging continuous local changes into a single change record. In Loro, multiple low-level operations are grouped into higher-level Changes for readability and syncing. See [Operations and Changes](/docs/concepts/operations_changes).
 
 **Parameters:**
+
 - `interval` - Merge interval in milliseconds
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setChangeMergeInterval(1000); // Merge changes within 1 second
 ```
+
 </Indent>
 
 <Method id="LoroDoc.configTextStyle">
@@ -289,16 +307,22 @@ configTextStyle(styles: StyleConfig): void
 Configures the behavior of text styles (marks) in rich text containers. Marks can expand when edits happen at their edges (before/after/both/none). For a primer on rich text and marks in Loro, see [Text](/docs/tutorial/text).
 
 **Parameters:**
+
 - `styles` - Configuration object mapping style names to their config
 
 **StyleConfig Type:**
+
 ```typescript no_run
-type StyleConfig = Record<string, {
-  expand?: "after" | "before" | "both" | "none"
-}>
+type StyleConfig = Record<
+  string,
+  {
+    expand?: "after" | "before" | "both" | "none";
+  }
+>;
 ```
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -306,9 +330,10 @@ const doc = new LoroDoc();
 doc.configTextStyle({
   bold: { expand: "after" },
   italic: { expand: "none" },
-  link: { expand: "none" }
+  link: { expand: "none" },
 });
 ```
+
 </Indent>
 
 <Method id="LoroDoc.configDefaultTextStyle">
@@ -320,15 +345,18 @@ configDefaultTextStyle(style?: { expand: "after" | "before" | "both" | "none" })
 Configures the default text style for the document when using LoroText. If undefined is provided, the default style is reset.
 
 **Parameters:**
+
 - `style` - Default style configuration (optional)
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.configDefaultTextStyle({ expand: "after" });
 ```
+
 </Indent>
 
 ### Container Access Methods
@@ -336,14 +364,17 @@ doc.configDefaultTextStyle({ expand: "after" });
 **📝 Note:** Creating root containers (e.g., `doc.getText("...")`) does not record operations; nested container creation (e.g., `map.setContainer(...)`) does.
 
 **⚠️ Pitfall:** Avoid concurrent creation of child containers with the same key in LoroMaps. Instead of:
+
 ```ts no_run
 // Dangerous - can cause overwrites
-doc.getMap("user").getOrCreateContainer(userId, new LoroMap())
+doc.getMap("user").getOrCreateContainer(userId, new LoroMap());
 ```
+
 Use:
+
 ```ts no_run
 // Safe - unique root container per user
-doc.getMap("user." + userId)
+doc.getMap("user." + userId);
 ```
 
 <Method id="LoroDoc.getText">
@@ -356,11 +387,13 @@ getText(name: string): LoroText
 Gets or creates a text container with the given name. New to LoroText and marks? See [Text](/docs/tutorial/text).
 
 **Parameters:**
+
 - `name` - The container name
 
 **Returns:** A `LoroText` instance
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -368,6 +401,7 @@ const doc = new LoroDoc();
 const text = doc.getText("content");
 text.insert(0, "Hello");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getList">
@@ -380,11 +414,13 @@ getList(name: string): LoroList
 Gets or creates a list container with the given name. Unsure whether to use List or MovableList? See [List and Movable List](/docs/tutorial/list) and the type selection guide [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 **Parameters:**
-- `name` - The container name  
+
+- `name` - The container name
 
 **Returns:** A `LoroList` instance
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -392,6 +428,7 @@ const doc = new LoroDoc();
 const list = doc.getList("items");
 list.push("Item 1");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getMap">
@@ -403,11 +440,13 @@ getMap(name: string): LoroMap
 Gets or creates a map container with the given name. See [Map](/docs/tutorial/map) for basics and patterns.
 
 **Parameters:**
+
 - `name` - The container name
 
 **Returns:** A `LoroMap` instance
 
 **Example:**
+
 ```ts twoslash
 import { LoroDoc } from "loro-crdt";
 
@@ -415,6 +454,7 @@ const doc = new LoroDoc();
 const map = doc.getMap("settings");
 map.set("theme", "dark");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getTree">
@@ -426,11 +466,13 @@ getTree(name: string): LoroTree
 Gets or creates a tree container with the given name. Learn about hierarchical editing and moves in [Tree](/docs/tutorial/tree).
 
 **Parameters:**
+
 - `name` - The container name
 
 **Returns:** A `LoroTree` instance
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -438,6 +480,7 @@ const doc = new LoroDoc();
 const tree = doc.getTree("fileSystem");
 const root = tree.createNode();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getCounter">
@@ -449,11 +492,13 @@ getCounter(name: string): LoroCounter
 Gets or creates a counter container with the given name. Counters are special CRDTs that sum concurrent increments; see [Counter](/docs/tutorial/counter).
 
 **Parameters:**
+
 - `name` - The container name
 
 **Returns:** A `LoroCounter` instance
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -461,6 +506,7 @@ const doc = new LoroDoc();
 const counter = doc.getCounter("likes");
 counter.increment(1);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getMovableList">
@@ -472,11 +518,13 @@ getMovableList(name: string): LoroMovableList
 Gets or creates a movable list container with the given name. MovableList is designed for reordering with concurrent moves. See [List and Movable List](/docs/tutorial/list) and [Choosing CRDT Types](/docs/concepts/choose_crdt_type).
 
 **Parameters:**
+
 - `name` - The container name
 
 **Returns:** A `LoroMovableList` instance
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -487,6 +535,7 @@ movableList.push("Task 2");
 movableList.push("Task 3");
 movableList.move(0, 2); // Move first item to third position
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getContainerById">
@@ -498,11 +547,13 @@ getContainerById(id: ContainerID): Container | undefined
 Gets a container by its unique ID. Container IDs (CID) uniquely reference containers across updates; see [Container ID](/docs/advanced/cid) and [Container](/docs/concepts/container).
 
 **Parameters:**
+
 - `id` - The container ID
 
 **Returns:** The container instance or undefined if not found
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -511,6 +562,7 @@ const text = doc.getText("text");
 const textId = text.id;
 const sameText = doc.getContainerById(textId);
 ```
+
 </Indent>
 
 ### Import/Export Methods
@@ -524,25 +576,29 @@ export(mode?: ExportMode): Uint8Array
 Exports the document in various formats for synchronization or persistence. For a walkthrough of export modes—snapshot, update, shallow-snapshot, and updates-in-range—see [Export Mode](/docs/tutorial/encoding). Shallow snapshots remove history while keeping current state; see [Shallow Snapshots](/docs/concepts/shallow_snapshots). VersionVector and Frontiers are two ways to represent versions; see [Version Vector](/docs/concepts/version_vector) and [Frontiers](/docs/concepts/frontiers).
 
 **Parameters:**
+
 - `mode` - Export configuration (optional)
 
 **ExportMode Options:**
+
 ```typescript no_run
-type ExportMode = 
+type ExportMode =
   | { mode: "snapshot" }
-  | { mode: "update", from?: VersionVector }
-  | { mode: "shallow-snapshot", frontiers: Frontiers }
-  | { mode: "updates-in-range", spans: { id: OpId; len: number }[] }
+  | { mode: "update"; from?: VersionVector }
+  | { mode: "shallow-snapshot"; frontiers: Frontiers }
+  | { mode: "updates-in-range"; spans: { id: OpId; len: number }[] };
 ```
 
 **Returns:** Encoded binary data
 
 **⚠️ Important Notes:**
+
 - **Shallow snapshots**: Cannot import updates from before the shallow start point. Peers can only sync if they have versions after this point.
 - **Auto-commit**: The document automatically commits pending operations before export.
 - **Performance**: Export new snapshots periodically to reduce import times for new peers.
 
 **Examples:**
+
 ```typescript no_run
 import { LoroDoc, VersionVector } from "loro-crdt";
 
@@ -555,17 +611,18 @@ const snapshot = doc.export({ mode: "snapshot" });
 // Export updates from a specific version
 const lastSyncVersion = doc.version(); // Get current version
 // ... make more changes ...
-const updates = doc.export({ 
-  mode: "update", 
-  from: lastSyncVersion 
+const updates = doc.export({
+  mode: "update",
+  from: lastSyncVersion,
 });
 
 // Export shallow snapshot at current version
-const shallowSnapshot = doc.export({ 
+const shallowSnapshot = doc.export({
   mode: "shallow-snapshot",
-  frontiers: doc.frontiers()
+  frontiers: doc.frontiers(),
 });
 ```
+
 </Indent>
 
 <Method id="LoroDoc.import">
@@ -577,11 +634,13 @@ import(data: Uint8Array): ImportStatus
 Imports updates or snapshots into the document. Returns an `ImportStatus` describing which peer ranges were applied or are pending. See [Sync](/docs/tutorial/sync) and [Import Status](/docs/concepts/import_status) for how Loro handles out-of-order and partial updates.
 
 **Parameters:**
+
 - `data` - Binary data or another LoroDoc to import from
 
 **⚠️ Important:** LoroDoc will automatically commits pending operations before import. If the doc is in detached mode, the imported operations are recorded into OpLog but not applied to DocState until you call `attach()`, see [Attached vs Detached States](/docs/concepts/attached_detached) adn [OpLog and DocState](/docs/concepts/oplog_docstate).
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -595,6 +654,7 @@ const updates: Uint8Array = otherDoc.export({ mode: "update" });
 const status = doc.import(updates);
 console.log(status.success);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.importBatch">
@@ -606,9 +666,11 @@ importBatch(data: Uint8Array[]): ImportStatus
 Efficiently imports multiple updates in a single batch operation. See [Batch Import](/docs/advanced/import_batch) for performance considerations and usage.
 
 **Parameters:**
+
 - `data` - Array of binary updates
 
 **Example:**
+
 ```typescript no_run
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -620,6 +682,7 @@ declare const update3: Uint8Array;
 const updates = [update1, update2, update3];
 const status = doc.importBatch(updates);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.exportJsonUpdates">
@@ -631,12 +694,14 @@ exportJsonUpdates(start?: VersionVector, end?: VersionVector, withPeerCompressio
 Exports updates in JSON format for debugging or alternative storage. See [Export Mode](/docs/tutorial/encoding) for format details and trade-offs.
 
 **Parameters:**
+
 - `start` - Starting version (optional)
 - `end` - Ending version (optional)
 
 **Returns:** JSON representation of updates
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -644,6 +709,7 @@ const doc = new LoroDoc();
 const jsonUpdates = doc.exportJsonUpdates();
 console.log(JSON.stringify(jsonUpdates, null, 2));
 ```
+
 </Indent>
 
 <Method id="LoroDoc.importJsonUpdates">
@@ -655,9 +721,11 @@ importJsonUpdates(json: string | JsonSchema): void
 Imports updates from JSON format. Useful for debugging, migration, or custom storage layers; see [Export Mode](/docs/tutorial/encoding).
 
 **Parameters:**
+
 - `json` - JSON string or object containing updates
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -667,6 +735,7 @@ otherDoc.getText("text").insert(0, "Hello");
 const jsonStr = otherDoc.exportJsonUpdates();
 doc.importJsonUpdates(jsonStr);
 ```
+
 </Indent>
 
 ## Versioning
@@ -684,9 +753,11 @@ checkout(frontiers: Frontiers): void
 Checks out the document to a specific version, making it read-only at that point in history. This is the core of time travel; see [Time Travel](/docs/tutorial/time_travel) and [Version](/docs/tutorial/version).
 
 **Parameters:**
+
 - `frontiers` - Array of OpIds representing the target version
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -695,12 +766,14 @@ const frontiers = doc.frontiers();
 // Make some changes...
 doc.checkout(frontiers); // Go back to previous version
 ```
+
 </Indent>
 
 <Indent>
-**⚠️ Important:** In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations. 
+**⚠️ Important:** In Loro 1.0, `version()`/`frontiers()` include pending (uncommitted) local operations.
 
 **📝 Note:** After `checkout()`, the document enters "detached" mode and becomes read-only by default. Use `attach()` or `checkoutToLatest()` to return to editing mode. See [Version Deep Dive](/docs/advanced/version_deep_dive) and [Attached vs Detached States](/docs/concepts/attached_detached).
+
 </Indent>
 
 <Method id="LoroDoc.checkoutToLatest">
@@ -712,12 +785,14 @@ checkoutToLatest(): void
 Returns the document to the latest version after a checkout. Related concepts: [Frontiers](/docs/concepts/frontiers) and [Version Vector](/docs/concepts/version_vector).
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.checkoutToLatest();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.attach">
@@ -729,12 +804,14 @@ attach(): void
 Attaches the document to track latest changes after being detached. See [Attached vs Detached States](/docs/concepts/attached_detached) for how Loro separates current state from history.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.attach();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.detach">
@@ -746,12 +823,14 @@ detach(): void
 Detaches the document from tracking latest changes, freezing it at current version. See [Attached vs Detached States](/docs/concepts/attached_detached).
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.detach();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.fork">
@@ -765,12 +844,14 @@ Creates a new document that is a fork of the current one with a new peer ID. For
 **Returns:** A new LoroDoc instance
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const forkedDoc = doc.fork();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.forkAt">
@@ -782,11 +863,13 @@ forkAt(frontiers: Frontiers): LoroDoc
 Creates a fork at a specific version in history. Learn more about versions, DAG history, and heads in [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 **Parameters:**
+
 - `frontiers` - The version to fork from
 
 **Returns:** A new LoroDoc instance
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -794,6 +877,7 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 const forkedDoc = doc.forkAt(frontiers);
 ```
+
 </Indent>
 
 ## Events & Transactions
@@ -811,30 +895,33 @@ subscribe(listener: (event: LoroEventBatch) => void): () => void
 Subscribes to all document changes. See [Event Handling](/docs/tutorial/event) for the event model and best practices.
 
 **Parameters:**
+
 - `listener` - Callback function that receives change events
 
 **Returns:** Unsubscribe function
 
 **Event Structure:**
+
 ```typescript no_run
 interface LoroEventBatch {
-  by: "local" | "import" | "checkout"
-  origin?: string
-  currentTarget?: ContainerID
-  events: LoroEvent[]
-  from: Frontiers
-  to: Frontiers
+  by: "local" | "import" | "checkout";
+  origin?: string;
+  currentTarget?: ContainerID;
+  events: LoroEvent[];
+  from: Frontiers;
+  to: Frontiers;
 }
 ```
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const unsubscribe = doc.subscribe((event) => {
   console.log("Change type:", event.by);
-  event.events.forEach(e => {
+  event.events.forEach((e) => {
     console.log("Container changed:", e.target);
     console.log("Diff:", e.diff);
   });
@@ -844,6 +931,7 @@ const unsubscribe = doc.subscribe((event) => {
 ```
 
 **⚠️ Important:** Events are emitted synchronously as of v1.8. If you are pinned to `<=1.7.x`, await a microtask before reading the batch.
+
 ```ts no_run
 doc.commit();
 // Events have already been delivered in v1.8+
@@ -851,6 +939,7 @@ doc.commit();
 ```
 
 **📝 Note:** Multiple operations before a commit are batched into a single event. See [Event Handling](/docs/tutorial/event).
+
 </Indent>
 
 <Method id="LoroDoc.subscribeLocalUpdates">
@@ -862,11 +951,13 @@ subscribeLocalUpdates(f: (bytes: Uint8Array) => void): () => void
 Subscribes only to local changes, useful for syncing with remote peers. This is typically wired to your transport layer; see [Sync](/docs/tutorial/sync).
 
 **Parameters:**
+
 - `f` - Callback that receives binary updates
 
 **Returns:** Unsubscribe function
 
 **Example:**
+
 ```ts no_run threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -878,6 +969,7 @@ const unsubscribe = doc.subscribeLocalUpdates((updates) => {
   websocket.send(updates);
 });
 ```
+
 </Indent>
 
 <Method id="LoroDoc.subscribeFirstCommitFromPeer">
@@ -889,11 +981,13 @@ subscribeFirstCommitFromPeer(f: (e: { peer: PeerID }) => void): () => void
 Subscribes to the first commit from each peer, useful for tracking peer metadata.
 
 **Parameters:**
+
 - `f` - Callback that receives peer information
 
 **Returns:** Unsubscribe function
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -902,13 +996,12 @@ doc.subscribeFirstCommitFromPeer(({ peer }) => {
   // Store peer metadata
   doc.getMap("peers").set(peer, {
     joinedAt: Date.now(),
-    name: `User ${peer}`
+    name: `User ${peer}`,
   });
 });
 ```
-</Indent>
 
- 
+</Indent>
 
 ### Transaction Methods
 
@@ -921,6 +1014,7 @@ commit(options?: { origin?: string, message?: string, timestamp?: number }): voi
 Commits pending changes as a single transaction. A transaction groups operations into a Change; see [Operations and Changes](/docs/concepts/operations_changes).
 
 **⚠️ Critical Distinction:** Loro transactions are NOT ACID database transactions:
+
 - No rollback capability
 - No isolation guarantees
 - Purpose: Bundle local operations for event batching and history grouping
@@ -929,26 +1023,30 @@ Commits pending changes as a single transaction. A transaction groups operations
 See [Transaction Model](/docs/concepts/transaction_model).
 
 **Parameters:**
+
 - `options` - Optional commit configuration
   - `message` - Commit message (persisted in the document like a git commit message, visible to all peers after sync)
   - `origin` - Origin identifier (local only - used for marking local events, remote peers won't see this)
   - `timestamp` - Unix timestamp in seconds (see [Storing Timestamps](/docs/advanced/timestamp))
 
 **Important distinction:**
+
 - `message` is persisted in the document's history and will be synchronized to all peers, similar to git commit messages
 - `origin` is only used locally for filtering events (e.g., excluding certain origins from undo) and is NOT synchronized to remote peers
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.commit({
   message: "Updated document title", // Persisted & synced to all peers
-  origin: "user-action",             // Local only, for event filtering
-  timestamp: Math.floor(Date.now() / 1000)
+  origin: "user-action", // Local only, for event filtering
+  timestamp: Math.floor(Date.now() / 1000),
 });
 ```
+
 </Indent>
 
 ### Query Methods
@@ -964,6 +1062,7 @@ Converts the entire document to a JSON-compatible value. If you prefer a structu
 **Returns:** JSON representation of the document
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -971,6 +1070,7 @@ const doc = new LoroDoc();
 const json = doc.toJSON();
 console.log(JSON.stringify(json, null, 2));
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getShallowValue">
@@ -984,6 +1084,7 @@ Gets a shallow representation where sub-containers are represented by their IDs.
 **Returns:** Shallow JSON value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -991,6 +1092,7 @@ const doc = new LoroDoc();
 const shallow = doc.getShallowValue();
 // Sub-containers appear as: "cid:..."
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getDeepValueWithID">
@@ -1004,12 +1106,14 @@ Gets the deep value of the document with container IDs preserved. This is useful
 **Returns:** Document value with container IDs
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const deepValue = doc.getDeepValueWithID();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.version">
@@ -1023,6 +1127,7 @@ Gets the current version vector of the document. Version vectors track how much 
 **Returns:** Map from PeerID to counter
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1030,6 +1135,7 @@ const doc = new LoroDoc();
 const vv = doc.version();
 console.log(vv.toJSON());
 ```
+
 </Indent>
 
 <Method id="LoroDoc.frontiers">
@@ -1047,6 +1153,7 @@ Gets the current frontiers (heads) of the document. Frontiers are a compact repr
 **Returns:** Array of OpIds
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1054,6 +1161,7 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 // Can be used for checkouts or shallow snapshots
 ```
+
 </Indent>
 
 <Method id="LoroDoc.diff">
@@ -1065,13 +1173,15 @@ diff(from: Frontiers, to: Frontiers, for_json?: boolean): [ContainerID, Diff | J
 Calculates differences between two versions. Understanding how Loro computes diffs benefits from the history DAG model; see [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 **Parameters:**
+
 - `from` - Starting frontiers
-- `to` - Ending frontiers  
+- `to` - Ending frontiers
 - `for_json` - If true, returns JsonDiff format (default: true)
 
 **Returns:** Array of container IDs and their diffs
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1085,6 +1195,7 @@ diffs.forEach(([containerId, diff]) => {
   console.log(`Container ${containerId} changed:`, diff);
 });
 ```
+
 </Indent>
 
 ### Pre-Commit Hook
@@ -1112,6 +1223,7 @@ doc.getText("text").insert(0, "Hello");
 doc.commit();
 unsubscribe();
 ```
+
 </Indent>
 
 ### Cursor Utilities
@@ -1136,6 +1248,7 @@ const c0 = text.getCursor(1);
 const pos = doc.getCursorPos(c0!);
 console.log(pos.offset); // 1
 ```
+
 </Indent>
 
 ### Pending Operations
@@ -1158,9 +1271,11 @@ const pending = doc.getUncommittedOpsAsJson();
 doc.commit();
 const none = doc.getUncommittedOpsAsJson(); // undefined after commit
 ```
+
 </Indent>
 
 ### Change Graph & History
+
 These APIs traverse the history DAG of changes (ancestors/descendants, spans). If this sounds unfamiliar, start with Loro's [Versioning Deep Dive](/docs/advanced/version_deep_dive) and the [Event Graph Walker](/docs/concepts/event_graph_walker).
 
 <Method id="LoroDoc.travelChangeAncestors">
@@ -1183,16 +1298,14 @@ doc.travelChangeAncestors(head, (change) => {
   return true; // continue
 });
 ```
+
 </Indent>
 
 <Method id="LoroDoc.findIdSpansBetween">
-```typescript no_run
-findIdSpansBetween(from: Frontiers, to: Frontiers): VersionVectorDiff
-```
+  ```typescript no_run findIdSpansBetween(from: Frontiers, to: Frontiers):
+  VersionVectorDiff ```
 </Method>
-<Indent>
-Find the op id spans that lie between two versions.
-</Indent>
+<Indent>Find the op id spans that lie between two versions.</Indent>
 
 <Method id="LoroDoc.exportJsonInIdSpan">
 ```typescript no_run
@@ -1211,18 +1324,20 @@ a.commit();
 const snapshot = a.export({ mode: "snapshot" });
 let printed: any;
 b.subscribe((e) => {
-  const spans = b.findIdSpansBetween(e.from, e.to);
-  const changes = b.exportJsonInIdSpan(spans.forward[0]);
-  printed = changes;
+const spans = b.findIdSpansBetween(e.from, e.to);
+const changes = b.exportJsonInIdSpan(spans.forward[0]);
+printed = changes;
 });
 b.import(snapshot);
-```
+
+````
 </Indent>
 
 <Method id="LoroDoc.getChangedContainersIn">
 ```typescript no_run
 getChangedContainersIn(id: OpId, len: number): ContainerID[]
-```
+````
+
 </Method>
 <Indent>
 Get container IDs modified in the given ID range.
@@ -1236,6 +1351,7 @@ doc.commit();
 const head = doc.frontiers()[0];
 const containers = doc.getChangedContainersIn(head, 1);
 ```
+
 </Indent>
 
 ### Revert & Apply Diff
@@ -1258,6 +1374,7 @@ t.update("Hello");
 doc.commit();
 doc.revertTo([{ peer: "1", counter: 1 }]);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.applyDiff">
@@ -1278,6 +1395,36 @@ doc1.getText("text").insert(0, "Hello");
 const diff = doc1.diff([], doc1.frontiers());
 doc2.applyDiff(diff);
 ```
+
+**Workflow example (squash-like diffs):** For PR-style reviews, combine `diff` and `applyDiff` to send a compact change set between a base version and a new version. Operations that cancel out (insert + delete) are compressed away.
+
+```ts threeslash
+import { LoroDoc } from "loro-crdt";
+
+const baseDoc = new LoroDoc();
+const baseText = baseDoc.getText("text");
+baseText.insert(0, "hello world");
+
+// Fork to make isolated edits
+const newDoc = baseDoc.fork();
+const newText = newDoc.getText("text");
+newText.insert(0, "abc");
+newText.delete(0, 4);
+
+const diff = newDoc.diff(baseDoc.frontiers(), newDoc.frontiers());
+console.log(diff);
+// [
+//   [
+//     "cid:root-text:Text",
+//     { type: "text", diff: [ { delete: 1 } ] }
+//   ]
+// ]
+
+baseDoc.applyDiff(diff);
+console.log(baseDoc.toJSON());
+// { text: "ello world" }
+```
+
 </Indent>
 
 ### Detached Editing
@@ -1291,15 +1438,18 @@ setDetachedEditing(enable: boolean): void
 Enables or disables detached editing mode. Detached editing lets you stage edits separate from the latest head; see [Attached vs Detached States](/docs/concepts/attached_detached).
 
 **Parameters:**
+
 - `enable` - Whether to enable detached editing
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setDetachedEditing(true);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.isDetachedEditingEnabled">
@@ -1313,12 +1463,14 @@ Checks if detached editing mode is enabled.
 **Returns:** True if detached editing is enabled
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const enabled = doc.isDetachedEditingEnabled();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.isDetached">
@@ -1332,12 +1484,14 @@ Checks if the document is currently detached.
 **Returns:** True if document is detached
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 console.log(doc.isDetached());
 ```
+
 </Indent>
 
 ### Commit Options Helpers
@@ -1351,15 +1505,18 @@ setNextCommitMessage(msg: string): void
 Sets the message for the next commit.
 
 **Parameters:**
+
 - `msg` - Commit message
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setNextCommitMessage("User action");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.setNextCommitOrigin">
@@ -1371,15 +1528,18 @@ setNextCommitOrigin(origin: string): void
 Sets the origin for the next commit.
 
 **Parameters:**
+
 - `origin` - Origin identifier
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setNextCommitOrigin("ui");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.setNextCommitTimestamp">
@@ -1391,15 +1551,18 @@ setNextCommitTimestamp(timestamp: number): void
 Sets the timestamp for the next commit.
 
 **Parameters:**
+
 - `timestamp` - Unix timestamp in seconds
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.setNextCommitTimestamp(Math.floor(Date.now() / 1000));
 ```
+
 </Indent>
 
 <Method id="LoroDoc.setNextCommitOptions">
@@ -1411,9 +1574,11 @@ setNextCommitOptions(options: { origin?: string, timestamp?: number, message?: s
 Sets multiple options for the next commit.
 
 **Parameters:**
+
 - `options` - Commit options object
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1422,6 +1587,7 @@ doc.setNextCommitOptions({ origin: "ui", message: "batch" });
 doc.getText("text").insert(0, "Hi");
 doc.commit();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.clearNextCommitOptions">
@@ -1433,12 +1599,14 @@ clearNextCommitOptions(): void
 Clears all pending commit options.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.clearNextCommitOptions();
 ```
+
 </Indent>
 
 ### Version & Frontier Utilities
@@ -1452,11 +1620,13 @@ frontiersToVV(frontiers: Frontiers): VersionVector
 Converts frontiers to a version vector.
 
 **Parameters:**
+
 - `frontiers` - Frontiers to convert
 
 **Returns:** Version vector representation
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1464,6 +1634,7 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 const vv = doc.frontiersToVV(frontiers);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.vvToFrontiers">
@@ -1475,11 +1646,13 @@ vvToFrontiers(vv: VersionVector): Frontiers
 Converts a version vector to frontiers.
 
 **Parameters:**
+
 - `vv` - Version vector to convert
 
 **Returns:** Frontiers representation
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1487,6 +1660,7 @@ const doc = new LoroDoc();
 const vv = doc.version();
 const frontiers = doc.vvToFrontiers(vv);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.oplogVersion">
@@ -1500,12 +1674,14 @@ Gets the oplog version vector.
 **Returns:** Oplog version vector
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const vv = doc.oplogVersion();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.oplogFrontiers">
@@ -1519,12 +1695,14 @@ Gets the oplog frontiers.
 **Returns:** Oplog frontiers
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const frontiers = doc.oplogFrontiers();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.cmpWithFrontiers">
@@ -1536,11 +1714,13 @@ cmpWithFrontiers(frontiers: Frontiers): -1 | 0 | 1
 Compares current document state with given frontiers.
 
 **Parameters:**
+
 - `frontiers` - Frontiers to compare with
 
 **Returns:** -1 if behind, 0 if equal, 1 if ahead
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1548,6 +1728,7 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 const cmp = doc.cmpWithFrontiers(frontiers);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.cmpFrontiers">
@@ -1559,12 +1740,14 @@ cmpFrontiers(a: Frontiers, b: Frontiers): -1 | 0 | 1 | undefined
 Compares two frontiers.
 
 **Parameters:**
+
 - `a` - First frontiers
 - `b` - Second frontiers
 
 **Returns:** -1 if a < b, 0 if equal, 1 if a > b, undefined if incomparable
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1573,9 +1756,11 @@ const f1 = doc.frontiers();
 const f2 = doc.frontiers();
 const cmp = doc.cmpFrontiers(f1, f2);
 ```
+
 </Indent>
 
 ### JSONPath & Path Queries
+
 Use simple path strings and JSONPath to fetch nested values and containers. Paths are formed from root container names and keys (e.g., map/key or list/0). For container IDs, see [Container ID](/docs/advanced/cid).
 
 <Method id="LoroDoc.getByPath">
@@ -1587,11 +1772,13 @@ getByPath(path: string): Value | Container | undefined
 Gets a value or container by its path.
 
 **Parameters:**
+
 - `path` - Path string (e.g., "map/key")
 
 **Returns:** Value or container at the path, or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1601,6 +1788,7 @@ map.set("key", 1);
 // Usage example:
 const value = doc.getByPath("map/key");
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getPathToContainer">
@@ -1612,11 +1800,13 @@ getPathToContainer(id: ContainerID): (string | number)[] | undefined
 Gets the path to a container by its ID.
 
 **Parameters:**
+
 - `id` - Container ID
 
 **Returns:** Array representing the path, or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1624,6 +1814,7 @@ const map = doc.getMap("map");
 
 const path = doc.getPathToContainer(map.id);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.JSONPath">
@@ -1635,11 +1826,13 @@ JSONPath(jsonpath: string): any[]
 Queries the document using JSONPath syntax.
 
 **Parameters:**
+
 - `jsonpath` - JSONPath query string
 
 **Returns:** Array of matching values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1649,9 +1842,11 @@ map.set("key", 1);
 // Usage example:
 const results = doc.JSONPath("$.map");
 ```
+
 </Indent>
 
 ### Shallow Doc Utilities
+
 These helpers relate to shallow snapshots and redaction. If you need a refresher on what “shallow” means, see [Shallow Snapshots](/docs/concepts/shallow_snapshots).
 
 <Method id="LoroDoc.shallowSinceVV">
@@ -1665,12 +1860,14 @@ Gets the version vector since which the document is shallow.
 **Returns:** Version vector
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const vv = doc.shallowSinceVV();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.shallowSinceFrontiers">
@@ -1684,12 +1881,14 @@ Gets the frontiers since which the document is shallow.
 **Returns:** Frontiers
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const frontiers = doc.shallowSinceFrontiers();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.isShallow">
@@ -1703,12 +1902,14 @@ Checks if the document is shallow.
 **Returns:** True if document is shallow
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const shallow = doc.isShallow();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.setHideEmptyRootContainers">
@@ -1720,9 +1921,11 @@ setHideEmptyRootContainers(hide: boolean): void
 Controls whether empty root containers are hidden in JSON output.
 
 **Parameters:**
+
 - `hide` - Whether to hide empty root containers
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1730,6 +1933,7 @@ const doc = new LoroDoc();
 doc.setHideEmptyRootContainers(true);
 // Now empty roots are hidden in toJSON()
 ```
+
 </Indent>
 
 <Method id="LoroDoc.deleteRootContainer">
@@ -1741,9 +1945,11 @@ deleteRootContainer(cid: ContainerID): void
 Deletes a root container.
 
 **Parameters:**
+
 - `cid` - Container ID to delete
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1752,6 +1958,7 @@ const map = doc.getMap("map");
 // Usage example:
 doc.deleteRootContainer(map.id);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.hasContainer">
@@ -1763,11 +1970,13 @@ hasContainer(id: ContainerID): boolean
 Checks if a container exists in the document.
 
 **Parameters:**
+
 - `id` - Container ID to check
 
 **Returns:** True if container exists
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1775,6 +1984,7 @@ const map = doc.getMap("map");
 
 const exists = doc.hasContainer(map.id);
 ```
+
 </Indent>
 
 ### JSON Serialization with Replacer
@@ -1788,11 +1998,13 @@ toJsonWithReplacer(replacer: (key: string | number, value: Value | Container) =>
 Customize JSON serialization of containers and values.
 
 **Parameters:**
+
 - `replacer` - Function to transform values during serialization
 
 **Returns:** Customized JSON value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -1807,6 +2019,7 @@ const json = doc.toJsonWithReplacer((key, value) => {
   return value;
 });
 ```
+
 </Indent>
 
 ### Stats & Introspection
@@ -1820,12 +2033,14 @@ debugHistory(): void
 Prints debug information about the document history.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.debugHistory();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.changeCount">
@@ -1839,12 +2054,14 @@ Gets the total number of changes in the document.
 **Returns:** Number of changes
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const changes = doc.changeCount();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.opCount">
@@ -1858,12 +2075,14 @@ Gets the total number of operations in the document.
 **Returns:** Number of operations
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const ops = doc.opCount();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getAllChanges">
@@ -1877,12 +2096,14 @@ Gets all changes grouped by peer ID.
 **Returns:** Map of peer ID to changes
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 const changes = doc.getAllChanges();
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getChangeAt">
@@ -1894,20 +2115,23 @@ getChangeAt(id: OpId): Change
 Gets a specific change by operation ID.
 
 **Parameters:**
+
 - `id` - Operation ID
 
 **Returns:** Change object
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
 doc.getText("text").insert(0, "hello");
-doc.commit()
+doc.commit();
 const changes = doc.getAllChanges();
 const change = changes.get(doc.peerIdStr)?.[0];
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getChangeAtLamport">
@@ -1919,12 +2143,14 @@ getChangeAtLamport(peer_id: string, lamport: number): Change | undefined
 Gets a change by peer ID and Lamport timestamp.
 
 **Parameters:**
+
 - `peer_id` - Peer ID
 - `lamport` - Lamport timestamp
 
 **Returns:** Change object or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1932,6 +2158,7 @@ const doc = new LoroDoc();
 doc.getText("text").insert(0, "hello");
 const change = doc.getChangeAtLamport(doc.peerIdStr, 1);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getOpsInChange">
@@ -1943,11 +2170,13 @@ getOpsInChange(id: OpId): any[]
 Gets all operations in a specific change.
 
 **Parameters:**
+
 - `id` - Operation ID
 
 **Returns:** Array of operations
 
 **Example:**
+
 ```typescript no_run
 import { LoroDoc } from "loro-crdt";
 
@@ -1956,6 +2185,7 @@ doc.getText("text").insert(0, "hello");
 const changes = doc.getAllChanges();
 const ops = doc.getOpsInChange(changes[0].id);
 ```
+
 </Indent>
 
 <Method id="LoroDoc.getPendingTxnLength">
@@ -1969,6 +2199,7 @@ Gets the number of pending operations in the current transaction.
 **Returns:** Number of pending operations
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -1977,6 +2208,7 @@ doc.getText("text").insert(0, "x");
 console.log(doc.getPendingTxnLength());
 doc.commit();
 ```
+
 </Indent>
 
 ### Import/Export Utilities
@@ -1990,12 +2222,14 @@ decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetad
 Decodes metadata from an import blob.
 
 **Parameters:**
+
 - `blob` - Binary data to decode
 - `check_checksum` - Whether to verify checksum
 
 **Returns:** Import blob metadata
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, decodeImportBlobMeta } from "loro-crdt";
 
@@ -2003,6 +2237,7 @@ const doc = new LoroDoc();
 const updates = doc.export({ mode: "update" });
 const meta = decodeImportBlobMeta(updates, true);
 ```
+
 </Indent>
 
 <Method id="redactJsonUpdates">
@@ -2016,12 +2251,14 @@ Redacts JSON updates within a specified version range.
 Use this to safely remove accidentally leaked sensitive content from history while preserving structure. See [Tips: Redaction](/docs/tutorial/tips).
 
 **Parameters:**
+
 - `json` - JSON updates to redact
 - `version_range` - Version range for redaction
 
 **Returns:** Redacted JSON schema
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, redactJsonUpdates } from "loro-crdt";
 
@@ -2029,6 +2266,7 @@ const doc = new LoroDoc();
 const json = doc.exportJsonUpdates();
 const redacted = redactJsonUpdates(json, { [doc.peerIdStr]: [0, 999999] });
 ```
+
 </Indent>
 
 ---
@@ -2039,30 +2277,33 @@ Common CRDT containers for modeling JSON-like structures. See [Choosing CRDT Typ
 
 ### LoroText
 
-A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and 
-stable cursors. The merge semantics avoid interleaving artifacts under concurrency (Fugue + Eg-walker ideas); you use simple index 
-APIs and Loro handles index transformation. 
+A rich text container supporting collaborative text editing with formatting. Supports overlapping marks (bold, italic, links) and
+stable cursors. The merge semantics avoid interleaving artifacts under concurrency (Fugue + Eg-walker ideas); you use simple index
+APIs and Loro handles index transformation.
 See [Text](/docs/tutorial/text), [Eg-walker](/docs/advanced/event_graph_walker), and the rich text blog: https://loro.dev/blog/loro-richtext
 
 **⚠️ Critical: UTF-16 String Encoding**
 
 LoroText uses **UTF-16** encoding, matching JavaScript's native string encoding:
+
 - All standard methods (`insert()`, `delete()`, `mark()`, `slice()`, `charAt()`) use UTF-16 code unit indices
 - `length` returns UTF-16 code units (same as JavaScript `string.length`)
 - Use `insertUtf8()` and `deleteUtf8()` for UTF-8 byte-based operations when integrating with UTF-8 systems
 
 **⚠️ Common Pitfalls:**
+
 1. **Index Misalignment**: UTF-16 indices differ from visual character count
 2. **Performance**: Cursor queries on deleted positions require history traversal - in that case, it will return a refreshed Cursor object that does not point to the deleted text
 
 **Example with emoji:**
+
 ```typescript no_run
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
-console.log(text.length);        // 13 (emoji counts as 2)
+console.log(text.length); // 13 (emoji counts as 2)
 console.log(text.toString()[6]); // ⚠️ Invalid - splits the emoji
-text.delete(6, 2);               // ✅ Correct - deletes entire emoji
-text.delete(6, 1);               // ❌ Wrong - corrupts the emoji
+text.delete(6, 2); // ✅ Correct - deletes entire emoji
+text.delete(6, 1); // ❌ Wrong - corrupts the emoji
 
 // Safe iteration
 text.iter((char) => {
@@ -2072,25 +2313,25 @@ text.iter((char) => {
 ```
 
 **📝 Text vs String in Maps:**
+
 - Use `LoroText` for collaborative text editing where all concurrent edits must be preserved
 - Use regular strings in `LoroMap` for atomic values (URLs, IDs, hashes) where Last-Write-Wins is preferred
 - Example: URLs should be strings in maps, not LoroText. Otherwise, the automatically merged result may be an invalid URL
 
-
 <Method id="LoroText.insert">
-```typescript no_run
-insert(index: number, text: string): void
-```
+  ```typescript no_run insert(index: number, text: string): void ```
 </Method>
 
 <Indent>
 Inserts text at the specified position using UTF-16 code unit indices (same as JavaScript string indices).
 
 **Parameters:**
+
 - `index` - UTF-16 code unit position to insert at (0-based, same as JavaScript string index)
 - `text` - Text to insert
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2100,22 +2341,23 @@ const text = doc.getText("text");
 text.insert(0, "Hello ");
 text.insert(6, "World");
 ```
+
 </Indent>
 
 <Method id="LoroText.delete">
-```typescript no_run
-delete(index: number, len: number): void
-```
+  ```typescript no_run delete(index: number, len: number): void ```
 </Method>
 
 <Indent>
 Deletes text from the specified position using UTF-16 code units.
 
 **Parameters:**
+
 - `index` - Starting UTF-16 code unit position (same as JavaScript string index)
 - `len` - Number of UTF-16 code units to delete
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2124,6 +2366,7 @@ text.insert(0, "Hello 😀 World");
 text.delete(6, 2); // Delete emoji (2 UTF-16 units)
 text.delete(5, 1); // Delete space before World
 ```
+
 </Indent>
 
 <Method id="LoroText.mark">
@@ -2136,11 +2379,13 @@ mark(range: { start: number, end: number }, key: string, value: Value): void
 Applies formatting to a text range. Marks can be configured to expand/stop at edges via configTextStyle(); see [Text](/docs/tutorial/text) for mark behavior.
 
 **Parameters:**
+
 - `range` - The range to format
 - `key` - Style attribute name
 - `value` - Style value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2149,6 +2394,7 @@ text.insert(0, "Hello World");
 doc.configTextStyle({ bold: { expand: "after" } });
 text.mark({ start: 0, end: 5 }, "bold", true);
 ```
+
 </Indent>
 
 <Method id="LoroText.unmark">
@@ -2160,10 +2406,12 @@ unmark(range: { start: number, end: number }, key: string): void
 Removes formatting from a text range. For how conflicting edits on marks resolve, see [Text](/docs/tutorial/text).
 
 **Parameters:**
+
 - `range` - The range to unformat
 - `key` - Style attribute to remove
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2172,6 +2420,7 @@ text.insert(0, "Hello World");
 text.mark({ start: 0, end: 5 }, "bold", true);
 text.unmark({ start: 0, end: 5 }, "bold");
 ```
+
 </Indent>
 
 <Method id="LoroText.toDelta">
@@ -2185,6 +2434,7 @@ Converts text to Delta format (Quill-compatible).
 **Returns:** Array of Delta operations
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2194,6 +2444,7 @@ text.mark({ start: 0, end: 5 }, "bold", true);
 const delta = text.toDelta();
 // [{ insert: "Hello", attributes: { bold: true } }, { insert: " World" }]
 ```
+
 </Indent>
 
 <Method id="LoroText.sliceDelta">
@@ -2205,10 +2456,12 @@ sliceDelta(start: number, end: number): Delta<string>[]
 Returns a Quill-style Delta for a subsection of the text, using UTF-16 indices. Useful for copying a styled span. Use `sliceDeltaUtf8` if you need UTF-8 byte offsets instead.
 
 **Parameters:**
+
 - `start` - Start UTF-16 code unit index (inclusive)
 - `end` - End UTF-16 code unit index (exclusive)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 import { expect } from "expect";
@@ -2230,6 +2483,7 @@ expect(snippet).toStrictEqual([
   { insert: "Wo", attributes: { comment: "greeting" } },
 ]);
 ```
+
 </Indent>
 
 <Method id="LoroText.sliceDeltaUtf8">
@@ -2241,10 +2495,12 @@ sliceDeltaUtf8(start: number, end: number): Delta<string>[]
 Returns a Quill-style Delta for a subsection of the text using **UTF-8 byte offsets**. Choose this when your offsets come from UTF-8 encoded buffers.
 
 **Parameters:**
+
 - `start` - Start byte offset (inclusive)
 - `end` - End byte offset (exclusive)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 import { expect } from "expect";
@@ -2253,12 +2509,13 @@ const text = doc.getText("text");
 text.insert(0, "Hi 👋");
 
 const enc = new TextEncoder();
-const start = enc.encode("Hi ").length;   // 3 bytes
-const end = enc.encode("Hi 👋").length;   // 7 bytes
+const start = enc.encode("Hi ").length; // 3 bytes
+const end = enc.encode("Hi 👋").length; // 7 bytes
 
 const delta = text.sliceDeltaUtf8(start, end);
 expect(delta).toStrictEqual([{ insert: "👋" }]);
 ```
+
 </Indent>
 
 <Method id="LoroText.applyDelta">
@@ -2270,18 +2527,21 @@ applyDelta(delta: Delta<string>[]): void
 Applies Delta operations to the text.
 
 **Parameters:**
+
 - `delta` - Array of Delta operations
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.applyDelta([
   { insert: "Hello", attributes: { bold: true } },
-  { insert: " World" }
+  { insert: " World" },
 ]);
 ```
+
 </Indent>
 
 <Method id="LoroText.update">
@@ -2293,12 +2553,14 @@ update(text: string, options?: { timeoutMs?: number; useRefinedDiff?: boolean })
 Updates the current text to the target text using Myers' diff algorithm.
 
 **Parameters:**
+
 - `text` - New text content
 - `options` - Update options
   - `timeoutMs` - Optional timeout for the diff computation
   - `useRefinedDiff` - Use refined diff for better quality on long texts
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2307,6 +2569,7 @@ const text = doc.getText("text");
 text.insert(0, "Hello");
 text.update("Hello World", { timeoutMs: 100 });
 ```
+
 </Indent>
 
 <Method id="LoroText.updateByLine">
@@ -2325,6 +2588,7 @@ const text = doc.getText("text");
 text.insert(0, "Line A\nLine C");
 text.updateByLine("Line A\nLine B\nLine C");
 ```
+
 </Indent>
 
 <Method id="LoroText.getCursor">
@@ -2336,12 +2600,14 @@ getCursor(pos: number, side?: Side): Cursor | undefined
 Gets a stable cursor position that survives edits.
 
 **Parameters:**
+
 - `pos` - Position in the text
 - `side` - Cursor affinity (-1, 0, or 1)
 
 **Returns:** Cursor object or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2351,6 +2617,7 @@ text.insert(0, "Hello World");
 const cursor = text.getCursor(5);
 // Cursor remains valid even after edits
 ```
+
 </Indent>
 
 <Method id="LoroText.toString">
@@ -2364,6 +2631,7 @@ Converts to plain text string.
 **Returns:** Plain text content
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2371,6 +2639,7 @@ const text = doc.getText("text");
 text.insert(0, "Hello World");
 const plainText = text.toString();
 ```
+
 </Indent>
 
 <Method id="LoroText.charAt">
@@ -2382,11 +2651,13 @@ charAt(pos: number): string
 Gets the character at a specific UTF-16 code unit position.
 
 **Parameters:**
+
 - `pos` - UTF-16 code unit position
 
 **Returns:** Character at position
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2394,6 +2665,7 @@ const text = doc.getText("text");
 text.insert(0, "Hello");
 const char = text.charAt(1); // "e"
 ```
+
 </Indent>
 
 <Method id="LoroText.slice">
@@ -2405,22 +2677,25 @@ slice(start: number, end: number): string
 Extracts a section of the text using UTF-16 code unit positions.
 
 **Parameters:**
+
 - `start` - Start UTF-16 code unit index
 - `end` - End UTF-16 code unit index (exclusive)
 
 **Returns:** Sliced text
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const text = doc.getText("text");
 text.insert(0, "Hello 😀 World");
 
-const slice1 = text.slice(0, 5);  // "Hello"
-const slice2 = text.slice(6, 8);  // "😀" (emoji spans 6-8)
+const slice1 = text.slice(0, 5); // "Hello"
+const slice2 = text.slice(6, 8); // "😀" (emoji spans 6-8)
 const slice3 = text.slice(9, 14); // "World"
 ```
+
 </Indent>
 
 <Method id="LoroText.splice">
@@ -2432,6 +2707,7 @@ splice(pos: number, len: number, s: string): string
 Replaces text at a position with new content.
 
 **Parameters:**
+
 - `pos` - Start position
 - `len` - Length to delete
 - `s` - String to insert
@@ -2439,6 +2715,7 @@ Replaces text at a position with new content.
 **Returns:** Deleted text
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2448,6 +2725,7 @@ text.insert(0, "Hello World");
 // Usage example:
 const deleted = text.splice(6, 5, "Loro"); // returns "World"
 ```
+
 </Indent>
 
 <Method id="LoroText.push">
@@ -2459,9 +2737,11 @@ push(s: string): void
 Appends text to the end of the document.
 
 **Parameters:**
+
 - `s` - String to append
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2470,6 +2750,7 @@ const text = doc.getText("text");
 text.push("Hello");
 text.push(" World");
 ```
+
 </Indent>
 
 <Method id="LoroText.iter">
@@ -2481,9 +2762,11 @@ iter(callback: (char: string) => boolean): void
 Iterates over each character in the text.
 
 **Parameters:**
+
 - `callback` - Function called for each character. Return false to stop iteration.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2496,6 +2779,7 @@ text.iter((char) => {
   return true; // continue iteration
 });
 ```
+
 </Indent>
 
 <Method id="LoroText.insertUtf8">
@@ -2507,10 +2791,12 @@ insertUtf8(index: number, content: string): void
 Inserts text at a UTF-8 byte index position.
 
 **Parameters:**
+
 - `index` - UTF-8 byte index
 - `content` - Text to insert
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2518,6 +2804,7 @@ const text = doc.getText("text");
 
 text.insertUtf8(0, "Hello");
 ```
+
 </Indent>
 
 <Method id="LoroText.deleteUtf8">
@@ -2529,10 +2816,12 @@ deleteUtf8(index: number, len: number): void
 Deletes text at a UTF-8 byte index position.
 
 **Parameters:**
+
 - `index` - UTF-8 byte index
 - `len` - Number of UTF-8 bytes to delete
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2542,6 +2831,7 @@ text.insert(0, "Hello World");
 // Usage example:
 text.deleteUtf8(6, 5); // Delete "World"
 ```
+
 </Indent>
 
 <Method id="LoroText.getEditorOf">
@@ -2553,11 +2843,13 @@ getEditorOf(pos: number): PeerID | undefined
 Gets the peer ID of who last edited the character at a position.
 
 **Parameters:**
+
 - `pos` - Character position
 
 **Returns:** PeerID of last editor or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2567,6 +2859,7 @@ text.insert(0, "Hello");
 // Usage example:
 const editor = text.getEditorOf(0);
 ```
+
 </Indent>
 
 <Method id="LoroText.kind">
@@ -2580,6 +2873,7 @@ Returns the container type.
 **Returns:** "Text"
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2587,6 +2881,7 @@ const text = doc.getText("text");
 
 const type = text.kind(); // "Text"
 ```
+
 </Indent>
 
 <Method id="LoroText.parent">
@@ -2600,6 +2895,7 @@ Gets the parent container if this text is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2609,6 +2905,7 @@ const text = list.insertContainer(0, doc.getText("nested"));
 // Usage example:
 const parent = text.parent(); // Returns the list
 ```
+
 </Indent>
 
 <Method id="LoroText.isAttached">
@@ -2622,6 +2919,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2629,6 +2927,7 @@ const text = new LoroText();
 
 const attached = text.isAttached(); // false until attached to doc
 ```
+
 </Indent>
 
 <Method id="LoroText.getAttached">
@@ -2642,6 +2941,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2649,6 +2949,7 @@ const text = new LoroText();
 
 const attached = text.getAttached();
 ```
+
 </Indent>
 
 <Method id="LoroText.isDeleted">
@@ -2662,6 +2963,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2669,6 +2971,7 @@ const text = doc.getText("text");
 
 const deleted = text.isDeleted();
 ```
+
 </Indent>
 
 <Method id="LoroText.getShallowValue">
@@ -2682,6 +2985,7 @@ Gets the text content without marks.
 **Returns:** Plain text string
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2691,6 +2995,7 @@ text.insert(0, "Hello");
 // Usage example:
 const value = text.getShallowValue(); // "Hello"
 ```
+
 </Indent>
 
 <Method id="LoroText.toJSON">
@@ -2704,6 +3009,7 @@ Converts the text to JSON representation.
 **Returns:** JSON value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2713,6 +3019,7 @@ text.insert(0, "Hello");
 // Usage example:
 const json = text.toJSON(); // "Hello"
 ```
+
 </Indent>
 
 <Method id="LoroText.id">
@@ -2724,6 +3031,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2731,6 +3039,7 @@ const text = doc.getText("text");
 
 const containerId = text.id;
 ```
+
 </Indent>
 
 <Method id="LoroText.length">
@@ -2742,12 +3051,14 @@ readonly length: number
 Gets the length of the text in UTF-16 code units (same as JavaScript's `string.length`).
 
 **⚠️ Important:** Emoji and other characters outside the Basic Multilingual Plane count as 2 UTF-16 units. This affects all index-based operations:
+
 ```typescript no_run
 text.insert(0, "👨‍👩‍👧‍👦"); // Family emoji
 console.log(text.length); // 11 (not 1!) - complex emoji with ZWJ sequences
 ```
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2758,15 +3069,17 @@ console.log(text.length); // 5
 text.insert(5, " 😀");
 console.log(text.length); // 8 (space + emoji which counts as 2)
 ```
+
 </Indent>
 
 ### LoroList
 
-An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices 
-by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list), 
+An ordered list container for collaborative arrays. Uses index-based APIs; under concurrency, Loro transforms indices
+by replaying only the necessary portion of history (Eg-walker-inspired). See [List and Movable List](/docs/tutorial/list),
 [Choosing CRDT Types](/docs/concepts/choose_crdt_type), and [Eg-walker](/docs/advanced/event_graph_walker).
 
 **⚠️ Important: List vs Map for Coordinates**
+
 ```typescript no_run
 // ❌ WRONG - Don't use List for coordinates
 const coord = doc.getList("coord");
@@ -2790,10 +3103,12 @@ insert(pos: number, value: Value | Container): void
 Inserts a value at the specified position.
 
 **Parameters:**
+
 - `pos` - Insert position
 - `value` - Value to insert
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2801,6 +3116,7 @@ const list = doc.getList("list");
 list.insert(0, "First");
 list.insert(1, { type: "object" });
 ```
+
 </Indent>
 
 <Method id="LoroList.insertContainer">
@@ -2812,12 +3128,14 @@ insertContainer<T extends Container>(pos: number, container: T): T
 Inserts a new container at the position.
 
 **Parameters:**
-- `pos` - Insert position  
+
+- `pos` - Insert position
 - `container` - Container instance
 
 **Returns:** The inserted container
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2825,6 +3143,7 @@ const list = doc.getList("list");
 const subText = list.insertContainer(0, new LoroText());
 subText.insert(0, "Nested text");
 ```
+
 </Indent>
 
 <Method id="LoroList.delete">
@@ -2836,10 +3155,12 @@ delete(pos: number, len: number): void
 Deletes elements from the list.
 
 **Parameters:**
+
 - `pos` - Starting position
 - `len` - Number of elements to delete
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2851,6 +3172,7 @@ list.push("d");
 
 list.delete(1, 2); // Delete 2 elements starting at index 1
 ```
+
 </Indent>
 
 <Method id="LoroList.push">
@@ -2862,15 +3184,18 @@ push(value: Value | Container): void
 Appends a value to the end of the list.
 
 **Parameters:**
+
 - `value` - Value to append
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const list = doc.getList("list");
 list.push("Last item");
 ```
+
 </Indent>
 
 <Method id="LoroList.getIdAt">
@@ -2886,23 +3211,27 @@ const list = doc.getList("list");
 
 list.insert(0, 1);
 const id0 = list.getIdAt(0);
-```
+
+````
 </Indent>
 
 <Method id="LoroList.pushContainer">
 ```typescript no_run
 pushContainer<T extends Container>(container: T): T
-```
+````
+
 </Method>
 <Indent>
 Appends a container to the end of the list.
 
 **Parameters:**
+
 - `container` - Container to append
 
 **Returns:** The appended container
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroMap } from "loro-crdt";
 const doc = new LoroDoc();
@@ -2910,6 +3239,7 @@ const list = doc.getList("list");
 const map = list.pushContainer(new LoroMap());
 map.set("key", "value");
 ```
+
 </Indent>
 
 <Method id="LoroList.pop">
@@ -2923,12 +3253,14 @@ Removes and returns the last element.
 **Returns:** The removed element or undefined
 
 **Example:**
+
 ```ts no_run threeslash
 import { LoroList } from "loro-crdt";
 declare const list: LoroList;
 // ---cut---
 const lastItem = list.pop();
 ```
+
 </Indent>
 
 <Method id="LoroList.get">
@@ -2940,11 +3272,13 @@ get(index: number): Value | Container | undefined
 Gets the value at the specified index.
 
 **Parameters:**
+
 - `index` - Element index
 
 **Returns:** The value or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -2954,6 +3288,7 @@ list.push("first", "second");
 
 const item = list.get(0); // "first"
 ```
+
 </Indent>
 
 <Method id="LoroList.getCursor">
@@ -2965,12 +3300,14 @@ getCursor(pos: number, side?: Side): Cursor | undefined
 Gets a stable cursor for the position.
 
 **Parameters:**
+
 - `pos` - Position in the list
 - `side` - Cursor affinity
 
 **Returns:** Cursor object or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 
@@ -2980,6 +3317,7 @@ list.push("a", "b", "c");
 
 const cursor = list.getCursor(2);
 ```
+
 </Indent>
 
 <Method id="LoroList.toArray">
@@ -2993,6 +3331,7 @@ Converts the list to a JavaScript array.
 **Returns:** Array of values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3000,6 +3339,7 @@ const list = doc.getList("list");
 list.push("a", "b", "c");
 const array = list.toArray();
 ```
+
 </Indent>
 
 <Method id="LoroList.clear">
@@ -3011,6 +3351,7 @@ clear(): void
 Removes all elements from the list.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3018,6 +3359,7 @@ const list = doc.getList("list");
 list.push("a", "b", "c");
 list.clear();
 ```
+
 </Indent>
 
 <Method id="LoroList.length">
@@ -3031,6 +3373,7 @@ Gets the number of elements in the list.
 **Returns:** List length
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3040,6 +3383,7 @@ list.push("b");
 list.push("c");
 console.log(`List has ${list.length} items`);
 ```
+
 </Indent>
 
 <Method id="LoroList.kind">
@@ -3053,6 +3397,7 @@ Returns the container type.
 **Returns:** "List"
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3060,6 +3405,7 @@ const list = doc.getList("list");
 
 const type = list.kind(); // "List"
 ```
+
 </Indent>
 
 <Method id="LoroList.toJSON">
@@ -3073,6 +3419,7 @@ Converts the list to JSON representation.
 **Returns:** JSON array
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3082,6 +3429,7 @@ list.push(1, 2, 3);
 // Usage example:
 const json = list.toJSON(); // [1, 2, 3]
 ```
+
 </Indent>
 
 <Method id="LoroList.parent">
@@ -3095,6 +3443,7 @@ Gets the parent container if this list is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3104,6 +3453,7 @@ const list = map.setContainer("nested", doc.getList("list"));
 // Usage example:
 const parent = list.parent(); // Returns the map
 ```
+
 </Indent>
 
 <Method id="LoroList.isAttached">
@@ -3117,6 +3467,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3124,6 +3475,7 @@ const list = new LoroList();
 
 const attached = list.isAttached(); // false until attached to doc
 ```
+
 </Indent>
 
 <Method id="LoroList.getAttached">
@@ -3137,6 +3489,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3144,6 +3497,7 @@ const list = new LoroList();
 
 const attached = list.getAttached();
 ```
+
 </Indent>
 
 <Method id="LoroList.isDeleted">
@@ -3157,6 +3511,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3164,6 +3519,7 @@ const list = doc.getList("list");
 
 const deleted = list.isDeleted();
 ```
+
 </Indent>
 
 <Method id="LoroList.getShallowValue">
@@ -3177,6 +3533,7 @@ Gets the list values with sub-containers as IDs.
 **Returns:** Array of values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3186,6 +3543,7 @@ list.push(1, 2);
 // Usage example:
 const values = list.getShallowValue(); // [1, 2]
 ```
+
 </Indent>
 
 <Method id="LoroList.id">
@@ -3197,6 +3555,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3204,6 +3563,7 @@ const list = doc.getList("list");
 
 const containerId = list.id;
 ```
+
 </Indent>
 
 ### LoroMap
@@ -3221,10 +3581,12 @@ Sets a key-value pair.
 Note: Setting a key to the same value is a no-op (no operation recorded). See [Map basics](/docs/tutorial/map).
 
 **Parameters:**
+
 - `key` - The key
 - `value` - The value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3233,6 +3595,7 @@ const map = doc.getMap("map");
 map.set("name", "Alice");
 map.set("age", 30);
 ```
+
 </Indent>
 
 <Method id="LoroMap.setContainer">
@@ -3243,15 +3606,17 @@ setContainer<T extends Container>(key: string, container: T): T
 <Indent>
 Sets a container as the value for a key.
 
-**⚠️ Pitfall:** Concurrent child container creation at the same key on a LoroMap from multiple peers causes overwrites (different container IDs cannot auto-merge).  See [Container initialization](/docs/tutorial/tips).
+**⚠️ Pitfall:** Concurrent child container creation at the same key on a LoroMap from multiple peers causes overwrites (different container IDs cannot auto-merge). See [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
+
 - `key` - The key
 - `container` - Container instance
 
 **Returns:** The set container
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroList } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3260,6 +3625,7 @@ const map = doc.getMap("map");
 const list = map.setContainer("items", new LoroList());
 list.push("item1");
 ```
+
 </Indent>
 
 <Method id="LoroMap.get">
@@ -3271,11 +3637,13 @@ get(key: string): Value | Container | undefined
 Gets the value for a key.
 
 **Parameters:**
+
 - `key` - The key
 
 **Returns:** The value or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3283,6 +3651,7 @@ const map = doc.getMap("map");
 
 const name = map.get("name");
 ```
+
 </Indent>
 
 <Method id="LoroMap.getOrCreateContainer">
@@ -3296,12 +3665,14 @@ Gets an existing container or creates a new one.
 **⚠️ Pitfall:** Parallel container creation for the same key across peers causes overwrites. See [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
+
 - `key` - The key
 - `container` - Container to create if not exists
 
 **Returns:** The container
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3309,6 +3680,7 @@ const map = doc.getMap("map");
 
 const text = map.getOrCreateContainer("description", new LoroText());
 ```
+
 </Indent>
 
 <Method id="LoroMap.delete">
@@ -3320,9 +3692,11 @@ delete(key: string): void
 Removes a key-value pair.
 
 **Parameters:**
+
 - `key` - The key to remove
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3330,6 +3704,7 @@ const map = doc.getMap("map");
 
 map.delete("obsoleteKey");
 ```
+
 </Indent>
 
 <Method id="LoroMap.clear">
@@ -3341,6 +3716,7 @@ clear(): void
 Removes all key-value pairs.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3348,6 +3724,7 @@ const map = doc.getMap("map");
 
 map.clear();
 ```
+
 </Indent>
 
 <Method id="LoroMap.keys">
@@ -3361,6 +3738,7 @@ Gets all keys in the map.
 **Returns:** Array of keys
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3368,6 +3746,7 @@ const map = doc.getMap("map");
 
 const allKeys = map.keys();
 ```
+
 </Indent>
 
 <Method id="LoroMap.values">
@@ -3381,6 +3760,7 @@ Gets all values in the map.
 **Returns:** Array of values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3388,6 +3768,7 @@ const map = doc.getMap("map");
 
 const allValues = map.values();
 ```
+
 </Indent>
 
 <Method id="LoroMap.entries">
@@ -3401,6 +3782,7 @@ Gets all key-value pairs.
 **Returns:** Array of entries
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3410,6 +3792,7 @@ for (const [key, value] of map.entries()) {
   console.log(`${key}: ${value}`);
 }
 ```
+
 </Indent>
 
 <Method id="LoroMap.getLastEditor">
@@ -3427,13 +3810,15 @@ map.set("k", 1);
 doc.commit();
 const who = map.getLastEditor("k");
 // who = doc.peerIdStr
-```
+
+````
 </Indent>
 
 <Method id="LoroMap.size">
 ```typescript no_run
 size: number
-```
+````
+
 </Method>
 <Indent>
 Gets the number of key-value pairs.
@@ -3441,6 +3826,7 @@ Gets the number of key-value pairs.
 **Returns:** Map size
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3448,6 +3834,7 @@ const map = doc.getMap("map");
 
 console.log(`Map has ${map.size} entries`);
 ```
+
 </Indent>
 
 <Method id="LoroMap.kind">
@@ -3461,6 +3848,7 @@ Returns the container type.
 **Returns:** "Map"
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3468,6 +3856,7 @@ const map = doc.getMap("map");
 
 const type = map.kind(); // "Map"
 ```
+
 </Indent>
 
 <Method id="LoroMap.toJSON">
@@ -3481,6 +3870,7 @@ Converts the map to JSON representation.
 **Returns:** JSON object
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3490,6 +3880,7 @@ map.set("name", "Alice");
 // Usage example:
 const json = map.toJSON(); // { name: "Alice" }
 ```
+
 </Indent>
 
 <Method id="LoroMap.parent">
@@ -3503,6 +3894,7 @@ Gets the parent container if this map is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3512,6 +3904,7 @@ const map = list.insertContainer(0, doc.getMap("nested"));
 // Usage example:
 const parent = map.parent(); // Returns the list
 ```
+
 </Indent>
 
 <Method id="LoroMap.isAttached">
@@ -3525,6 +3918,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroMap } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3532,6 +3926,7 @@ const map = new LoroMap();
 
 const attached = map.isAttached(); // false until attached to doc
 ```
+
 </Indent>
 
 <Method id="LoroMap.getAttached">
@@ -3545,6 +3940,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroMap } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3552,6 +3948,7 @@ const map = new LoroMap();
 
 const attached = map.getAttached();
 ```
+
 </Indent>
 
 <Method id="LoroMap.isDeleted">
@@ -3565,6 +3962,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3572,6 +3970,7 @@ const map = doc.getMap("map");
 
 const deleted = map.isDeleted();
 ```
+
 </Indent>
 
 <Method id="LoroMap.getShallowValue">
@@ -3585,6 +3984,7 @@ Gets the map values with sub-containers as IDs.
 **Returns:** Object with values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3594,6 +3994,7 @@ map.set("key", "value");
 // Usage example:
 const values = map.getShallowValue(); // { key: "value" }
 ```
+
 </Indent>
 
 <Method id="LoroMap.id">
@@ -3605,6 +4006,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3612,6 +4014,7 @@ const map = doc.getMap("map");
 
 const containerId = map.id;
 ```
+
 </Indent>
 
 ### LoroTree
@@ -3619,6 +4022,7 @@ const containerId = map.id;
 A hierarchical tree container for nested structures. Supports moving subtrees while handling concurrent edits. See [Tree](/docs/tutorial/tree).
 
 **⚠️ Important Tree Operation Notes:**
+
 - **Concurrent moves can create cycles**: Loro detects and prevents these automatically
 - **Fractional indexing**: Has interleaving issues but maintains relative ordering
 - **Don't disable fractional index** if you need siblings to be sorted. See [Tree](/docs/tutorial/tree).
@@ -3632,12 +4036,14 @@ createNode(parent?: TreeID, index?: number): LoroTreeNode
 Creates a new tree node.
 
 **Parameters:**
+
 - `parent` - Parent node ID (optional, creates root if omitted)
 - `index` - Position among siblings (optional)
 
 **Returns:** The new node's handler
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3646,6 +4052,7 @@ const tree = doc.getTree("tree");
 const root = tree.createNode();
 const child = root.createNode(0);
 ```
+
 </Indent>
 
 <Method id="LoroTree.move">
@@ -3657,11 +4064,13 @@ move(target: TreeID, parent?: TreeID, index?: number): void
 Moves a node to a new position.
 
 **Parameters:**
+
 - `target` - Node to move
 - `parent` - New parent (undefined for root)
 - `index` - Position among siblings
 
 **Example:**
+
 ```typescript no_run threeslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3672,6 +4081,7 @@ declare const newParentId: TreeID;
 // Usage example:
 tree.move(nodeId, newParentId, 0);
 ```
+
 </Indent>
 
 <Method id="LoroTree.delete">
@@ -3683,9 +4093,11 @@ delete(target: TreeID): void
 Deletes a node and its descendants.
 
 **Parameters:**
+
 - `target` - Node to delete
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3696,6 +4108,7 @@ const nodeId = node.id;
 // Usage example:
 tree.delete(nodeId);
 ```
+
 </Indent>
 
 <Method id="LoroTree.getNodeByID">
@@ -3707,11 +4120,13 @@ getNodeByID(id: TreeID): LoroTreeNode | undefined
 Gets a node handler by its ID.
 
 **Parameters:**
+
 - `id` - Node ID
 
 **Returns:** Node handler or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3725,6 +4140,7 @@ if (node) {
   node.data.set("label", "New Label");
 }
 ```
+
 </Indent>
 
 <Method id="LoroTree.nodes">
@@ -3738,6 +4154,7 @@ Gets all nodes in the tree.
 **Returns:** Array of all nodes
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3745,6 +4162,7 @@ const tree = doc.getTree("tree");
 
 const allNodes = tree.nodes();
 ```
+
 </Indent>
 
 <Method id="LoroTree.roots">
@@ -3758,6 +4176,7 @@ Gets all root nodes.
 **Returns:** Array of root nodes
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3765,6 +4184,7 @@ const tree = doc.getTree("tree");
 
 const rootNodes = tree.roots();
 ```
+
 </Indent>
 
 <Method id="LoroTree.has">
@@ -3776,11 +4196,13 @@ has(target: TreeID): boolean
 Checks if a node exists.
 
 **Parameters:**
+
 - `target` - Node ID to check
 
 **Returns:** Boolean indicating existence
 
 **Example:**
+
 ```typescript no_run threeslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3792,6 +4214,7 @@ if (tree.has(nodeId)) {
   console.log("Node exists");
 }
 ```
+
 </Indent>
 
 <Method id="LoroTree.isNodeDeleted">
@@ -3803,11 +4226,13 @@ isNodeDeleted(target: TreeID): boolean
 Checks if a node has been deleted.
 
 **Parameters:**
+
 - `target` - Node ID to check
 
 **Returns:** Boolean indicating deletion status
 
 **Example:**
+
 ```typescript no_run threeslash
 import { LoroDoc, TreeID } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3819,6 +4244,7 @@ if (tree.isNodeDeleted(nodeId)) {
   console.log("Node was deleted");
 }
 ```
+
 </Indent>
 <Method id="LoroTree.enableFractionalIndex">
 ```typescript no_run
@@ -3829,9 +4255,11 @@ enableFractionalIndex(jitter: number): void
 Enables fractional indexing for better concurrent move performance.
 
 **Parameters:**
+
 - `jitter` - Jitter amount for fractional indices
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3839,6 +4267,7 @@ const tree = doc.getTree("tree");
 
 tree.enableFractionalIndex(0.001);
 ```
+
 </Indent>
 
 <Method id="LoroTree.disableFractionalIndex">
@@ -3850,6 +4279,7 @@ disableFractionalIndex(): void
 Disables fractional indexing.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3857,6 +4287,7 @@ const tree = doc.getTree("tree");
 
 tree.disableFractionalIndex();
 ```
+
 </Indent>
 
 <Method id="LoroTree.isFractionalIndexEnabled">
@@ -3870,6 +4301,7 @@ Checks if fractional indexing is enabled.
 **Returns:** True if enabled
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3877,6 +4309,7 @@ const tree = doc.getTree("tree");
 
 const enabled = tree.isFractionalIndexEnabled();
 ```
+
 </Indent>
 
 <Method id="LoroTree.kind">
@@ -3890,6 +4323,7 @@ Returns the container type.
 **Returns:** "Tree"
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3897,6 +4331,7 @@ const tree = doc.getTree("tree");
 
 const type = tree.kind(); // "Tree"
 ```
+
 </Indent>
 
 <Method id="LoroTree.toJSON">
@@ -3910,6 +4345,7 @@ Converts the tree to JSON representation.
 **Returns:** JSON tree structure
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3917,6 +4353,7 @@ const tree = doc.getTree("tree");
 
 const json = tree.toJSON();
 ```
+
 </Indent>
 
 <Method id="LoroTree.parent">
@@ -3930,6 +4367,7 @@ Gets the parent container if this tree is nested.
 **Returns:** Parent container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3939,6 +4377,7 @@ const tree = map.setContainer("tree", doc.getTree("nested"));
 // Usage example:
 const parent = tree.parent();
 ```
+
 </Indent>
 
 <Method id="LoroTree.isAttached">
@@ -3952,6 +4391,7 @@ Checks if the container is attached to a document.
 **Returns:** True if attached
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroTree } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3959,6 +4399,7 @@ const tree = new LoroTree();
 
 const attached = tree.isAttached();
 ```
+
 </Indent>
 
 <Method id="LoroTree.getAttached">
@@ -3972,6 +4413,7 @@ Gets the attached version of this container.
 **Returns:** Attached container or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroTree } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3979,6 +4421,7 @@ const tree = new LoroTree();
 
 const attached = tree.getAttached();
 ```
+
 </Indent>
 
 <Method id="LoroTree.isDeleted">
@@ -3992,6 +4435,7 @@ Checks if the container has been deleted.
 **Returns:** True if deleted
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -3999,6 +4443,7 @@ const tree = doc.getTree("tree");
 
 const deleted = tree.isDeleted();
 ```
+
 </Indent>
 
 <Method id="LoroTree.getShallowValue">
@@ -4012,6 +4457,7 @@ Gets the tree values with sub-containers as IDs.
 **Returns:** Array of tree node values
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4019,6 +4465,7 @@ const tree = doc.getTree("tree");
 
 const values = tree.getShallowValue();
 ```
+
 </Indent>
 
 <Method id="LoroTree.id">
@@ -4030,6 +4477,7 @@ readonly id: ContainerID
 Gets the unique container ID.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4037,6 +4485,7 @@ const tree = doc.getTree("tree");
 
 const containerId = tree.id;
 ```
+
 </Indent>
 
 ### LoroTreeNode
@@ -4052,6 +4501,7 @@ data: LoroMap
 A map container for storing node metadata.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4060,6 +4510,7 @@ const node = tree.createNode();
 node.data.set("title", "Node Title");
 node.data.set("expanded", true);
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.createNode">
@@ -4071,11 +4522,13 @@ createNode(index?: number): LoroTreeNode
 Creates a child node.
 
 **Parameters:**
+
 - `index` - Position among siblings
 
 **Returns:** New node's handler
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4083,6 +4536,7 @@ const tree = doc.getTree("tree");
 const node = tree.createNode();
 const childId = node.createNode(0);
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.move">
@@ -4094,10 +4548,12 @@ move(parent?: LoroTreeNode, index?: number): void
 Moves this node to a new parent.
 
 **Parameters:**
+
 - `parent` - New parent node
 - `index` - Position among siblings
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4108,6 +4564,7 @@ const parent = tree.createNode();
 // Usage example:
 node.move(parent, 0);
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.moveAfter">
@@ -4119,9 +4576,11 @@ moveAfter(target: LoroTreeNode): void
 Moves this node after a sibling.
 
 **Parameters:**
+
 - `target` - Sibling node
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4132,7 +4591,8 @@ const sibling = tree.createNode();
 // Usage example:
 node.moveAfter(sibling);
 ```
-</Indent> 
+
+</Indent>
 
 <Method id="LoroTreeNode.moveBefore">
 ```typescript no_run
@@ -4143,9 +4603,11 @@ moveBefore(target: LoroTreeNode): void
 Moves this node before a sibling.
 
 **Parameters:**
+
 - `target` - Sibling node
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroTreeNode } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4156,6 +4618,7 @@ const sibling = tree.createNode();
 // Usage example:
 node.moveBefore(sibling);
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.parent">
@@ -4169,6 +4632,7 @@ Gets the parent node.
 **Returns:** Parent node or undefined
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4178,6 +4642,7 @@ const node = tree.createNode();
 // Usage example:
 const parentNode = node.parent();
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.children">
@@ -4191,6 +4656,7 @@ Gets all child nodes.
 **Returns:** Array of children
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4200,6 +4666,7 @@ const node = tree.createNode();
 // Usage example:
 const childNodes = node.children();
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.index">
@@ -4213,6 +4680,7 @@ Gets the position among siblings.
 **Returns:** Index or undefined if root
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4222,6 +4690,7 @@ const node = tree.createNode();
 // Usage example:
 const position = node.index();
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.fractionalIndex">
@@ -4237,6 +4706,7 @@ Returns `undefined` for the root node. Note: the tree must be attached to the do
 **Returns:** Hex string or `undefined` for root
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4249,6 +4719,7 @@ const aFi = a.fractionalIndex();
 const bFi = b.fractionalIndex();
 // aFi < bFi, because b is inserted after a
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.creationId">
@@ -4262,6 +4733,7 @@ Returns the OpID that created this node.
 **Returns:** `{ peer: PeerID, counter: number }` creation identifier
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4270,6 +4742,7 @@ const node = tree.createNode();
 
 const { peer, counter } = node.creationId();
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.creator">
@@ -4283,6 +4756,7 @@ Returns the peer ID that created this node (equivalent to `creationId().peer`).
 **Returns:** `PeerID`
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4292,6 +4766,7 @@ const node = tree.createNode();
 const author = node.creator();
 // author == doc.peerIdStr
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.getLastMoveId">
@@ -4305,6 +4780,7 @@ Returns the OpID of the most recent move operation for this node, or `undefined`
 **Returns:** Creation/move OpID or `undefined`
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4313,6 +4789,7 @@ const node = tree.createNode();
 
 const lastMove = node.getLastMoveId();
 ```
+
 </Indent>
 
 <Method id="LoroTreeNode.isDeleted">
@@ -4326,6 +4803,7 @@ Checks if this node has been deleted.
 **Returns:** Boolean deletion status
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4337,6 +4815,7 @@ if (node.isDeleted()) {
   console.log("Node is deleted");
 }
 ```
+
 </Indent>
 
 ### LoroCounter
@@ -4352,16 +4831,19 @@ increment(value: number): void
 Increments the counter.
 
 **Parameters:**
+
 - `value` - Amount to increment (default: 1)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
 
-counter.increment(5);   // +5
+counter.increment(5); // +5
 ```
+
 </Indent>
 
 <Method id="LoroCounter.decrement">
@@ -4373,16 +4855,19 @@ decrement(value: number): void
 Decrements the counter.
 
 **Parameters:**
+
 - `value` - Amount to decrement (default: 1)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
 const counter = doc.getCounter("counter");
 
-counter.decrement(3);   // -3
+counter.decrement(3); // -3
 ```
+
 </Indent>
 
 <Method id="LoroCounter.value">
@@ -4396,6 +4881,7 @@ Gets the current counter value.
 **Returns:** Current numeric value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4403,14 +4889,16 @@ const counter = doc.getCounter("counter");
 
 console.log(`Counter value: ${counter.value}`);
 ```
+
 </Indent>
 
 ### LoroMovableList
 
-A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under 
+A list optimized for move operations. Designed for frequent reordering (drag-and-drop) with good behavior under
 concurrent moves (concurrent moves resolve to one final position). See [List and Movable List](/docs/tutorial/list).
 
 **📝 MovableList vs List:**
+
 - **Use MovableList** for: Drag-and-drop UIs, sortable lists, kanban boards
 - **Use List** for: scenarios where the list items don't need to be moved
 - **Key difference**: MovableList handles concurrent moves better (no duplicates) and supports set operations, List is more efficient in general.
@@ -4424,10 +4912,12 @@ move(from: number, to: number): void
 Moves an element from one position to another.
 
 **Parameters:**
+
 - `from` - Source index
 - `to` - Target index
 
 **Example:**
+
 ```typescript
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4440,6 +4930,7 @@ movableList.push("e");
 
 movableList.move(0, 3); // Move first element to fourth position
 ```
+
 </Indent>
 
 <Method id="LoroMovableList.set">
@@ -4451,10 +4942,12 @@ set(pos: number, value: Value | Container): void
 Replaces the value at a position.
 
 **Parameters:**
+
 - `pos` - Position to update
 - `value` - New value
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4463,6 +4956,7 @@ movableList.push("a", "b", "c");
 
 movableList.set(0, "Updated value");
 ```
+
 </Indent>
 
 <Method id="LoroMovableList.setContainer">
@@ -4474,12 +4968,14 @@ setContainer<T extends Container>(pos: number, container: T): T
 Replaces the value with a container.
 
 **Parameters:**
+
 - `pos` - Position to update
 - `container` - New container
 
 **Returns:** The set container
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, LoroText } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4488,7 +4984,8 @@ movableList.push("placeholder");
 
 const text = movableList.setContainer(0, new LoroText());
 ```
-</Indent> 
+
+</Indent>
 
 ## Synchronization
 
@@ -4534,9 +5031,10 @@ doc2.subscribeLocalUpdates((updates) => {
 ```
 
 Performance tips:
+
 - Prefer `mode: "update"` with a `VersionVector` to sync incrementally.
 - Use `mode: "shallow-snapshot"` when you only need current state; it strips history for faster import/load.
-- Loro’s LSM-based encoding and Eg-walker-inspired merge keep import/export fast, even for large histories. 
+- Loro’s LSM-based encoding and Eg-walker-inspired merge keep import/export fast, even for large histories.
   See [Encoding](/docs/tutorial/encoding) and v1.0 performance notes: https://loro.dev/blog/v1.0
 
 #### Network Sync with WebSocket
@@ -4545,7 +5043,7 @@ Performance tips:
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have:
-declare const ws: { 
+declare const ws: {
   send: (data: Uint8Array) => void;
   on: (event: string, handler: (data: any) => void) => void;
 };
@@ -4559,7 +5057,7 @@ doc.subscribeLocalUpdates((updates) => {
 });
 
 // Receive updates from server
-ws.on('message', (data) => {
+ws.on("message", (data) => {
   doc.import(new Uint8Array(data));
 });
 ```
@@ -4576,7 +5074,7 @@ const doc = new LoroDoc();
 const frontiers = doc.frontiers();
 const shallowSnapshot = doc.export({
   mode: "shallow-snapshot",
-  frontiers: frontiers
+  frontiers: frontiers,
 });
 
 // Import shallow snapshot
@@ -4656,18 +5154,18 @@ console.log(`Document has ${vv.length()} peers`);
 
 ```typescript no_run
 interface LoroEventBatch {
-  by: "local" | "import" | "checkout"
-  origin?: string
-  currentTarget?: ContainerID
-  events: LoroEvent[]
-  from: Frontiers
-  to: Frontiers
+  by: "local" | "import" | "checkout";
+  origin?: string;
+  currentTarget?: ContainerID;
+  events: LoroEvent[];
+  from: Frontiers;
+  to: Frontiers;
 }
 
 interface LoroEvent {
-  target: ContainerID
-  diff: Diff
-  path: Path
+  target: ContainerID;
+  diff: Diff;
+  path: Path;
 }
 ```
 
@@ -4687,10 +5185,12 @@ type TextDiff = {
 Represents changes to text content using Delta format.
 
 **Properties:**
+
 - `type` - Always "text" for text diffs
 - `diff` - Array of Delta operations (insert, delete, retain)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4700,7 +5200,7 @@ const text = doc.getText("text");
 text.subscribe((e) => {
   for (const event of e.events) {
     if (event.diff.type === "text") {
-      event.diff.diff.forEach(delta => {
+      event.diff.diff.forEach((delta) => {
         if (delta.insert) {
           console.log(`Inserted: "${delta.insert}"`);
         }
@@ -4712,6 +5212,7 @@ text.subscribe((e) => {
   }
 });
 ```
+
 </Indent>
 
 #### ListDiff
@@ -4726,10 +5227,12 @@ type ListDiff = {
 Represents changes to list content using Delta format.
 
 **Properties:**
+
 - `type` - Always "list" for list diffs
 - `diff` - Array of Delta operations on list items
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4739,7 +5242,7 @@ const list = doc.getList("list");
 list.subscribe((e) => {
   for (const event of e.events) {
     if (event.diff.type === "list") {
-      event.diff.diff.forEach(delta => {
+      event.diff.diff.forEach((delta) => {
         if (delta.insert) {
           console.log(`Inserted items:`, delta.insert);
         }
@@ -4748,6 +5251,7 @@ list.subscribe((e) => {
   }
 });
 ```
+
 </Indent>
 
 #### MapDiff
@@ -4762,10 +5266,12 @@ type MapDiff = {
 Represents changes to map content.
 
 **Properties:**
+
 - `type` - Always "map" for map diffs
 - `updated` - Record of key-value changes (undefined means deleted)
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4786,6 +5292,7 @@ map.subscribe((e) => {
   }
 });
 ```
+
 </Indent>
 
 #### TreeDiff
@@ -4798,29 +5305,30 @@ type TreeDiff = {
 }
 
 type TreeDiffItem =
-  | {
-      target: TreeID
-      action: "create"
-      parent: TreeID | undefined
-      index: number
-      fractionalIndex: string
-    }
-  | {
-      target: TreeID
-      action: "delete"
-      oldParent: TreeID | undefined
-      oldIndex: number
-    }
-  | {
-      target: TreeID
-      action: "move"
-      parent: TreeID | undefined
-      index: number
-      fractionalIndex: string
-      oldParent: TreeID | undefined
-      oldIndex: number
-    }
-```
+| {
+target: TreeID
+action: "create"
+parent: TreeID | undefined
+index: number
+fractionalIndex: string
+}
+| {
+target: TreeID
+action: "delete"
+oldParent: TreeID | undefined
+oldIndex: number
+}
+| {
+target: TreeID
+action: "move"
+parent: TreeID | undefined
+index: number
+fractionalIndex: string
+oldParent: TreeID | undefined
+oldIndex: number
+}
+
+````
 Represents changes to tree structure.
 
 **Properties:**
@@ -4858,7 +5366,8 @@ tree.subscribe((e) => {
     }
   }
 });
-```
+````
+
 </Indent>
 
 ### Deep Subscription
@@ -4878,7 +5387,7 @@ text.subscribe((event) => {
 // Subscribe with deep observation
 doc.subscribe((event) => {
   // Path shows the location of the change
-  event.events.forEach(e => {
+  event.events.forEach((e) => {
     console.log("Change path:", e.path);
     console.log("Container:", e.target);
     console.log("Diff:", e.diff);
@@ -4897,6 +5406,7 @@ Local undo operates on your own changes without breaking collaboration. See [Und
 Provides local undo/redo functionality.
 
 **⚠️ Important Notes:**
+
 - **Local-only**: UndoManager only undoes the local user's operations, not remote operations
 - **Origin filtering**: Use `excludeOriginPrefixes` to exclude certain operations (e.g., sync operations) from undo
 - **Cursor restoration**: Use `onPush`/`onPop` callbacks to save and restore cursor positions
@@ -4910,6 +5420,7 @@ constructor(doc: LoroDoc, config: UndoConfig)
 Creates a new UndoManager instance.
 
 **Parameters:**
+
 - `doc` - The LoroDoc to manage undo/redo for
 - `config` - Configuration options
   - `mergeInterval?` - Time in ms to merge consecutive operations (default: 1000)
@@ -4919,6 +5430,7 @@ Creates a new UndoManager instance.
   - `onPop?` - Callback when undoing/redoing
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 
@@ -4926,9 +5438,10 @@ const doc = new LoroDoc();
 const undo = new UndoManager(doc, {
   mergeInterval: 1000,
   maxUndoSteps: 100,
-  excludeOriginPrefixes: ["sync-"]
+  excludeOriginPrefixes: ["sync-"],
 });
 ```
+
 </Indent>
 
 <Method id="UndoManager.undo">
@@ -4942,6 +5455,7 @@ Undo the last operation.
 **Returns:** True if undo was successful
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4954,6 +5468,7 @@ doc.commit();
 const success = undo.undo();
 console.log(success); // true
 ```
+
 </Indent>
 
 <Method id="UndoManager.redo">
@@ -4967,6 +5482,7 @@ Redo the last undone operation.
 **Returns:** True if redo was successful
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -4980,6 +5496,7 @@ undo.undo();
 const success = undo.redo();
 console.log(success); // true
 ```
+
 </Indent>
 
 <Method id="UndoManager.canUndo">
@@ -4993,6 +5510,7 @@ Check if undo is available.
 **Returns:** True if can undo
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5003,6 +5521,7 @@ if (undo.canUndo()) {
   undo.undo();
 }
 ```
+
 </Indent>
 
 <Method id="UndoManager.canRedo">
@@ -5016,6 +5535,7 @@ Check if redo is available.
 **Returns:** True if can redo
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5026,6 +5546,7 @@ if (undo.canRedo()) {
   undo.redo();
 }
 ```
+
 </Indent>
 
 <Method id="UndoManager.peer">
@@ -5039,6 +5560,7 @@ Get the peer ID of the undo manager.
 **Returns:** The peer ID
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5048,6 +5570,7 @@ const undo = new UndoManager(doc, {});
 const peerId = undo.peer();
 console.log(peerId); // e.g., "123456"
 ```
+
 </Indent>
 
 <Method id="UndoManager.setMaxUndoSteps">
@@ -5059,9 +5582,11 @@ setMaxUndoSteps(steps: number): void
 Set the maximum number of undo steps.
 
 **Parameters:**
+
 - `steps` - Maximum number of undo steps
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5070,6 +5595,7 @@ const undo = new UndoManager(doc, {});
 // Usage example:
 undo.setMaxUndoSteps(50);
 ```
+
 </Indent>
 
 <Method id="UndoManager.setMergeInterval">
@@ -5081,9 +5607,11 @@ setMergeInterval(interval: number): void
 Set the merge interval for grouping operations.
 
 **Parameters:**
+
 - `interval` - Merge interval in milliseconds
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5092,6 +5620,7 @@ const undo = new UndoManager(doc, {});
 // Usage example:
 undo.setMergeInterval(2000); // 2 seconds
 ```
+
 </Indent>
 
 <Method id="UndoManager.groupStart">
@@ -5103,11 +5632,13 @@ groupStart(): void
 Begin a manual grouping of subsequent commits into a single undo step.
 
 **Behavior:**
+
 - Wrap consecutive `doc.commit()` calls so they undo together
 - Calling `groupStart` again before `groupEnd` throws and leaves the current group unchanged
 - Conflicting remote imports may automatically end the group and split the undo item
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 
@@ -5129,6 +5660,7 @@ undo.undo();
 
 console.log(text.toString()); // ""
 ```
+
 </Indent>
 
 <Method id="UndoManager.groupEnd">
@@ -5140,11 +5672,13 @@ groupEnd(): void
 Close the active manual group and enqueue the grouped operations as a single undo item.
 
 **Behavior:**
+
 - Must be paired with a prior `groupStart`
 - Safe to call after the group was auto-closed by a conflicting remote import (becomes a no-op)
 - Non-conflicting remote updates from other peers remain outside the undo item but do not break the group
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 
@@ -5177,6 +5711,7 @@ undo.undo();
 
 console.log(text.toString()); // ""
 ```
+
 </Indent>
 
 <Method id="UndoManager.addExcludeOriginPrefix">
@@ -5188,9 +5723,11 @@ addExcludeOriginPrefix(prefix: string): void
 Add a prefix to exclude from undo stack.
 
 **Parameters:**
+
 - `prefix` - Origin prefix to exclude
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5200,6 +5737,7 @@ const undo = new UndoManager(doc, {});
 undo.addExcludeOriginPrefix("sync-");
 undo.addExcludeOriginPrefix("import-");
 ```
+
 </Indent>
 
 <Method id="UndoManager.clear">
@@ -5211,6 +5749,7 @@ clear(): void
 Clear the undo and redo stacks.
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, UndoManager } from "loro-crdt";
 const doc = new LoroDoc();
@@ -5219,6 +5758,7 @@ const undo = new UndoManager(doc, {});
 // Usage example:
 undo.clear();
 ```
+
 </Indent>
 
 ### Custom Undo Handlers
@@ -5238,14 +5778,14 @@ const undo = new UndoManager(doc, {
     const cursors = saveCursorPositions();
     return {
       value: doc.toJSON(),
-      cursors: cursors
+      cursors: cursors,
     };
   },
-  
+
   onPop: (isUndo, { value, cursors }, counterRange) => {
     // Restore cursor positions when undoing
     restoreCursorPositions(cursors);
-  }
+  },
 });
 ```
 
@@ -5259,24 +5799,30 @@ Reference for core types used across the API. For conceptual background, see [Co
 
 ```typescript no_run
 // Peer identifier
-type PeerID = `${number}`
+type PeerID = `${number}`;
 
 // Container identifier
-type ContainerID = 
+type ContainerID =
   | `cid:root-${string}:${ContainerType}`
-  | `cid:${number}@${PeerID}:${ContainerType}`
+  | `cid:${number}@${PeerID}:${ContainerType}`;
 
 // Tree node identifier
-type TreeID = `${number}@${PeerID}`
+type TreeID = `${number}@${PeerID}`;
 
 // Operation identifier
-type OpId = { 
-  peer: PeerID
-  counter: number 
-}
+type OpId = {
+  peer: PeerID;
+  counter: number;
+};
 
 // Container types
-type ContainerType = "Text" | "Map" | "List" | "Tree" | "MovableList" | "Counter"
+type ContainerType =
+  | "Text"
+  | "Map"
+  | "List"
+  | "Tree"
+  | "MovableList"
+  | "Counter";
 
 // Value types
 type Value =
@@ -5288,37 +5834,40 @@ type Value =
   | { [key: string]: Value }
   | Uint8Array
   | Value[]
-  | undefined
+  | undefined;
 ```
 
 ### Version Types
+
 Loro uses two complementary version representations: Version Vectors (per-peer counters) and Frontiers (a compact set of heads). See [Version Vector](/docs/concepts/version_vector) and [Frontiers](/docs/concepts/frontiers). For the full DAG model, see [Version Deep Dive](/docs/advanced/version_deep_dive).
 
 ```typescript no_run
 // Version vector class
 class VersionVector {
-  constructor(value: Map<PeerID, number> | Uint8Array | VersionVector | undefined | null)
-  static parseJSON(version: Map<PeerID, number>): VersionVector
-  toJSON(): Map<PeerID, number>
-  encode(): Uint8Array
-  static decode(bytes: Uint8Array): VersionVector
-  get(peer_id: number | bigint | `${number}`): number | undefined
-  compare(other: VersionVector): number | undefined
-  setEnd(id: { peer: PeerID, counter: number }): void
-  setLast(id: { peer: PeerID, counter: number }): void
-  remove(peer: PeerID): void
-  length(): number
+  constructor(
+    value: Map<PeerID, number> | Uint8Array | VersionVector | undefined | null,
+  );
+  static parseJSON(version: Map<PeerID, number>): VersionVector;
+  toJSON(): Map<PeerID, number>;
+  encode(): Uint8Array;
+  static decode(bytes: Uint8Array): VersionVector;
+  get(peer_id: number | bigint | `${number}`): number | undefined;
+  compare(other: VersionVector): number | undefined;
+  setEnd(id: { peer: PeerID; counter: number }): void;
+  setLast(id: { peer: PeerID; counter: number }): void;
+  remove(peer: PeerID): void;
+  length(): number;
 }
 
 // Frontiers represent a specific version
-type Frontiers = OpId[]
+type Frontiers = OpId[];
 
 // ID span for range queries
 type IdSpan = {
-  peer: PeerID
-  counter: number
-  length: number
-}
+  peer: PeerID;
+  counter: number;
+  length: number;
+};
 ```
 
 ### Change Types
@@ -5326,63 +5875,65 @@ type IdSpan = {
 ```typescript no_run
 // Change metadata
 interface Change {
-  peer: PeerID
-  counter: number
-  lamport: number
-  length: number
-  timestamp: number  // Unix timestamp in seconds
-  deps: OpId[]
-  message: string | undefined
+  peer: PeerID;
+  counter: number;
+  lamport: number;
+  length: number;
+  timestamp: number; // Unix timestamp in seconds
+  deps: OpId[];
+  message: string | undefined;
 }
 
 // Change modifier for pre-commit hooks
 interface ChangeModifier {
-  setMessage(message: string): this
-  setTimestamp(timestamp: number): this
+  setMessage(message: string): this;
+  setTimestamp(timestamp: number): this;
 }
 ```
 
 ### Cursor Types
+
 Stable cursors survive concurrent edits and resolve to absolute positions on demand. See [Cursor and Stable Positions](/docs/concepts/cursor_stable_positions) and [Cursor tutorial](/docs/tutorial/cursor).
 
 ```typescript no_run
 // Stable position in containers
 class Cursor {
-  containerId(): ContainerID
-  pos(): OpId | undefined
-  side(): Side  // -1 | 0 | 1
-  encode(): Uint8Array
-  static decode(data: Uint8Array): Cursor
+  containerId(): ContainerID;
+  pos(): OpId | undefined;
+  side(): Side; // -1 | 0 | 1
+  encode(): Uint8Array;
+  static decode(data: Uint8Array): Cursor;
 }
 
 // Cursor side affinity
-type Side = -1 | 0 | 1
+type Side = -1 | 0 | 1;
 ```
 
 ### Delta Type
+
 Delta is a popular rich-text operation format (e.g., Quill). LoroText can export/import Delta; see [Text](/docs/tutorial/text).
 
 ```typescript no_run
 // Rich text delta operations
 type Delta<T> =
   | {
-      insert: T
-      attributes?: { [key in string]: {} }
-      retain?: undefined
-      delete?: undefined
+      insert: T;
+      attributes?: { [key in string]: {} };
+      retain?: undefined;
+      delete?: undefined;
     }
   | {
-      delete: number
-      attributes?: undefined
-      retain?: undefined
-      insert?: undefined
+      delete: number;
+      attributes?: undefined;
+      retain?: undefined;
+      insert?: undefined;
     }
   | {
-      retain: number
-      attributes?: { [key in string]: {} }
-      delete?: undefined
-      insert?: undefined
-    }
+      retain: number;
+      attributes?: { [key in string]: {} };
+      delete?: undefined;
+      insert?: undefined;
+    };
 ```
 
 ---
@@ -5402,11 +5953,13 @@ encodeFrontiers(frontiers: OpId[]): Uint8Array
 Encode frontiers for efficient transmission.
 
 **Parameters:**
+
 - `frontiers` - Array of operation IDs representing frontiers
 
 **Returns:** Encoded bytes
 
 **Example:**
+
 ```ts threeslash
 import { LoroDoc, encodeFrontiers } from "loro-crdt";
 
@@ -5415,6 +5968,7 @@ const frontiers = doc.frontiers();
 const encoded = encodeFrontiers(frontiers);
 // Send encoded to remote peers
 ```
+
 </Indent>
 
 <Method id="decodeFrontiers">
@@ -5426,11 +5980,13 @@ decodeFrontiers(bytes: Uint8Array): OpId[]
 Decode frontiers from bytes.
 
 **Parameters:**
+
 - `bytes` - Encoded frontier bytes
 
 **Returns:** Array of operation IDs
 
 **Example:**
+
 ```typescript no_run threeslash
 import { decodeFrontiers } from "loro-crdt";
 
@@ -5438,6 +5994,7 @@ declare const encodedData: Uint8Array;
 const frontiers = decodeFrontiers(encodedData);
 console.log(frontiers); // [{ peer: "1", counter: 10 }, ...]
 ```
+
 </Indent>
 
 ### Debugging
@@ -5451,12 +6008,14 @@ setDebug(): void
 Enable debug mode for detailed logging.
 
 **Example:**
+
 ```ts threeslash
 import { setDebug } from "loro-crdt";
 
 // Enable debug logging
 setDebug();
 ```
+
 </Indent>
 
 <Method id="LORO_VERSION">
@@ -5470,12 +6029,14 @@ Get the current Loro version.
 **Returns:** Version string
 
 **Example:**
+
 ```ts threeslash
 import { LORO_VERSION } from "loro-crdt";
 
 const version = LORO_VERSION();
 console.log("Loro version:", version);
 ```
+
 </Indent>
 
 ### Import Blob Metadata
@@ -5489,12 +6050,14 @@ decodeImportBlobMeta(blob: Uint8Array, check_checksum: boolean): ImportBlobMetad
 Decode metadata from an import blob.
 
 **Parameters:**
+
 - `blob` - The import blob bytes
 - `check_checksum` - Whether to verify checksum
 
 **Returns:** Import blob metadata
 
 **Example:**
+
 ```typescript no_run threeslash
 import { decodeImportBlobMeta } from "loro-crdt";
 
@@ -5502,6 +6065,7 @@ declare const blob: Uint8Array;
 const metadata = decodeImportBlobMeta(blob, true);
 console.log("Blob metadata:", metadata);
 ```
+
 </Indent>
 
 ---
@@ -5510,7 +6074,8 @@ console.log("Blob metadata:", metadata);
 
 Manages ephemeral state like cursor positions and user presence. See [Ephemeral Store](/docs/tutorial/ephemeral) for concepts and usage patterns. Each entry uses timestamp-based LWW (Last-Write-Wins) for conflict resolution.
 
-**⚠️ Important:** 
+**⚠️ Important:**
+
 - EphemeralStore is a separate CRDT without history - history/operations are NOT persisted
 - Perfect for temporary state: cursor positions, selections, typing indicators
 - Each peer's state auto-expires after the timeout period
@@ -5527,15 +6092,18 @@ constructor(timeout?: number)
 Creates a new EphemeralStore instance.
 
 **Parameters:**
+
 - `timeout` - Duration in milliseconds. A peer's state is considered outdated if its last update is older than this timeout. Default is 30000ms (30 seconds).
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 
 // Create ephemeral store with 30 second timeout
 const store = new EphemeralStore(30000);
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.set">
@@ -5547,10 +6115,12 @@ set<K extends keyof T>(key: K, value: T[K]): void
 Set an ephemeral value.
 
 **Parameters:**
+
 - `key` - The key to set
 - `value` - The value to store
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5560,6 +6130,7 @@ store.set("cursor", { line: 10, column: 5 });
 store.set("selection", { start: 0, end: 10 });
 store.set("user", { name: "Alice", color: "#ff0000" });
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.get">
@@ -5571,11 +6142,13 @@ get<K extends keyof T>(key: K): T[K] | undefined
 Get an ephemeral value.
 
 **Parameters:**
+
 - `key` - The key to get
 
 **Returns:** The stored value or undefined
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5585,6 +6158,7 @@ store.set("cursor", { line: 10 });
 const cursor = store.get("cursor");
 console.log(cursor); // { line: 10 }
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.delete">
@@ -5596,9 +6170,11 @@ delete<K extends keyof T>(key: K): void
 Delete an ephemeral value.
 
 **Parameters:**
+
 - `key` - The key to delete
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5607,6 +6183,7 @@ store.set("cursor", { line: 10 });
 // Usage example:
 store.delete("cursor");
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.getAllStates">
@@ -5620,6 +6197,7 @@ Get all ephemeral states.
 **Returns:** All stored states
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5630,6 +6208,7 @@ store.set("user", { name: "Alice" });
 const allStates = store.getAllStates();
 console.log(allStates);
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.encode">
@@ -5641,11 +6220,13 @@ encode<K extends keyof T>(key: K): Uint8Array
 Encode a specific key's state for transmission.
 
 **Parameters:**
+
 - `key` - The key to encode
 
 **Returns:** Encoded bytes
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5655,6 +6236,7 @@ store.set("cursor", { line: 10 });
 const encoded = store.encode("cursor");
 // Send encoded to remote peers
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.encodeAll">
@@ -5668,6 +6250,7 @@ Encode all states for transmission.
 **Returns:** Encoded bytes
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5678,6 +6261,7 @@ store.set("user", { name: "Alice" });
 const encoded = store.encodeAll();
 // Send encoded to remote peers
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.apply">
@@ -5689,9 +6273,11 @@ apply(bytes: Uint8Array): void
 Apply remote updates.
 
 **Parameters:**
+
 - `bytes` - Encoded updates from remote peer
 
 **Example:**
+
 ```typescript no_run threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5700,6 +6286,7 @@ const store = new EphemeralStore(30000);
 declare const remoteData: Uint8Array;
 store.apply(remoteData);
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.keys">
@@ -5713,6 +6300,7 @@ Get all keys in the store.
 **Returns:** Array of keys
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5723,6 +6311,7 @@ store.set("user", { name: "Alice" });
 const allKeys = store.keys();
 console.log(allKeys); // ["cursor", "user"]
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.subscribe">
@@ -5734,11 +6323,13 @@ subscribe(listener: EphemeralListener): () => void
 Subscribe to all ephemeral state changes.
 
 **Parameters:**
+
 - `listener` - Callback function for state changes
 
 **Returns:** Unsubscribe function
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5751,6 +6342,7 @@ const unsubscribe = store.subscribe((event) => {
 // Later, unsubscribe
 unsubscribe();
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.subscribeLocalUpdates">
@@ -5762,11 +6354,13 @@ subscribeLocalUpdates(listener: EphemeralLocalListener): () => void
 Subscribe to local ephemeral updates for syncing to remote peers.
 
 **Parameters:**
+
 - `listener` - Callback function that receives encoded updates
 
 **Returns:** Unsubscribe function
 
 **Example:**
+
 ```typescript no_run threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5782,6 +6376,7 @@ const unsubscribe = store.subscribeLocalUpdates((data) => {
 // Later, unsubscribe
 unsubscribe();
 ```
+
 </Indent>
 
 <Method id="EphemeralStore.destroy">
@@ -5793,6 +6388,7 @@ destroy(): void
 Clean up and destroy the ephemeral store.
 
 **Example:**
+
 ```ts threeslash
 import { EphemeralStore } from "loro-crdt";
 const store = new EphemeralStore(30000);
@@ -5800,6 +6396,7 @@ const store = new EphemeralStore(30000);
 // Usage example:
 store.destroy();
 ```
+
 </Indent>
 
 ### Complete Example
