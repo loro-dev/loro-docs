@@ -83,7 +83,7 @@ doc.import(docB.export({ mode: "update" }));
    - If possible, initialize all child containers during the map container's initialization
    - Avoid concurrent creation of child containers with the same key in the map container to prevent overwrites
 2. If it's impossible to initialize all child containers when the map container is initialized, prefer initializing them at the root level rather than as nested containers. - You can use `doc.getMap("user." + userId)` instead of `doc.getMap("user").getOrCreateContainer(userId, new LoroMap())` to avoid this problem.
-   </details>
+</details>
 
 ---
 
