@@ -1,0 +1,46 @@
+---
+title: "Loro Knowledge Base"
+description: "Search-first guides for CRDTs, collaborative editing, local-first architecture, and evaluating Loro against other CRDT libraries."
+keywords: "loro knowledge base, crdt guides, collaborative editing, local-first, yjs alternative"
+---
+
+import { Cards } from "nextra/components";
+
+# Loro Knowledge Base
+
+Search-first guides for engineers evaluating CRDTs, collaborative editing architecture, and local-first software.
+
+Use this section when you want the big picture first:
+- what CRDTs are
+- how to compare Loro with Yjs and Automerge
+- how to design a collaborative editor
+- why document history and time travel matter
+
+## Start here
+
+<Cards num={2}>
+  <Cards.Card arrow title="What Is a CRDT?" href="/kb/what-is-crdt">
+    Learn the core idea behind conflict-free replicated data types and why they matter for offline and real-time apps.
+  </Cards.Card>
+  <Cards.Card arrow title="Loro vs Yjs" href="/kb/loro-vs-yjs">
+    A practical comparison for teams choosing a CRDT library for collaborative software.
+  </Cards.Card>
+  <Cards.Card arrow title="CRDT Library Comparison" href="/kb/crdt-library-comparison">
+    Compare Loro, Yjs, and Automerge across ecosystem, data model, and product fit.
+  </Cards.Card>
+  <Cards.Card arrow title="How to Build a Collaborative Editor" href="/kb/build-collaborative-editor">
+    A search-first architecture guide for collaborative text and document products.
+  </Cards.Card>
+  <Cards.Card arrow title="CRDT Time Travel" href="/kb/crdt-time-travel">
+    Understand document history, replay, and versioning in local-first and collaborative apps.
+  </Cards.Card>
+</Cards>
+
+## Looking for implementation details?
+
+If you already know what you want to build and just need APIs and examples, go straight to the docs:
+
+- [Get Started](/docs/tutorial/get_started)
+- [CRDT Concepts](/docs/concepts/crdt)
+- [Sync Tutorial](/docs/tutorial/sync)
+- [Time Travel Tutorial](/docs/tutorial/time_travel)
