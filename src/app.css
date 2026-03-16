@@ -124,57 +124,22 @@ h4:hover > a.heading-anchor {
 }
 
 .site-shell--docs {
-  background:
-    radial-gradient(circle at 8% 10%, rgba(14, 165, 233, 0.16), transparent 18%),
-    radial-gradient(circle at 88% 8%, rgba(249, 115, 22, 0.14), transparent 22%),
-    linear-gradient(180deg, #04070c 0%, #0a121a 100%);
+  background: #0a0e14;
 }
 
 .docs-layout {
   align-items: flex-start;
 }
 
-.docs-sidebar,
-.docs-toc {
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background:
-    linear-gradient(180deg, rgba(10, 17, 26, 0.86), rgba(8, 14, 21, 0.84));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 24px 48px rgba(0, 0, 0, 0.22);
-}
+/* Sidebar and TOC now have cleaner inline styles */
 
-.docs-sidebar-section {
-  color: rgba(148, 163, 184, 0.62);
-}
+/* Sidebar styles moved to component */
 
-.docs-sidebar-link {
-  color: rgba(226, 232, 240, 0.75);
-}
-
-.docs-sidebar-link:hover {
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.docs-sidebar-link.is-active {
-  color: #f8fafc;
-  background: linear-gradient(90deg, rgba(8, 145, 178, 0.22), rgba(249, 115, 22, 0.16));
-  box-shadow: inset 3px 0 0 #22d3ee, inset 0 0 0 1px rgba(34, 211, 238, 0.1);
-}
-
-.docs-toc-link {
-  color: rgba(203, 213, 225, 0.6);
-}
-
-.docs-toc-link:hover {
-  color: #f8fafc;
-}
+/* TOC styles moved to component */
 
 .docs-article {
   color: #e2e8f0;
-  background:
-    linear-gradient(180deg, rgba(8, 14, 22, 0.92), rgba(10, 18, 27, 0.88));
+  background: transparent;
   overflow-x: clip;
 }
 
@@ -185,18 +150,7 @@ h4:hover > a.heading-anchor {
   flex-wrap: wrap;
 }
 
-.docs-kicker {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  background: rgba(34, 211, 238, 0.12);
-  color: #9be7f5;
-  padding: 0.38rem 0.7rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
+/* Kicker styles moved to component */
 
 .docs-date {
   font-size: 0.85rem;
@@ -226,7 +180,8 @@ h4:hover > a.heading-anchor {
 
 .content-prose {
   color: #e2e8f0;
-  line-height: 1.78;
+  line-height: 1.75;
+  font-size: 15px;
 }
 
 .content-prose h1,
@@ -234,24 +189,27 @@ h4:hover > a.heading-anchor {
 .content-prose h3,
 .content-prose h4 {
   color: #f8fafc;
-  scroll-margin-top: 7rem;
-  letter-spacing: -0.02em;
+  scroll-margin-top: 6rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
 .content-prose h1 {
-  font-size: clamp(2.4rem, 4vw, 4.2rem);
-  line-height: 0.98;
+  font-size: 2.25rem;
+  line-height: 1.1;
   margin-top: 0;
 }
 
 .content-prose h2 {
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-  margin-top: 2.7rem;
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .content-prose h3 {
-  font-size: 1.3rem;
-  margin-top: 1.85rem;
+  font-size: 1.125rem;
+  margin-top: 1.75rem;
 }
 
 .content-prose p,
@@ -259,11 +217,16 @@ h4:hover > a.heading-anchor {
 .content-prose blockquote,
 .content-prose table,
 .content-prose dd {
-  color: rgba(226, 232, 240, 0.82);
+  color: rgba(226, 232, 240, 0.75);
 }
 
 .content-prose a {
-  color: #67e8f9;
+  color: #22d3ee;
+  text-decoration: none;
+}
+
+.content-prose a:hover {
+  text-decoration: underline;
 }
 
 .content-prose img,
@@ -275,12 +238,11 @@ h4:hover > a.heading-anchor {
 
 .content-prose pre {
   overflow-x: auto;
-  border: 1px solid rgba(34, 211, 238, 0.12);
-  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   padding: 1rem;
-  background: linear-gradient(180deg, #071118, #09121a);
+  background: #0d1117;
   color: #e2e8f0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .content-prose pre.shiki {

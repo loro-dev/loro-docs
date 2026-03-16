@@ -1,26 +1,56 @@
+import { useEffect, useState } from "react";
 import type { HeadingEntry } from "../generated/content-manifest";
 
 export function TableOfContents({ headings }: { headings: HeadingEntry[] }) {
+  const [activeId, setActiveId] = useState<string>("");
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-20% 0% -80% 0%" }
+    );
+
+    headings.forEach((heading) => {
+      const element = document.getElementById(heading.id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [headings]);
+
   if (headings.length === 0) return null;
 
   return (
-    <aside className="hidden w-64 shrink-0 2xl:block">
-      <div className="docs-toc sticky top-20 rounded-[1.75rem] p-4">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
-          On This Page
+    <aside className="hidden w-64 shrink-0 xl:block">
+      <div className="sticky top-24">
+        <div className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">
+          On this page
         </div>
-        <div className="space-y-2">
+        <ul className="space-y-0.5">
           {headings.map((heading) => (
-            <a
+            <li
               key={heading.id}
-              href={`#${heading.id}`}
-              className="docs-toc-link block text-sm no-underline transition"
-              style={{ marginLeft: (heading.depth - 2) * 10 }}
+              style={{ marginLeft: (heading.depth - 2) * 12 }}
             >
-              {heading.text}
-            </a>
+              <a
+                href={`#${heading.id}`}
+                className={`block py-1 px-2 text-[13px] leading-relaxed no-underline transition-colors ${
+                  activeId === heading.id
+                    ? "text-cyan-400 font-medium"
+                    : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                {heading.text}
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </aside>
   );

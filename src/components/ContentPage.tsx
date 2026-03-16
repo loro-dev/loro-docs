@@ -36,17 +36,20 @@ export function ContentPage({
   const body = (
     <article
       id="content"
-      className="docs-article content-prose min-w-0 flex-1 rounded-[2rem] border border-white/10 p-6 shadow-[0_30px_90px_rgba(0,0,0,0.24)] sm:p-8 lg:p-10"
+      className="docs-article content-prose min-w-0 flex-1 p-6 sm:p-8 lg:p-10"
     >
       {entry.title ? (
-        <header className="docs-hero mb-10 border-b border-white/8 pb-8">
-          <div className="docs-kicker-row">
-            <div className="docs-kicker">{sectionLabel(entry)}</div>
-            {entry.date ? <div className="docs-date">{entry.date}</div> : null}
-          </div>
-          <h1 className="m-0">{entry.title}</h1>
+        <header className="docs-hero mb-10 border-b border-white/[0.08] pb-8">
+          {entry.kind === "docs" && (
+            <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.08em] text-white/40">
+              {sectionLabel(entry)}
+            </div>
+          )}
+          <h1 className="m-0 text-3xl font-semibold tracking-tight text-white">
+            {entry.title}
+          </h1>
           {entry.description ? (
-            <p className="docs-lead mt-4 max-w-3xl text-base">
+            <p className="docs-lead mt-4 max-w-3xl text-base text-white/60">
               {entry.description}
             </p>
           ) : null}
@@ -90,7 +93,7 @@ export function ContentPage({
       <SiteHeader />
       <div className="site-frame mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         {entry.kind === "docs" ? (
-          <div className="docs-layout flex gap-6">
+          <div className="docs-layout flex gap-8">
             <DocsSidebar nodes={docsNavTree} />
             {body}
             <TableOfContents headings={entry.headings} />

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import LanguageDropdown from "../../components/LanguageDropdown";
+import { Search } from "lucide-react";
 
 function NavLink({
   to,
@@ -26,6 +27,22 @@ function NavLink({
   );
 }
 
+function SearchButton() {
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/50 transition hover:border-white/20 hover:text-white/70"
+    >
+      <Search size={14} />
+      <span className="hidden md:inline">Search documentation...</span>
+      <span className="md:hidden">Search...</span>
+      <kbd className="ml-2 hidden rounded border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-mono text-white/40 lg:inline-block">
+        Ctrl K
+      </kbd>
+    </button>
+  );
+}
+
 export function SiteHeader() {
   return (
     <header className="site-header sticky top-0 z-40">
@@ -40,7 +57,8 @@ export function SiteHeader() {
           <NavLink to="/changelog">Changelog</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-3">
+          <SearchButton />
           <a
             href="https://github.com/loro-dev/loro"
             className="site-nav-link rounded-full px-3 py-2 text-sm font-medium no-underline transition"

@@ -33,13 +33,16 @@ export default {
   chat: {
     link: "https://discord.gg/tUsBSVfqzf",
   },
-  navbar: {
-    extraContent: <LanguageDropdown />,
-  },
   docsRepositoryBase: "https://github.com/loro-dev/loro-docs/tree/main",
   footer: {
     text: "Loro 2024 ©",
     component: Footer,
+  },
+  search: {
+    placeholder: "Search documentation...",
+  },
+  navbar: {
+    extraContent: <LanguageDropdown />,
   },
   head: () => {
     const config = useConfig();
@@ -53,9 +56,6 @@ export default {
     const normalizedPath = rawPath.split("#")[0] || "/";
     const canonicalUrl = `https://loro.dev${normalizedPath}`;
     const chineseUrl = `https://cn.loro.dev${normalizedPath}`;
-    // Nextra v3 moves reserved fields like `title`, `description`, `image`
-    // out of `frontMatter` into top-level config. Fallback to frontMatter for
-    // older content that still sets them there.
     const metaTitle = config.title ?? config.frontMatter?.title;
     const metaDescription =
       config.description ?? config.frontMatter?.description ?? "Loro";
@@ -101,6 +101,9 @@ export default {
   sidebar: {
     defaultMenuCollapseLevel: 1,
     autoCollapse: true,
+  },
+  toc: {
+    title: "On This Page",
   },
   darkMode: true,
   nextThemes: {
