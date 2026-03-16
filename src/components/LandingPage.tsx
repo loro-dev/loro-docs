@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import Testimonial from "../../components/Testimonial";
 import Demo from "../../components/richtextDemo";
-import { InlineCode } from "./CodeBlock";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { useEffect, useRef, useState } from "react";
@@ -521,7 +520,9 @@ export function LandingPage() {
                     <div className="landing-code-title text-sm font-medium text-white/70 mb-3">
                       Effortless document synchronization
                     </div>
-                    <InlineCode code={syncSnippet} />
+                    <pre className="landing-code-block text-sm font-mono text-white/80 leading-relaxed">
+                      <code>{syncSnippet}</code>
+                    </pre>
                   </div>
                   
                   <div className="px-4 py-3 border-t border-white/[0.06] bg-white/[0.01]">
