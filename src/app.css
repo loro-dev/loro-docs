@@ -124,7 +124,7 @@ h4:hover > a.heading-anchor {
 }
 
 .site-shell--docs {
-  background: #0a0e14;
+  background: #090c11;
 }
 
 .docs-layout {
@@ -238,11 +238,17 @@ h4:hover > a.heading-anchor {
 
 .content-prose pre {
   overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 1rem;
-  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1.25rem;
+  background: #111827;
   color: #e2e8f0;
+}
+
+/* Ensure code blocks stand out from page background */
+.content-prose pre.shiki {
+  background: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .content-prose pre.shiki {
@@ -266,24 +272,44 @@ h4:hover > a.heading-anchor {
   padding-bottom: 0.2rem;
 }
 
+/* Dark theme for Twoslash popup - overrides the light default */
 .content-prose .twoslash .twoslash-popup-container {
   width: max-content;
   min-width: min(24rem, calc(100vw - 3rem));
   max-width: min(92vw, 40rem);
   max-height: min(70vh, 32rem);
   overflow: auto;
-  box-shadow: var(--twoslash-popup-shadow);
+  background: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   z-index: 30;
 }
 
+/* Dark theme for popup docs */
+.content-prose .twoslash .twoslash-popup-docs {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  padding: 1rem !important;
+}
+
+.content-prose .twoslash .twoslash-popup-docs p {
+  color: #cbd5e1 !important;
+}
+
+/* Dark theme for popup code */
 .content-prose .twoslash .twoslash-popup-code {
   display: block;
   max-width: min(92vw, 40rem);
   overflow-x: auto;
   overflow-y: hidden;
   line-height: 1.4;
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
 }
 
 .content-prose .twoslash .twoslash-popup-code pre,
@@ -291,16 +317,36 @@ h4:hover > a.heading-anchor {
   white-space: pre !important;
   word-break: normal !important;
   overflow-wrap: normal !important;
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
 }
 
 .content-prose .twoslash .twoslash-popup-code pre {
   margin: 0;
   overflow-x: auto;
+  padding: 0.75rem !important;
 }
 
-.content-prose .twoslash .twoslash-popup-docs {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+/* Dark theme for error and tag elements */
+.content-prose .twoslash .twoslash-error {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #fca5a5 !important;
+}
+
+.content-prose .twoslash .twoslash-tag {
+  background: rgba(34, 211, 238, 0.2) !important;
+  border-color: rgba(34, 211, 238, 0.5) !important;
+  color: #67e8f9 !important;
+}
+
+/* Dark theme for query symbol */
+.content-prose .twoslash .twoslash-hover {
+  border-color: rgba(34, 211, 238, 0.3) !important;
+}
+
+.content-prose .twoslash .twoslash-query-presisted {
+  background: rgba(34, 211, 238, 0.1) !important;
 }
 
 .content-prose code {

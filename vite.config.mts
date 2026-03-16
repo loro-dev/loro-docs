@@ -47,7 +47,7 @@ export default defineConfig({
         [
           rehypeShiki,
           {
-            theme: "github-light",
+            theme: "github-dark",
             defaultLanguage: "ts",
             addLanguageClass: true,
             transformers: [
