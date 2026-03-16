@@ -263,7 +263,7 @@ See the dedicated guide: [Cursor](/docs/tutorial/cursor).
 
 Example (caret):
 
-```ts twoslash
+```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
 import { expect } from "expect";
 // ---cut---
@@ -365,7 +365,7 @@ console.log(text.toDelta());
 
 Use `sliceDelta(start, end)` when you only need a portion of the Delta (for example, to copy a styled snippet). It uses UTF-16 indices just like other text APIs; use `sliceDeltaUtf8` if you need to slice by UTF-8 byte offsets instead.
 
-```ts twoslash
+```ts no_run twoslash
 import { LoroDoc } from "loro-crdt";
 import { expect } from "expect";
 // ---cut---

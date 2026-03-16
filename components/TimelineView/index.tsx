@@ -33,8 +33,8 @@ export default function Timeline({ ...props }: TimelineProps) {
   }, [updateTrackRange]);
   useEffect(updateTrackRange, [isHistoryEmpty]);
   return (
-    <div className="w-full rounded-[40px] bg-timeline pt-5 px-7.5 pb-5 flex flex-col">
-      <header className="flex flex-row items-center justify-between">
+    <div className="w-full min-w-0 overflow-x-auto rounded-[40px] bg-timeline pt-5 px-7.5 pb-5 flex flex-col">
+      <header className="flex flex-row flex-wrap items-center justify-between gap-3">
         <h3 className={classes.Title}>History</h3>
         <GeneralToolBar className="ml-auto" {...props} />
       </header>
@@ -56,7 +56,7 @@ export default function Timeline({ ...props }: TimelineProps) {
           </div>
         </div>
       </div>
-      <footer className="mt-5 touch:mt-8 flex flex-row justify-center">
+      <footer className="mt-5 touch:mt-8 flex flex-row flex-wrap justify-center">
         <Controls />
       </footer>
     </div>

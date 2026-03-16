@@ -34,9 +34,13 @@ async function scanMarkdownFiles(
 }
 
 function replaceImportVersion(input: string, targetVersion: string): string {
-  const regex = /from "loro-crdt"/g;
-  const replacement = `from "npm:loro-crdt@${targetVersion}"`;
-  return input.replace(regex, replacement);
+  return input
+    .replace(/from "loro-crdt"/g, `from "npm:loro-crdt@${targetVersion}"`)
+    .replace(/from "loro-mirror"/g, `from "npm:loro-mirror@1.0.0"`)
+    .replace(
+      /from "loro-mirror-react"/g,
+      `from "npm:loro-mirror-react@1.0.0"`
+    );
 }
 
 // Parsing command-line arguments

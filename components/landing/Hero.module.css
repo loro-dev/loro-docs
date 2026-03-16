@@ -1,11 +1,11 @@
 .DescriptionText {
-  width: 243px;
-  color: #f5f5f5;
+  width: 260px;
+  color: rgba(255, 255, 255, 0.7);
   text-align: right;
   font-style: normal;
-  font-weight: 300;
-  line-height: normal;
-  opacity: 0.7;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
 }
 
 .GradientText {
@@ -16,13 +16,29 @@
   font-style: normal;
   font-weight: 800;
   text-transform: uppercase;
-  background: var(
-    --blue---green,
-    linear-gradient(94deg, #98b0ff 0%, #42ffa4 93.93%)
+  background: linear-gradient(
+    94deg, 
+    #98b0ff 0%, 
+    #42ffa4 25%,
+    #98b0ff 50%,
+    #42ffa4 75%,
+    #98b0ff 100%
   );
+  background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+/* Subtle hover effect on gradient text */
+.GradientText:hover {
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .HairlineText {
@@ -31,22 +47,56 @@
   leading-trim: both;
   text-edge: cap;
   font-style: normal;
+  letter-spacing: -0.02em;
+  transition: all 0.3s ease;
+}
+
+.HairlineText::before,
+.HairlineText::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  background: linear-gradient(135deg, #98b0ff, #42ffa4);
+  transition: all 0.3s ease;
 }
 
 .HairlineText::before {
-  position: absolute;
   top: 0;
-  left: -7px;
-  content: "";
-  border-radius: 7px;
-  background-color: #fff;
+  left: -10px;
 }
 
 .HairlineText::after {
-  position: absolute;
   bottom: 0;
-  right: -7px;
-  content: "";
-  border-radius: 7px;
-  background-color: #fff;
+  right: -10px;
+}
+
+/* Hover effect on CRDTs text */
+a:hover .HairlineText {
+  text-shadow: 0 0 40px rgba(152, 176, 255, 0.3);
+}
+
+a:hover .HairlineText::before,
+a:hover .HairlineText::after {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(152, 176, 255, 0.5);
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .DescriptionText {
+    width: 200px;
+    font-size: 12px;
+  }
+  
+  .GradientText {
+    letter-spacing: -0.01em;
+  }
+  
+  .HairlineText::before {
+    left: -6px;
+  }
+  
+  .HairlineText::after {
+    right: -6px;
+  }
 }

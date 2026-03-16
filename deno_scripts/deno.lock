@@ -9,7 +9,8 @@
     "npm:loro-crdt@*": "0.15.1",
     "npm:loro-crdt@0.15.1": "0.15.1",
     "npm:loro-crdt@1.0.0-beta.5": "1.0.0-beta.5",
-    "npm:loro-crdt@1.5.10": "1.5.10"
+    "npm:loro-crdt@1.5.10": "1.5.10",
+    "npm:loro-mirror@1.0.0": "1.0.0_loro-crdt@0.15.1"
   },
   "jsr": {
     "@std/fs@1.0.4": {
@@ -263,6 +264,9 @@
     "has-flag@4.0.0": {
       "integrity": "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ=="
     },
+    "immer@10.2.0": {
+      "integrity": "sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw=="
+    },
     "is-number@7.0.0": {
       "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="
     },
@@ -383,6 +387,13 @@
     },
     "loro-crdt@1.5.10": {
       "integrity": "sha512-dBAw3Hh9EJLaS5MqyNMoZRq7r01UxLWUdm3go2v2EtYIrH658IG0vcktHuZqeEwyTMvE5eUtyHhLx3lgUyDFfw=="
+    },
+    "loro-mirror@1.0.0_loro-crdt@0.15.1": {
+      "integrity": "sha512-77PyZxkA/xyq8igmVO2bH6U3EkrKICz7Gnhu2fQ/L5UO61JC+zisUwy/8Hy26DXrVE07jih0WbwVZ7sMJLRcbg==",
+      "dependencies": [
+        "immer",
+        "loro-crdt@0.15.1"
+      ]
     },
     "loro-wasm@0.15.1": {
       "integrity": "sha512-1ZRJgD3WJzFDBEHnMMiciaszt1iuM7BwJECggjNqCH1wBhGJ6gNk777b1pLQvuqHP1rU8LDcKeWaYwnavep17g=="

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import modern animations */
+@import url('./styles/animations.css');
+
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 [type="search"]::-webkit-search-decoration,
 [type="search"]::-webkit-search-cancel-button {
     appearance: none;
@@ -74,19 +80,41 @@
 @layer base {
     :root {
         --default-sans-serif:
-            system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         @apply bg-black;
+        
+        /* Custom properties for design system */
+        --color-primary-blue: #98b0ff;
+        --color-primary-green: #42ffa4;
+        --color-accent-purple: #5B68DF;
+        --color-accent-teal: #73E0A9;
+        --radius-card: 24px;
+        --radius-button: 12px;
+        
+        /* Animation timing */
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     /* In order not to alter the font style on pages other than the landing page,
   we are currently only applying this class name to the landing page. */
     .landing-page-root {
-        font-family: Poppins, var(--default-sans-serif);
+        font-family: var(--default-sans-serif);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     .landing-page-root code {
         overflow-x: auto;
+        font-family: var(--font-mono);
+    }
+    
+    /* Modern selection color */
+    ::selection {
+        background: rgba(152, 176, 255, 0.3);
+        color: #fff;
     }
 
     .btn {

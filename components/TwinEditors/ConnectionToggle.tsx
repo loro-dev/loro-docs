@@ -9,8 +9,6 @@ import { useUpdateConnectedHistory } from "@components/landing/store/connection-
 import { useIsReviewing } from "@components/landing/store/player-state";
 import { useTimelineLength } from "@components/landing/store/timeline-history";
 import { useCallback, useEffect } from "react";
-import OfflineIcon from "../../public/images/offline.svg";
-import OnlineIcon from "../../public/images/online.svg";
 
 export type ConnectionToggleProps = {
   className?: string;
@@ -57,7 +55,12 @@ export default function ConnectionToggle({
               name="connection-toggle"
               disabled={isReviewing}
             >
-              {connected ? <OnlineIcon /> : <OfflineIcon />}
+              <img
+                src={connected ? "/images/online.svg" : "/images/offline.svg"}
+                alt=""
+                className="h-8 w-8"
+                aria-hidden="true"
+              />
             </button>
           </TooltipTrigger>
           <TooltipContent sideOffset={8}>

@@ -111,9 +111,10 @@ export default function LanguageDropdown() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-transparent text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-gray-400 dark:hover:text-gray-100"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-medium text-white/72 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
         aria-haspopup="menu"
         aria-expanded={isOpen}
+        aria-label="Switch site language"
       >
         <LucideLanguages className="h-5 w-5" />
       </button>
@@ -121,7 +122,7 @@ export default function LanguageDropdown() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "absolute right-0 mt-2 w-32 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg transition-opacity duration-150 dark:border-neutral-700 dark:bg-neutral-900",
+          "absolute right-0 mt-2 w-32 overflow-hidden rounded-2xl border border-white/10 bg-[#111a22] py-1 shadow-[0_18px_40px_rgba(0,0,0,0.45)] transition-opacity duration-150",
           isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         )}
       >
@@ -132,8 +133,8 @@ export default function LanguageDropdown() {
             className={cn(
               "flex w-full items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
               id === activeLanguage
-                ? "bg-gray-100 font-medium text-gray-900 dark:bg-neutral-800 dark:text-gray-100"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-neutral-800 dark:hover:text-gray-100"
+                ? "bg-white/10 font-medium text-white"
+                : "text-white/70 hover:bg-white/6 hover:text-white"
             )}
             onClick={() => handleSelect(id)}
           >

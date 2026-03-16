@@ -51,8 +51,8 @@ function TwinEditors(
     }
   }, []);
   return (
-    <section className="w-full min-h-[380px] grid gap-5 items-center grid-rows-twin-editors grid-cols-1 md:grid-rows-1 md:grid-cols-twin-editors">
-      <div className="h-full box-border bg-example rounded-[40px] flex flex-col p-5 min-h-[380px]">
+    <section className="w-full min-w-0 min-h-[380px] grid gap-5 items-center grid-rows-twin-editors grid-cols-1 md:grid-rows-1 md:grid-cols-twin-editors">
+      <div className="h-full min-w-0 box-border bg-example rounded-[40px] flex flex-col p-5 min-h-[380px]">
         <UserProfile
           // avatarColor="#afb6d4"
           avatarUrl="/images/avatar-1.svg"
@@ -74,7 +74,7 @@ function TwinEditors(
         connected={connected}
         onToggle={setConnected}
       />
-      <div className="h-full box-border bg-example rounded-[40px] flex flex-col p-5 min-h-[380px]">
+      <div className="h-full min-w-0 box-border bg-example rounded-[40px] flex flex-col p-5 min-h-[380px]">
         <UserProfile
           // avatarColor="#9fea52"
           avatarUrl="/images/avatar-2.svg"

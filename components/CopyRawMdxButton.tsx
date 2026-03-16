@@ -10,21 +10,33 @@ export default function CopyRawMdxButton() {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [prefetched, setPrefetched] = React.useState<string | null>(null);
     const [isPrefetching, setIsPrefetching] = React.useState(false);
+    const sources = React.useMemo(
+        () => ["/raw/js_api.mdx.txt", "/api/raw-mdx?doc=js_api"],
+        []
+    );
 
     // Prefetch the MDX content early so copy can run synchronously on click (iOS Safari requirement)
     const prefetch = React.useCallback(async () => {
         if (prefetched != null || isPrefetching) return;
         try {
             setIsPrefetching(true);
-            const res = await fetch("/api/raw-mdx?doc=js_api");
-            if (!res.ok) {
-                const maybeJson = await res
-                    .json()
-                    .catch(() => ({ message: `HTTP ${res.status}` }));
-                throw new Error(maybeJson.message || `HTTP ${res.status}`);
+            let lastError: Error | null = null;
+
+            for (const source of sources) {
+                const res = await fetch(source);
+                if (!res.ok) {
+                    const maybeJson = await res
+                        .json()
+                        .catch(() => ({ message: `HTTP ${res.status}` }));
+                    lastError = new Error(maybeJson.message || `HTTP ${res.status}`);
+                    continue;
+                }
+                const text = await res.text();
+                setPrefetched(text);
+                return;
             }
-            const text = await res.text();
-            setPrefetched(text);
+
+            throw lastError ?? new Error("No content source responded");
         } catch (e) {
             // Don't surface prefetch errors loudly; user may still retry
             // We'll show a message if copy is attempted without available content
@@ -32,7 +44,7 @@ export default function CopyRawMdxButton() {
         } finally {
             setIsPrefetching(false);
         }
-    }, [prefetched, isPrefetching]);
+    }, [isPrefetching, prefetched, sources]);
 
     React.useEffect(() => {
         // Start prefetch when the button mounts
