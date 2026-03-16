@@ -225,17 +225,18 @@ article main li > ul.nx-list-disc {
     background: none !important;
 }
 
-/* Twoslash popup mobile refinements */
+/* Twoslash popup refinements */
 .twoslash-popup-container {
-    /* Ensure the popup never exceeds the viewport width */
-    max-width: min(92vw, 40rem) !important;
+    /* Limit popup width to prevent overflow */
+    width: auto !important;
+    max-width: min(480px, 92vw) !important;
     box-shadow: var(--twoslash-popup-shadow);
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
 }
 
 .twoslash-popup-code {
-    /* Wrap long signatures nicely on small screens */
+    /* Wrap long signatures nicely */
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: anywhere;
@@ -246,7 +247,7 @@ article main li > ul.nx-list-disc {
     .twoslash-popup-container {
         /* Leave a small gutter on both sides on phones */
         max-width: calc(100vw - 24px) !important;
-        width: calc(100vw - 24px);
+        width: calc(100vw - 24px) !important;
         z-index: 50;
     }
 

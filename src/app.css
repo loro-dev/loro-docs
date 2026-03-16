@@ -274,18 +274,20 @@ h4:hover > a.heading-anchor {
 
 /* Dark theme for Twoslash popup - overrides the light default */
 .content-prose .twoslash .twoslash-popup-container {
-  width: max-content;
-  min-width: min(24rem, calc(100vw - 3rem));
-  max-width: min(92vw, 40rem);
+  width: auto;
+  min-width: 200px;
+  max-width: min(480px, calc(100vw - 2rem));
   max-height: min(70vh, 32rem);
   overflow: auto;
   background: #1e293b !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  z-index: 30;
+  z-index: 50;
+  /* Ensure popup doesn't overflow viewport */
+  position: relative;
 }
 
 /* Dark theme for popup docs */
