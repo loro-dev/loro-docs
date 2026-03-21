@@ -103,7 +103,7 @@ Note: Under the hood, Loro combines a Fugue-based CRDT core with Eg-walker-inspi
 
 ## Basic Usage
 
-```typescript twoslash
+```typescript
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -133,7 +133,7 @@ Creates a new Loro document with a randomly generated peer ID.
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -157,7 +157,7 @@ Creates a new LoroDoc from a snapshot. This is useful for loading a document fro
 
 **Example:**
 
-```ts no_run twoslash
+```ts no_run
 import { LoroDoc } from "loro-crdt";
 
 // Assume we have a snapshot from a previous export
@@ -184,7 +184,7 @@ Gets the peer ID of the current writer as a bigint.
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -203,7 +203,7 @@ Gets the peer ID as a decimal string.
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -229,7 +229,7 @@ See [PeerID Management](/docs/concepts/peerid_management) for why uniqueness mat
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -263,7 +263,7 @@ Configures whether to automatically record timestamps for changes. Timestamps us
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -286,7 +286,7 @@ Sets the interval in milliseconds for merging continuous local changes into a si
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -320,7 +320,7 @@ type StyleConfig = Record<
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -347,7 +347,7 @@ Configures the default text style for the document when using LoroText. If undef
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -391,7 +391,7 @@ Gets or creates a text container with the given name. New to LoroText and marks?
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -418,7 +418,7 @@ Gets or creates a list container with the given name. Unsure whether to use List
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
@@ -444,7 +444,7 @@ Gets or creates a map container with the given name. See [Map](/docs/tutorial/ma
 
 **Example:**
 
-```ts twoslash
+```ts
 import { LoroDoc } from "loro-crdt";
 
 const doc = new LoroDoc();
