@@ -1,0 +1,92 @@
+---
+title: "CRDT Library Comparison: Loro vs Yjs vs Automerge"
+description: "A practical comparison of CRDT libraries including Loro, Yjs, and Automerge across ecosystem, language support, data models, local-first fit, and collaboration use cases."
+keywords: "crdt library comparison, best crdt library, yjs vs automerge vs loro, javascript crdt library"
+---
+
+# CRDT Library Comparison
+
+There is no single best CRDT library for every product. Real teams choose one for a specific product shape: a collaborative editor, a local-first document app, a structured knowledge tool, or a shared data layer with offline sync.
+
+## Quick answer
+
+Choose **Yjs** if ecosystem safety and editor integration depth matter most.
+
+Choose **Automerge** if you are strongly local-first in philosophy and your use case leans toward general replicated app state.
+
+Choose **Loro** if you want collaboration plus a stronger document history/time-travel story, especially for structured content.
+
+## What to compare when choosing a CRDT library
+
+Useful criteria:
+
+- document model shape
+- ecosystem maturity
+- local-first fit
+- history / versioning story
+- long-term product fit vs fastest adoption
+
+## Comparison overview
+
+### Yjs
+
+Strong JavaScript adoption, collaborative editor mindshare, mature ecosystem.
+
+### Automerge
+
+Strong local-first association and replicated app-state narrative.
+
+### Loro
+
+Richer structured document orientation, stronger emphasis on document history and time travel.
+
+## Comparison table
+
+| Dimension | Loro | Yjs | Automerge |
+| --- | --- | --- | --- |
+| Ecosystem maturity | Growing | Strongest today | Established but more niche in some workflows |
+| JavaScript mindshare | Moderate | Strong | Moderate |
+| Editor ecosystem gravity | Limited vs Yjs | Strongest | Lower than Yjs |
+| Structured document fit | Strong | Good | Good |
+| History / time-travel emphasis | Strong | Varies by surrounding architecture | Strong local-first narrative |
+
+**TODO:** Replace directional wording with tighter, citation-backed capability statements where official docs give enough evidence.
+
+## Best for JavaScript-first teams
+
+Yjs has the clearest advantage today if you want the most familiar collaboration ecosystem.
+
+## Best for local-first products
+
+All three libraries can participate in local-first architectures, but they support different product stories.
+
+## Best for document history and time travel
+
+This is where Loro stands out most clearly.
+
+## Best for editor integrations
+
+If your main question is which library gives the broadest editor-oriented ecosystem and least surprising integration path, Yjs is usually the strongest answer.
+
+## Where Loro is differentiated
+
+Loro becomes more compelling when:
+
+- the document is highly structured
+- tree-like or movable content matters
+- version history is user-facing
+- collaboration and restore/replay belong in the same product story
+
+## Common mistakes when choosing a CRDT library
+
+- picking on popularity alone
+- over-focusing on toy benchmarks
+- ignoring history until later
+- treating all collaborative apps as text editors
+
+## What to read next
+
+- [What Is a CRDT?](/kb/what-is-crdt)
+- [Loro vs Yjs](/kb/loro-vs-yjs)
+- [How to Build a Collaborative Editor](/kb/build-collaborative-editor)
+- [Get Started with Loro](/docs/tutorial/get_started)

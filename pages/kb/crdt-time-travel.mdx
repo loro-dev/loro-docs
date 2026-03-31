@@ -1,0 +1,64 @@
+---
+title: "CRDT Time Travel: Version History for Local-First and Collaborative Apps"
+description: "See how CRDT time travel enables version history, undoable exploration, and Git-like document inspection in collaborative and local-first applications."
+keywords: "crdt time travel, document version history crdt, local-first version control, collaborative editing history"
+---
+
+# CRDT Time Travel
+
+Most collaboration content focuses on one thing: how multiple replicas converge. But real products also need to answer what changed, whether users can restore an older version, and how a document evolved over time.
+
+In a CRDT system, time travel means you can work with more than just the latest state. You can inspect history, reconstruct earlier versions, and build product features around document evolution.
+
+## What does “time travel” mean in a CRDT system?
+
+Time travel usually means some combination of:
+
+- viewing earlier document states
+- restoring a previous version
+- replaying changes over time
+- inspecting how a document evolved
+- building history-aware product features on top of synchronized state
+
+## Why version history matters in collaborative apps
+
+Version history helps with:
+
+- recovery
+- trust
+- review and inspection
+- product differentiation
+
+## Why this is hard to bolt on later
+
+Once persistence model, sync flow, and product assumptions revolve around only the latest state, adding high-quality version history becomes much more painful.
+
+## CRDT time travel vs undo/redo
+
+Undo is often local and session-oriented.
+Time travel is about durable document history.
+
+## Product features enabled by time travel
+
+- version history views
+- restore flows
+- replay / change walkthroughs
+- snapshot-based workflows
+- trust-building UX
+
+## How Loro fits here
+
+Loro is not only positioned as a CRDT library for convergence. It also has a stronger story around document history and time travel.
+
+**TODO:** Align exact terminology and capability wording with Loro’s official time-travel docs so the page stays precise instead of vague.
+
+## When you should care about this feature
+
+Care early if your product needs restore, review, recoverability, or structured content history as part of the UX.
+
+## What to read next
+
+- [Time Travel Tutorial](/docs/tutorial/time_travel)
+- [Learn how sync works](/docs/tutorial/sync)
+- [Loro vs Yjs](/kb/loro-vs-yjs)
+- [How to Build a Collaborative Editor](/kb/build-collaborative-editor)
