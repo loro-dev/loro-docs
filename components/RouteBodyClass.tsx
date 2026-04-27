@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const PLAIN_ROUTE_PATTERNS = [/^\/blog(\/|$)/, /^\/changelog(\/|$)/, /^\/about(\/|$)/];
+const PLAIN_ROUTE_PATTERNS = [/^\/blog\/?$/, /^\/changelog\/?$/, /^\/about\/?$/];
 
 export default function RouteBodyClass() {
   const pathname = usePathname();

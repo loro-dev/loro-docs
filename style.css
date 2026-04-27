@@ -60,6 +60,15 @@ body[data-layout="plain"] [class~="nextra-body-typesetting-article"] h4 {
     text-align: start !important;
 }
 
+/* Constrain content width on plain-layout pages to match the original
+   Nextra 3 page-type column width (~720px prose, centered). The blog and
+   changelog index pages already wrap their content in their own .max-w
+   wrappers, so this only kicks in on /about. */
+body[data-layout="plain"] article {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;

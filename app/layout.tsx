@@ -152,6 +152,7 @@ export default async function RootLayout({
           docsRepositoryBase="https://github.com/loro-dev/loro-docs/tree/main"
           footer={footer}
           sidebar={{ defaultMenuCollapseLevel: 1, autoCollapse: true }}
+          copyPageButton={false}
           darkMode
           nextThemes={{ defaultTheme: "dark" }}
         >
