@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useIsomorphicLayoutEffect } from "usehooks-ts";
 
@@ -15,7 +17,7 @@ export default function Background(): JSX.Element {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const elements: JSX.Element[] = [];
+  const elements: React.JSX.Element[] = [];
   if (pageHeight > 0 && viewportHeight > 0) {
     const limit = Math.floor((pageHeight / viewportWidth) * 100); // number of vw
     // Place circles

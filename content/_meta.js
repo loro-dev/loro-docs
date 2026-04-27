@@ -4,25 +4,29 @@ export default {
     type: "page",
     display: "hidden",
     theme: {
-      layout: "raw",
-      footer: false
+      layout: "full",
+      footer: false,
+      sidebar: false,
+      toc: false,
+      pagination: false,
+      breadcrumb: false,
+      timestamp: false,
     },
-    collapsible: true
   },
   docs: {
     title: "Docs",
-    type: "page"
+    type: "page",
   },
   blog: {
     title: "Blog",
-    type: "page"
+    type: "page",
   },
   changelog: {
     title: "Changelog",
-    type: "page"
+    type: "page",
   },
   about: {
     title: "About",
-    type: "page"
-  }
-}
+    type: "page",
+  },
+};

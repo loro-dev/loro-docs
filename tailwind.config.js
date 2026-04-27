@@ -5,10 +5,27 @@ const plugin = require("tailwindcss/plugin");
 module.exports = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./content/**/*.{js,ts,jsx,tsx,md,mdx}",
     "./components/**/*.{js,ts,jsx,tsx}",
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./app/**/*.{ts,tsx,js,jsx,mdx}",
+    "./src/**/*.{ts,tsx}",
+    "./mdx-components.{js,jsx,ts,tsx}",
+  ],
+  safelist: [
+    "grid-cols-1",
+    "grid-cols-2",
+    "grid-cols-3",
+    "grid-cols-4",
+    "sm:grid-cols-2",
+    "sm:grid-cols-3",
+    "md:grid-cols-2",
+    "md:grid-cols-3",
+    "lg:grid-cols-2",
+    "lg:grid-cols-3",
+    "lg:grid-cols-4",
+    "xl:grid-cols-3",
+    "xl:grid-cols-4",
+    "2xl:grid-cols-4",
   ],
   theme: {
     extend: {

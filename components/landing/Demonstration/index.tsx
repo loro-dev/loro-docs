@@ -1,3 +1,5 @@
+"use client";
+
 import Timeline from "@/components/TimelineView";
 import TwinEditors, { TwinEditorRefs } from "@/components/TwinEditors";
 import {
