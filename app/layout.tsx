@@ -7,6 +7,7 @@ import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import LandingFooter from "../components/landing/Footer";
 import LanguageDropdown from "../components/LanguageDropdown";
+import RouteBodyClass from "../components/RouteBodyClass";
 
 import "@fontsource/poppins/100.css";
 import "@fontsource/poppins/200.css";
@@ -115,6 +116,7 @@ export default async function RootLayout({
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <Head />
       <body>
+        <RouteBodyClass />
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-M8FTP4QZ81"

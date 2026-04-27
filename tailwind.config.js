@@ -4,6 +4,13 @@ const plugin = require("tailwindcss/plugin");
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
+  // Nextra 4 ships its own Tailwind v4 preflight (in a layer) via
+  // nextra-theme-docs/style-prefixed.css. Tailwind v3's preflight is emitted
+  // unlayered, which beats Nextra's layered heading/code styles in the cascade
+  // and flattens MDX content. Disable v3 preflight so Nextra's wins.
+  corePlugins: {
+    preflight: false,
+  },
   content: [
     "./content/**/*.{js,ts,jsx,tsx,md,mdx}",
     "./components/**/*.{js,ts,jsx,tsx}",

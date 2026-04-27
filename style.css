@@ -2,9 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tailwind v3 preflight is disabled in tailwind.config.js so it doesn't
+   override Nextra 4's layered heading/code styles. Re-add the bits the
+   landing page actually depends on, scoped under .landing-page-root so
+   they can't bleed into MDX-rendered docs. */
+.landing-page-root,
+.landing-page-root *,
+.landing-page-root *::before,
+.landing-page-root *::after {
+    box-sizing: border-box;
+}
+
+.landing-page-root button,
+.landing-page-root [type="button"],
+.landing-page-root [type="submit"] {
+    background-color: transparent;
+    background-image: none;
+    cursor: pointer;
+    -webkit-appearance: button;
+}
+
 [type="search"]::-webkit-search-decoration,
 [type="search"]::-webkit-search-cancel-button {
     appearance: none;
+}
+
+/* On `/blog`, `/changelog`, `/about` the original (Nextra 3) site rendered
+   without the docs sidebar/TOC. Nextra 4 generates them anyway because the
+   theme.sidebar=false meta override doesn't propagate through the catch-all
+   route's index.mdx. RouteBodyClass marks these routes via [data-layout]; the
+   rules below match the old behaviour. */
+body[data-layout="plain"] .nextra-sidebar,
+body[data-layout="plain"] .nextra-toc {
+    display: none !important;
+}
+
+/* Hide the page-content placeholder div that reserves sidebar width on
+   typed-as-page routes. */
+body[data-layout="plain"] .nextra-sidebar + div[class*="x:max-xl:hidden"][class*="x:w-64"] {
+    display: none !important;
+}
+
+/* Hide Nextra 4's "Copy page" button on plain pages — wasn't in the original
+   Nextra 3 layout. The button is rendered inside a floated container; match
+   it via attribute selector since `.x\:float-end` doesn't survive PostCSS. */
+body[data-layout="plain"] [class~="x:float-end"] {
+    display: none !important;
+}
+
+/* Nextra 4's article typesetting forces center-aligned headings, which the
+   original Nextra 3 about/blog/changelog pages did not have. Override on
+   plain-layout pages so headings keep their natural left alignment. */
+body[data-layout="plain"] [class~="nextra-body-typesetting-article"] h1,
+body[data-layout="plain"] [class~="nextra-body-typesetting-article"] h2,
+body[data-layout="plain"] [class~="nextra-body-typesetting-article"] h3,
+body[data-layout="plain"] [class~="nextra-body-typesetting-article"] h4 {
+    text-align: start !important;
 }
 
 @layer base {
