@@ -90,7 +90,7 @@ async function generate() {
     title: "Loro Blog",
     description: "Updates and stories from the Loro team.",
     routePrefix: "/blog/",
-    directory: path.join(__dirname, "content", "blog"),
+    directory: path.join(__dirname, "pages", "blog"),
     output: "blog.xml",
   });
 
@@ -98,7 +98,7 @@ async function generate() {
     title: "Loro Changelog",
     description: "Changelog of Loro CRDT.",
     routePrefix: "/changelog/",
-    directory: path.join(__dirname, "content", "changelog"),
+    directory: path.join(__dirname, "pages", "changelog"),
     output: "changelog.xml",
   });
 }

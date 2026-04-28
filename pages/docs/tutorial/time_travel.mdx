@@ -127,6 +127,9 @@ Below is a more complete example demonstrating Time Travel functionality with a 
 
 <iframe
   src="https://loro-react-flow-example.vercel.app/"
+  onClick={() => {
+    window.clarity?.("event", "play-time-travel");
+  }}
   style={{
     width: "100%",
     height: 500,

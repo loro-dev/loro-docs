@@ -1,5 +1,3 @@
-"use client";
-
 import React, { SVGProps } from "react";
 
 export default function Footer(): JSX.Element {

@@ -1,16 +1,4 @@
 export default {
-  index: {
-    title: "Blog",
-    display: "hidden",
-    theme: {
-      sidebar: false,
-      toc: false,
-      copyPage: false,
-      pagination: false,
-      breadcrumb: false,
-      timestamp: false,
-    },
-  },
   "loro-protocol": {
     theme: {
       toc: true,

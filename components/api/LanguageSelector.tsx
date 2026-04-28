@@ -1,7 +1,5 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 const languages = [
   { id: 'js', name: 'JavaScript / TypeScript', available: true },
@@ -11,21 +9,21 @@ const languages = [
 ];
 
 export default function LanguageSelector() {
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedLang, setSelectedLang] = useState('js');
 
   useEffect(() => {
     // Get language from URL query or localStorage
-    const urlLang = searchParams?.get('lang') ?? null;
+    const urlLang = router.query.lang as string;
     const storedLang = localStorage.getItem('loro-api-lang');
-
+    
     if (urlLang && languages.find(l => l.id === urlLang)) {
       setSelectedLang(urlLang);
       localStorage.setItem('loro-api-lang', urlLang);
     } else if (storedLang && languages.find(l => l.id === storedLang)) {
       setSelectedLang(storedLang);
     }
-  }, [searchParams]);
+  }, [router.query.lang]);
 
   const handleLanguageChange = (langId: string) => {
     const lang = languages.find(l => l.id === langId);

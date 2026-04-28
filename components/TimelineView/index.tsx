@@ -1,5 +1,3 @@
-"use client";
-
 import { useIsHistoryEmpty } from "@components/landing/store/timeline-history";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIsomorphicLayoutEffect } from "usehooks-ts";

@@ -4,14 +4,14 @@
         <title>Loro Blog</title>
         <link>https://loro.dev/blog/</link>
         <description>Updates and stories from the Loro team.</description>
-        <lastBuildDate>Mon, 27 Apr 2026 21:28:03 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 18 Dec 2025 02:46:35 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
             <title><![CDATA[Loro Protocol]]></title>
             <link>https://loro.dev/blog/loro-protocol</link>
             <guid>https://loro.dev/blog/loro-protocol</guid>
-            <pubDate>Thu, 30 Oct 2025 00:00:00 GMT</pubDate>
+            <pubDate>Wed, 29 Oct 2025 16:00:00 GMT</pubDate>
             <description><![CDATA[The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection and ships the open-source loro-websocket, loro-adaptors, plus Rust client and server implementations that speak the same protocol.]]></description>
             <content:encoded><![CDATA[<h2>Loro Protocol</h2>
 <p><img src="/images/blog-loro-protocol.png" alt=""></p>
@@ -97,7 +97,7 @@ ephAdaptor.getStore().set(&quot;cursor&quot;, { x: 100, y: 100 });
             <title><![CDATA[Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs]]></title>
             <link>https://loro.dev/blog/loro-mirror</link>
             <guid>https://loro.dev/blog/loro-mirror</guid>
-            <pubDate>Mon, 22 Sep 2025 00:00:00 GMT</pubDate>
+            <pubDate>Sun, 21 Sep 2025 16:00:00 GMT</pubDate>
             <description><![CDATA[Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history. ]]></description>
             <content:encoded><![CDATA[<h1>Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs</h1>
 <p><img src="/images/loro-mirror.png" alt=""></p>
@@ -310,7 +310,7 @@ const undo = useMemo(() =&gt; new UndoManager(doc), [doc]);
             <title><![CDATA[Loro 1.0]]></title>
             <link>https://loro.dev/blog/v1.0</link>
             <guid>https://loro.dev/blog/v1.0</guid>
-            <pubDate>Wed, 23 Oct 2024 00:00:00 GMT</pubDate>
+            <pubDate>Tue, 22 Oct 2024 16:00:00 GMT</pubDate>
             <description><![CDATA[Announcing Loro 1.0: Introducing a stable encoding schema, 10-100x faster document import, advanced version control, and more for efficient real-time collaboration and local-first software development.]]></description>
             <content:encoded><![CDATA[<h1>Loro 1.0</h1>
 <p>Loro is a <a href="https://crdt.tech/">Conflict-free Replicated Data Type (CRDT)</a>
@@ -1022,7 +1022,7 @@ If you&#39;re interested in using Loro, welcome to join our
             <title><![CDATA[Movable tree CRDTs and Loro's implementation]]></title>
             <link>https://loro.dev/blog/movable-tree</link>
             <guid>https://loro.dev/blog/movable-tree</guid>
-            <pubDate>Thu, 18 Jul 2024 00:00:00 GMT</pubDate>
+            <pubDate>Wed, 17 Jul 2024 16:00:00 GMT</pubDate>
             <description><![CDATA[This article introduces the implementation difficulties and challenges of Movable Tree CRDTs when collaboration, and how Loro implements it and sorts child nodes. The algorithm has high performance and can be used in production.]]></description>
             <content:encoded><![CDATA[<h1>Movable tree CRDTs and Loro&#39;s implementation</h1>
 <p><img src="./movable-tree/movable-tree-cover.png" alt=""></p>
@@ -1306,7 +1306,7 @@ let nodeData: LoroMap = node.data;
             <title><![CDATA[Introduction to Loro's Rich Text CRDT]]></title>
             <link>https://loro.dev/blog/loro-richtext</link>
             <guid>https://loro.dev/blog/loro-richtext</guid>
-            <pubDate>Mon, 22 Jan 2024 00:00:00 GMT</pubDate>
+            <pubDate>Sun, 21 Jan 2024 16:00:00 GMT</pubDate>
             <description><![CDATA[This article presents the rich text CRDT algorithm implemented in Loro, complying with Peritext's criteria for seamless rich text collaboration. Furthermore, it can be built on top of any List CRDT algorithms and turn them into rich text CRDTs.]]></description>
             <content:encoded><![CDATA[<h1>Introduction to Loro&#39;s Rich Text CRDT</h1>
 <p><img src="./loro-richtext/cover_long.png" alt=""></p>
@@ -2008,7 +2008,7 @@ any proposals for collaboration, please reach out to <a href="mailto:zx@loro.dev
             <title><![CDATA[Loro: Reimagine State Management with CRDTs]]></title>
             <link>https://loro.dev/blog/loro-now-open-source</link>
             <guid>https://loro.dev/blog/loro-now-open-source</guid>
-            <pubDate>Mon, 13 Nov 2023 00:00:00 GMT</pubDate>
+            <pubDate>Sun, 12 Nov 2023 16:00:00 GMT</pubDate>
             <description><![CDATA[Loro, our high-performance CRDTs library, is now open source.  In this article, we share our vision for the local-first software development paradigm, why we're excited about it, and the current status of Loro.]]></description>
             <content:encoded><![CDATA[<h1>Loro: Reimagine State Management with CRDTs</h1>
 <div>
@@ -2298,7 +2298,7 @@ collaboration and ready to help.</p>
             <title><![CDATA[crdt-richtext - Rust implementation of Peritext and Fugue]]></title>
             <link>https://loro.dev/blog/crdt-richtext</link>
             <guid>https://loro.dev/blog/crdt-richtext</guid>
-            <pubDate>Thu, 20 Apr 2023 00:00:00 GMT</pubDate>
+            <pubDate>Wed, 19 Apr 2023 16:00:00 GMT</pubDate>
             <description><![CDATA[Presenting a new Rust crate that combines Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into Loro, a general-purpose CRDT library currently under development.]]></description>
             <content:encoded><![CDATA[<h1><a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a>: Rust implementation of Peritext and Fugue</h1>
 <p>Presenting a new Rust crate that combines <a href="https://inkandswitch.com/peritext">Peritext</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>&#39;s power with impressive performance, tailored specifically for rich text. This crate&#39;s functionality is set to be incorporated into <strong><a href="https://www.loro.dev/">Loro</a></strong>, a general-purpose CRDT library currently under development.</p>
