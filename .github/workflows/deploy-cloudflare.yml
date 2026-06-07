@@ -17,7 +17,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      NODE_ENV: production
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
@@ -37,7 +36,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prod=false
 
       - name: Build and deploy to Cloudflare Workers
         run: pnpm run deploy

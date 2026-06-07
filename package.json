@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node gen-rss.js && next build",
-    "postbuild": "next-sitemap",
+    "postbuild": "next-sitemap && opennextjs-cloudflare build --skipNextBuild",
     "start": "next start",
     "test": "cd deno_scripts && deno run -A ./run_code_blocks.ts ..",
     "storybook": "storybook dev -p 6006",
@@ -12,7 +12,7 @@
     "extract-llms": "deno run -A ./deno_scripts/extract-llms.ts",
     "changelog": "node gen-rss.js",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "repository": {
