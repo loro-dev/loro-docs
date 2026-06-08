@@ -1,4 +1,10 @@
 export default {
+  "mergeable-containers": {
+    theme: {
+      toc: true,
+      pagination: false,
+    },
+  },
   "loro-protocol": {
     theme: {
       toc: true,
