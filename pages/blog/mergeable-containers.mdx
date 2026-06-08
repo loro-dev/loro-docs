@@ -29,14 +29,10 @@ From the user's point of view, the API change is small. Instead of creating an o
 
 ```ts no_run
 // Peer A
-doc.getMap("days")
-    .setContainer("2026-06-08", new LoroList())
-    .insert(0, "A")
+doc.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "A");
 
 // Peer B, offline
-doc.getMap("days")
-    .setContainer("2026-06-08", new LoroList())
-    .insert(0, "B")
+doc.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "B");
 
 // after sync: only one List is visible at "2026-06-08"
 ```
@@ -45,14 +41,10 @@ you can use a mergeable child:
 
 ```ts no_run
 // Peer A
-doc.getMap("days")
-    .ensureMergeableList("2026-06-08")
-    .insert(0, "A")
+doc.getMap("days").ensureMergeableList("2026-06-08").insert(0, "A");
 
 // Peer B, offline
-doc.getMap("days")
-    .ensureMergeableList("2026-06-08")
-    .insert(0, "B")
+doc.getMap("days").ensureMergeableList("2026-06-08").insert(0, "B");
 
 // after sync: both peers edit the same List
 ```
@@ -60,15 +52,15 @@ doc.getMap("days")
 As a rule of thumb, use `ensureMergeable*` when a child container should be identified by its logical position:
 
 ```ts no_run
-map.ensureMergeableText(key)
-map.ensureMergeableMap(key)
-map.ensureMergeableList(key)
-map.ensureMergeableMovableList(key)
-map.ensureMergeableTree(key)
-map.ensureMergeableCounter(key)
+map.ensureMergeableText(key);
+map.ensureMergeableMap(key);
+map.ensureMergeableList(key);
+map.ensureMergeableMovableList(key);
+map.ensureMergeableTree(key);
+map.ensureMergeableCounter(key);
 ```
 
-Use them for fields that should behave like one shared child document for everyone: one shared Text, one shared List, one shared Map, and so on. It should not matter which peer creates that child first. The rest of this post walks through why the problem exists and how the new encoding works.
+Use them for fields that should behave like one shared child container for everyone: one shared Text, one shared List, one shared Map, and so on. It should not matter which peer creates that child first. The rest of this post walks through why the problem exists and how the new encoding works.
 
 ## Why This Happens
 
@@ -87,8 +79,8 @@ The issue is not that List insertion cannot merge. Once both peers are editing t
 In Loro and Yjs, top-level Root Containers are usually accessed by name:
 
 ```ts no_run
-doc.getMap("state")
-doc.getText("content")
+doc.getMap("state");
+doc.getText("content");
 ```
 
 Here, `"state"` or `"content"` is already a stable identity. It does not depend on which peer created it or which operation created it. As long as multiple peers access the same root name, they naturally refer to the same logical Container.
@@ -184,14 +176,14 @@ At this key of this parent Map, activate a mergeable child of this type.
 When a new Loro client reads the slot, it uses the current `parent id + key + kind` to derive the deterministic mergeable CID, then presents it through the public API as a normal Container:
 
 ```ts no_run
-const body = map.get("body")
+const body = map.get("body");
 // body is a LoroText, not the internal binary marker
 ```
 
 When the key is deleted, only the marker is removed. The mergeable child state is not immediately destroyed, because the parent slot controls visibility rather than the child's stored history. Calling this again:
 
 ```ts no_run
-map.ensureMergeableText("body")
+map.ensureMergeableText("body");
 ```
 
 resurfaces the same deterministic Text Container.
@@ -258,17 +250,17 @@ Mergeable Containers are especially useful when eager initialization is not prac
 For example, suppose an application stores one child List per date:
 
 ```ts no_run
-const days = doc.getMap("days")
-const entries = days.ensureMergeableList("2026-06-08")
-entries.insert(0, "meeting notes")
+const days = doc.getMap("days");
+const entries = days.ensureMergeableList("2026-06-08");
+entries.insert(0, "meeting notes");
 ```
 
 Or suppose a schema migration lazily adds a new child Map to existing records:
 
 ```ts no_run
-const record = doc.getMap("records").ensureMergeableMap(recordId)
-const metadata = record.ensureMergeableMap("metadata_v2")
-metadata.set("migrated", true)
+const record = doc.getMap("records").ensureMergeableMap(recordId);
+const metadata = record.ensureMergeableMap("metadata_v2");
+metadata.set("migrated", true);
 ```
 
 In both cases, the child container identity no longer depends on which peer created it first. It depends on the logical position in the document structure.
@@ -351,7 +343,10 @@ function sync(a, b) {
   a.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "A");
   b.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "B");
   sync(a, b);
-  console.log("setContainer ->", JSON.stringify(a.getMap("days").get("2026-06-08").toArray()));
+  console.log(
+    "setContainer ->",
+    JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+  );
   // -> ["A"] or ["B"], never both: only one peer's List survives.
   // (which one wins depends on the randomly-assigned peer IDs)
 }
@@ -363,7 +358,10 @@ function sync(a, b) {
   a.getMap("days").ensureMergeableList("2026-06-08").insert(0, "A");
   b.getMap("days").ensureMergeableList("2026-06-08").insert(0, "B");
   sync(a, b);
-  console.log("ensureMergeable ->", JSON.stringify(a.getMap("days").get("2026-06-08").toArray()));
+  console.log(
+    "ensureMergeable ->",
+    JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+  );
   // -> both entries, e.g. ["A","B"] (order may vary): both peers share one List.
 }
 ```
@@ -378,14 +376,25 @@ const a = new Y.Doc();
 const b = new Y.Doc();
 
 // Peer A and Peer B each create a Y.Array at the same key, offline.
-{ const l = new Y.Array(); a.getMap("days").set("2026-06-08", l); l.insert(0, ["A"]); }
-{ const l = new Y.Array(); b.getMap("days").set("2026-06-08", l); l.insert(0, ["B"]); }
+{
+  const l = new Y.Array();
+  a.getMap("days").set("2026-06-08", l);
+  l.insert(0, ["A"]);
+}
+{
+  const l = new Y.Array();
+  b.getMap("days").set("2026-06-08", l);
+  l.insert(0, ["B"]);
+}
 
 // Sync both ways.
 Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
 Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
 
-console.log("yjs ->", JSON.stringify(a.getMap("days").get("2026-06-08").toArray()));
+console.log(
+  "yjs ->",
+  JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+);
 // -> ["A"] or ["B"], never both: one peer's child Y.Array wins, the other is dropped.
 ```
 
@@ -400,21 +409,33 @@ let a = A.clone(base);
 let b = A.clone(base);
 
 // Peer A and Peer B each create a list at the same key, offline.
-a = A.change(a, d => { d.days["2026-06-08"] = ["A"]; });
-b = A.change(b, d => { d.days["2026-06-08"] = ["B"]; });
+a = A.change(a, (d) => {
+  d.days["2026-06-08"] = ["A"];
+});
+b = A.change(b, (d) => {
+  d.days["2026-06-08"] = ["B"];
+});
 
 let merged = A.merge(A.clone(a), b);
 console.log("automerge visible ->", JSON.stringify(merged.days["2026-06-08"]));
 // -> ["A"] or ["B"], never both: one list wins.
-console.log("automerge conflicts ->", JSON.stringify(A.getConflicts(merged.days, "2026-06-08")));
+console.log(
+  "automerge conflicts ->",
+  JSON.stringify(A.getConflicts(merged.days, "2026-06-08")),
+);
 // -> both lists keyed by op id: the losing list is retained but hidden,
 //    reachable only via getConflicts().
 
 // Control: when the child is created ONCE up front, concurrent edits merge.
 let shared = A.from({ days: { "2026-06-08": [] } });
-let c = A.clone(shared), d = A.clone(shared);
-c = A.change(c, x => { x.days["2026-06-08"].push("A"); });
-d = A.change(d, x => { x.days["2026-06-08"].push("B"); });
+let c = A.clone(shared),
+  d = A.clone(shared);
+c = A.change(c, (x) => {
+  x.days["2026-06-08"].push("A");
+});
+d = A.change(d, (x) => {
+  x.days["2026-06-08"].push("B");
+});
 let ok = A.merge(A.clone(c), d);
 console.log("automerge pre-created ->", JSON.stringify(ok.days["2026-06-08"]));
 // -> ["A","B"] (order may vary): both survive — this is the eager-init workaround.
