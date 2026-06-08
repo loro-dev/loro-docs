@@ -19,7 +19,7 @@
 <p>There is no error, and the data is not actually gone from history. But <code>note.get(&quot;body&quot;)</code> can only return one Text container. The other container was created concurrently and still exists in history, but it is no longer visible in the current document state. From the application&#39;s point of view, this looks like data loss.</p>
 <p>This is a classic problem in JSON-like CRDTs. Users have run into versions of it in the Loro, Yjs, and Automerge communities. The <a href="#appendix-runnable-reproductions">Appendix</a> has short scripts that reproduce it in all three.</p>
 <p>Loro now solves this with Mergeable Containers. They make a child container&#39;s identity come from its logical position in the <code>Map</code>, not from the ID of the operation that happened to create it.</p>
-<p>Special thanks to <a href="https://github.com/typedrat">typedrat</a> for the substantial implementation work and design discussion behind this feature.</p>
+<p>Special thanks to <a href="https://github.com/typedrat">Alexis Williams</a> from <a href="https://synapdeck.com/">Synapdeck</a> for the substantial implementation work and design discussion behind this feature.</p>
 <p>From the user&#39;s point of view, the API change is small. Instead of creating an on-demand child container like this:</p>
 <pre><code class="language-ts">// Peer A
 doc.getMap(&quot;days&quot;)
