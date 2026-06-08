@@ -85,7 +85,7 @@ doc.getText("content");
 
 Here, `"state"` or `"content"` is already a stable identity. It does not depend on which peer created it or which operation created it. As long as multiple peers access the same root name, they naturally refer to the same logical Container.
 
-Automerge has a different object identity model, so this root-container comparison is specifically about Loro and Yjs. The broader issue is still similar: when composite values are created concurrently at the same key, the system needs a rule for which object identity becomes visible.
+> Automerge has a different object identity model, so this root-container comparison is specifically about Loro and Yjs. The broader issue is still similar: when composite values are created concurrently at the same key, the system needs a rule for which object identity becomes visible.
 
 Regular child Containers are different. Their identity is tied to the operation that created them, so two concurrent "first creations" become two different objects.
 
