@@ -214,7 +214,7 @@ metadata.set(&quot;migrated&quot;, true)
 <li>Loro background: <a href="https://github.com/loro-dev/loro/issues/759">issue #759</a></li>
 <li>Loro implementation: <a href="https://github.com/loro-dev/loro/pull/991">PR #991</a>, <a href="https://github.com/loro-dev/loro/pull/1002">PR #1002</a></li>
 <li>Related Yjs discussions: <a href="https://discuss.yjs.dev/t/how-would-you-model-a-complex-diagram-page/2114">complex diagram page</a>, <a href="https://discuss.yjs.dev/t/why-am-i-losing-data/2734">losing data</a>, <a href="https://discuss.yjs.dev/t/create-y-map-is-empty/1701">nested <code>Y.Map</code></a></li>
-<li>Related Automerge discussions: <a href="https://github.com/automerge/automerge-classic/issues/4">concurrently created objects under the same key</a>, <a href="https://github.com/automerge/automerge-classic/issues/19">assignment merges</a>, <a href="https://github.com/automerge/automerge-classic/issues/271">Automerge.Table merge</a></li>
+<li>Related Automerge discussions: <a href="https://github.com/automerge/automerge/issues/528">#528: failing merge for text values</a> is the closest match; <a href="https://github.com/automerge/automerge/issues/526">#526: conflict resolution for replaced arrays and objects</a> is useful background on object identity and conflict handling; the historical <a href="https://github.com/automerge/automerge-classic/issues/4">automerge-classic #4</a> also covers concurrently created objects under the same key.</li>
 </ul>
 <h2>Appendix: Runnable Reproductions</h2>
 <p>The snippets below are self-contained and run directly on Node (tested on Node 24; any Node 18+ with ESM works). Install the three libraries once:</p>
