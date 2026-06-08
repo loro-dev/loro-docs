@@ -4,7 +4,7 @@
         <title>Loro Blog</title>
         <link>https://loro.dev/blog/</link>
         <description>Updates and stories from the Loro team.</description>
-        <lastBuildDate>Mon, 08 Jun 2026 16:47:26 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 08 Jun 2026 17:07:24 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
@@ -85,8 +85,6 @@ map.ensure_mergeable_map(&quot;profile&quot;)?;
 <li>The parent Map slot. This decides whether that object is currently visible at a key, and which mergeable child type is active there.</li>
 </ol>
 <p>Keeping these two layers separate makes the behavior easier to reason about.</p>
-<p>Conceptually, the difference is this:</p>
-<p><img src="/images/blog-mergeable-containers-flow.png" alt="Regular child containers derive identity from creation operations, while mergeable containers derive identity from logical path"></p>
 <h2>1. CID: A Synthetic Root Container ID</h2>
 <p>A Mergeable Container uses a synthetic <code>ContainerID::Root</code> under an internal namespace. User-created root names cannot use this prefix, so ordinary roots cannot collide with mergeable CIDs:</p>
 <pre><code class="language-text">🤝:&lt;payload&gt;

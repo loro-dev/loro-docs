@@ -123,10 +123,6 @@ Mergeable Containers have two separate layers of representation:
 
 Keeping these two layers separate makes the behavior easier to reason about.
 
-Conceptually, the difference is this:
-
-![Regular child containers derive identity from creation operations, while mergeable containers derive identity from logical path](/images/blog-mergeable-containers-flow.png)
-
 ## 1. CID: A Synthetic Root Container ID
 
 A Mergeable Container uses a synthetic `ContainerID::Root` under an internal namespace. User-created root names cannot use this prefix, so ordinary roots cannot collide with mergeable CIDs:
