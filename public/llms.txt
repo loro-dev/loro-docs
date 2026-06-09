@@ -18,6 +18,7 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 
 - **Automatic Conflict Resolution**: All concurrent edits converge to the same state using CRDTs
 - **Data Types**: Map, List, MovableList, Text (rich/plain), Tree, Counter
+- **Mergeable Containers**: `ensureMergeable*` APIs let peers lazily create the same child container under a Map key and still edit one shared child
 - **Version Control**: Git-like checkout, fork, and merge operations
 - **Time Travel**: Navigate to any point in document history
 - **Rich Text**: Full support for overlapping styles and editor bindings (ProseMirror, CodeMirror, Lexical)
@@ -58,6 +59,7 @@ Loro provides JSON-compatible data structures with built-in version control, tim
 - [CRDT Introduction](https://loro.dev/docs/concepts/crdt): Understanding Conflict-free Replicated Data Types
 - [When Not to Use CRDTs](https://loro.dev/docs/concepts/when_not_crdt): Understanding CRDT limitations
 - [Choosing CRDT Types](https://loro.dev/docs/concepts/choose_crdt_type): Selecting the right container for your use case
+- [Mergeable Containers](https://loro.dev/blog/mergeable-containers): Avoid hidden child containers when peers concurrently initialize the same Map child
 
 ### Architecture
 - [Containers](https://loro.dev/docs/concepts/container): Building blocks for organizing data

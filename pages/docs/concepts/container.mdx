@@ -147,20 +147,40 @@ document content, overwriting it can lead to the unintended hiding/loss of
 critical information. For this reason, it is essential to implement careful and
 systematic container initialization practices to prevent such issues.
 
+### Mergeable Containers
+
+The overwrite happens because `setContainer` creates a regular child container.
+Its Container ID includes the operation that created it, so two peers that
+create `map["text"]` concurrently create two different Text containers.
+
+When a child container should be identified by its logical position in a Map,
+use a mergeable child container instead:
+
+```ts no_run
+const text = doc.getMap("map").ensureMergeableText("text");
+text.insert(0, "A");
+```
+
+Peers that call `ensureMergeableText("text")` on the same parent Map address the
+same logical Text container. The same pattern is available for Map, List,
+MovableList, Tree, and Counter children through the `ensureMergeable*` methods.
+
 ### Best Practices
 
-1. When containers might be initialized concurrently, prefer initializing them
-   at the root level rather than as nested containers
+1. For dynamic Map keys where peers may lazily create the same child, use
+   `ensureMergeableText`, `ensureMergeableMap`, `ensureMergeableList`, and the
+   other `ensureMergeable*` methods.
 
-2. When using map containers:
+2. When the structure is fixed and known ahead of time:
    - If possible, initialize all child containers during the map container's
      initialization
-   - Avoid concurrent creation of child containers with the same key in the map
-     container to prevent overwrites
 
-The overwrite behavior occurs because parallel creation of child containers
-results in different container IDs, preventing automatic merging of their
-contents.
+3. Use regular `setContainer` / `insertContainer` when each creation should
+   produce a distinct child object, or when you are modeling replacement rather
+   than shared initialization.
+
+4. A unique root container name can still be a good fit when the child naturally
+   belongs at the root, for example `doc.getMap("user." + userId)`.
 
 
 ## Related Concepts

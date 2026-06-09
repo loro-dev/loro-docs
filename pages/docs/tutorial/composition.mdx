@@ -51,3 +51,12 @@ expect(doc.toJSON()).toStrictEqual({ map: { list: [0, 1, "Hello, World!"] } });
   expect(callTimes).toBe(2);
 }
 ```
+
+`setContainer` creates a regular child container. This is fine for fixed
+schemas, or when each creation should produce a distinct child object. If
+multiple peers may lazily create the same child under the same Map key, use a
+mergeable child container instead:
+
+```ts no_run
+const sharedList = map.ensureMergeableList("list");
+```

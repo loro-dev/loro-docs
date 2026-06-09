@@ -7,6 +7,16 @@ description: "how to use loro map crdt and show all APIs of loro map crdt."
 
 Loro's Map uses LWW (Last-Write-Wins) semantics. When concurrent edits conflict, it compares Lamport logic timestamps to determine the winner.
 
+Map slot conflicts are still resolved by LWW. If the value at a key is a child
+container, regular child containers have operation-derived identities, so two
+peers that create a child at the same key can create two different children. If
+the child should be shared by logical key, use a mergeable child container:
+
+```ts no_run
+const body = doc.getMap("notes").ensureMergeableText(noteId);
+body.insert(0, "Hello");
+```
+
 Here is how to use it:
 
 ```ts twoslash
