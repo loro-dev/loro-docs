@@ -44,6 +44,16 @@ export type ContainerID =
      containers
    - Contains the Operation ID of its creation within its Container ID
 
+3. **Mergeable Containers**
+   - Created through `LoroMap.ensureMergeableText`,
+     `ensureMergeableMap`, `ensureMergeableList`, and the other
+     `ensureMergeable*` methods
+   - Use a special form of Root Container ID. The stable name inside that ID is
+     derived from the logical position `(parent Map, key, container type)`, not
+     from the operation that first created the child
+   - Useful when multiple peers may lazily initialize the same child container
+     under the same Map key
+
 ## Container States and IDs
 
 The ContainerID is not a random UUID but is deterministically generated based on the container's context. To understand how ContainerIDs work, it's important to first understand container states.
@@ -53,6 +63,7 @@ The ContainerID is not a random UUID but is deterministically generated based on
 Key points about ContainerID generation:
 - **Root containers**: Derive their ID from their name (e.g., "text" in `doc.getText("text")`)
 - **Normal containers**: Derive their ID from the operation (OpID) that created them
+- **Mergeable containers**: Use a special Root Container ID whose stable name is derived from the parent Map, key, and container type
 - **Detached containers**: Have a default placeholder ID until they're inserted into a document
 
 ## Container Overwrites
@@ -92,17 +103,31 @@ document content, overwriting it can lead to the unintended hiding/loss of
 critical information. For this reason, it is essential to implement careful and
 systematic container initialization practices to prevent such issues.
 
+### Mergeable Containers
+
+The overwrite behavior occurs because parallel creation of regular child
+containers results in different container IDs, preventing automatic merging of
+their contents. If peers should address the same child by logical Map key, use a
+mergeable child container:
+
+```ts no_run
+const text = doc.getMap("map").ensureMergeableText("text");
+```
+
+This uses a special Root Container ID for the child. Its stable name is derived
+from the parent Map, key, and type, rather than from the operation that first
+created it.
+
 ### Best Practices
 
-1. When containers might be initialized concurrently, prefer initializing them
-   at the root level rather than as nested containers
+1. Use `ensureMergeable*` when a Map child container should be shared by logical
+   key even if peers initialize it concurrently.
 
-2. When using map containers:
+2. When the structure is fixed and known ahead of time:
    - If possible, initialize all child containers during the map container's
      initialization
-   - Avoid concurrent creation of child containers with the same key in the map
-     container to prevent overwrites
 
-The overwrite behavior occurs because parallel creation of child containers
-results in different container IDs, preventing automatic merging of their
-contents.
+3. Use root containers when the child naturally has a stable top-level name.
+
+4. Use regular child containers when each creation should have a distinct
+   operation-derived identity.

@@ -50,12 +50,12 @@ This behavior contrasts with non-root containers. For example, when you execute 
 
 ---
 
-##### When initializing child containers of LoroMap in parallel, overwrites can occur instead of automatic merging.
+##### When initializing child containers of LoroMap in parallel, use mergeable containers when you want one shared child.
 
 <details>
 <summary>Why this happens</summary>
 
-This happens because parallel creation of child containers results in different container IDs, preventing automatic merging of their contents. When a container holds substantial data or serves as the primary storage for document content, overwriting it can lead to unintended hiding or loss of critical information.
+This happens because parallel creation of regular child containers results in different container IDs, preventing automatic merging of their contents. When a container holds substantial data or serves as the primary storage for document content, overwriting it can lead to unintended hiding or loss of critical information.
 
 ```ts twoslash
 import { LoroDoc, LoroText } from "loro-crdt";
@@ -79,10 +79,20 @@ doc.import(docB.export({ mode: "update" }));
 <details>
 <summary>Best practices for container initialization</summary>
 
-1. When using map containers:
-   - If possible, initialize all child containers during the map container's initialization
-   - Avoid concurrent creation of child containers with the same key in the map container to prevent overwrites
-2. If it's impossible to initialize all child containers when the map container is initialized, prefer initializing them at the root level rather than as nested containers. - You can use `doc.getMap("user." + userId)` instead of `doc.getMap("user").getOrCreateContainer(userId, new LoroMap())` to avoid this problem.
+1. If peers may lazily create the same child under the same Map key, use a mergeable child container:
+
+   ```ts no_run
+   const entries = doc.getMap("days").ensureMergeableList("2026-06-08");
+   entries.insert(0, "meeting notes");
+   ```
+
+   The same pattern is available through `ensureMergeableText`, `ensureMergeableMap`, `ensureMergeableMovableList`, `ensureMergeableTree`, and `ensureMergeableCounter`.
+
+2. If the child structure is fixed and known ahead of time, initialize all child containers during the map container's initialization.
+
+3. If the child naturally has a unique global name, a root container is also safe. You can use `doc.getMap("user." + userId)` instead of `doc.getMap("user").getOrCreateContainer(userId, new LoroMap())`.
+
+4. Keep using `setContainer` or `insertContainer` when each creation should produce a distinct child object, or when you are modeling replacement rather than shared initialization.
 </details>
 
 ---

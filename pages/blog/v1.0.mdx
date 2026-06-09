@@ -137,6 +137,10 @@ console.log(docA.getText("text").toString()); // Hello!Hi!
 console.log(docB.getText("text").toString()); // Hello!Hi!
 ```
 
+If a nested child container may be created lazily by multiple peers under the
+same Map key, use [Mergeable Containers](/blog/mergeable-containers) instead of
+regular `setContainer`.
+
 </details>
 </details>
 

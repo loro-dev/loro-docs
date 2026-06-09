@@ -121,7 +121,7 @@ map.set("complex", {
 });
 ```
 
-Note: When you need to store a CRDT container (like LoroText, LoroList, etc.) within another container, use `setContainer()` or `insertContainer()` methods instead of regular `set()` or `insert()`. This creates a proper sub-container relationship that maintains CRDT properties.
+Note: When you need to store a CRDT container (like LoroText, LoroList, etc.) within another container, use `setContainer()` or `insertContainer()` methods instead of regular `set()` or `insert()`. This creates a proper sub-container relationship that maintains CRDT properties. If a child container under a Map may be created lazily by multiple peers at the same key, use the `ensureMergeable*` methods instead; see [Containers](/docs/concepts/container) and [Composing CRDTs](/docs/tutorial/composition).
 
 ## Container Types
 

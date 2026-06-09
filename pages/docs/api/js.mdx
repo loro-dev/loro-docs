@@ -360,17 +360,22 @@ doc.configDefaultTextStyle({ expand: "after" });
 
 **📝 Note:** Creating root containers (e.g., `doc.getText("...")`) does not record operations; nested container creation (e.g., `map.setContainer(...)`) does.
 
-**⚠️ Pitfall:** Avoid concurrent creation of child containers with the same key in LoroMaps. Instead of:
+**⚠️ Pitfall:** Avoid concurrent creation of regular child containers with the same key in LoroMaps. Instead of:
 
 ```ts no_run
-// Dangerous - can cause overwrites
+// Dangerous - concurrent peers can create different child container IDs
 doc.getMap("user").getOrCreateContainer(userId, new LoroMap());
 ```
 
-Use:
+Use a mergeable child container when the child should be identified by its logical position:
 
 ```ts no_run
-// Safe - unique root container per user
+doc.getMap("user").ensureMergeableMap(userId);
+```
+
+Alternatively, use a unique root container if that better fits your model:
+
+```ts no_run
 doc.getMap("user." + userId);
 ```
 
@@ -3603,7 +3608,7 @@ setContainer<T extends Container>(key: string, container: T): T
 <Indent>
 Sets a container as the value for a key.
 
-**⚠️ Pitfall:** Concurrent child container creation at the same key on a LoroMap from multiple peers causes overwrites (different container IDs cannot auto-merge). See [Container initialization](/docs/tutorial/tips).
+**⚠️ Pitfall:** Concurrent regular child container creation at the same key on a LoroMap from multiple peers causes overwrites (different container IDs cannot auto-merge). If the child should be shared by logical key, use the `ensureMergeable*` methods instead. See [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
 
@@ -3622,6 +3627,125 @@ const map = doc.getMap("map");
 const list = map.setContainer("items", new LoroList());
 list.push("item1");
 ```
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableText">
+```typescript no_run
+ensureMergeableText(key: string): LoroText
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable Text child container. Peers that call this method concurrently with the same parent Map and key will address the same logical Text container instead of creating competing child container IDs.
+
+Use this for lazily-created text fields that should behave like one shared document for all peers.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable Text container
+
+**Example:**
+
+```ts no_run
+const body = doc.getMap("note").ensureMergeableText("body");
+body.insert(0, "Hello");
+```
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableMap">
+```typescript no_run
+ensureMergeableMap(key: string): LoroMap
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable Map child container. Use this when a nested record, profile, settings object, or migration-created child Map may be initialized by multiple peers.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable Map container
+
+**Example:**
+
+```ts no_run
+const record = doc.getMap("records").ensureMergeableMap(recordId);
+record.set("updated", true);
+```
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableList">
+```typescript no_run
+ensureMergeableList(key: string): LoroList
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable List child container. Use this for dynamic child lists, such as one list per day, where concurrent first creation should produce one shared List.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable List container
+
+**Example:**
+
+```ts no_run
+const entries = doc.getMap("days").ensureMergeableList("2026-06-08");
+entries.insert(0, "meeting notes");
+```
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableMovableList">
+```typescript no_run
+ensureMergeableMovableList(key: string): LoroMovableList
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable MovableList child container.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable MovableList container
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableTree">
+```typescript no_run
+ensureMergeableTree(key: string): LoroTree
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable Tree child container.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable Tree container
+
+</Indent>
+
+<Method id="LoroMap.ensureMergeableCounter">
+```typescript no_run
+ensureMergeableCounter(key: string): LoroCounter
+```
+</Method>
+<Indent>
+Ensures that `key` points to a mergeable Counter child container.
+
+**Parameters:**
+
+- `key` - The Map key for the mergeable child container
+
+**Returns:** The mergeable Counter container
 
 </Indent>
 
@@ -3653,13 +3777,18 @@ const name = map.get("name");
 
 <Method id="LoroMap.getOrCreateContainer">
 ```typescript no_run
+/**
+ * @deprecated Prefer ensureMergeableText/Map/List/... for lazily-created Map child containers.
+ */
 getOrCreateContainer<T extends Container>(key: string, container: T): T
 ```
 </Method>
 <Indent>
-Gets an existing container or creates a new one.
+**Deprecated:** Prefer the `ensureMergeable*` methods for Map child containers that may be created lazily or concurrently by multiple peers.
 
-**⚠️ Pitfall:** Parallel container creation for the same key across peers causes overwrites. See [Container initialization](/docs/tutorial/tips).
+Gets an existing container or creates a new regular child container.
+
+**⚠️ Pitfall:** Parallel container creation for the same key across peers creates different child container IDs and can cause overwrites. This method is kept for compatibility and for cases where you explicitly want a regular child container. For shared dynamic children, use `ensureMergeableText`, `ensureMergeableMap`, `ensureMergeableList`, `ensureMergeableMovableList`, `ensureMergeableTree`, or `ensureMergeableCounter`. See [Container initialization](/docs/tutorial/tips).
 
 **Parameters:**
 

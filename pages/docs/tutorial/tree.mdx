@@ -27,6 +27,10 @@ node.data.set("key", "value");
 node.data.setContainer("list", new LoroList());
 ```
 
+`node.data` is a Map. If the child container under `node.data` may be lazily
+created by multiple peers at the same key, use a mergeable child such as
+`node.data.ensureMergeableList("list")` instead of `setContainer`.
+
 ## Ordered Tree Nodes
 
 In certain scenarios such as graphic design or file systems, where sibling nodes may also require a sequential relationship, we have introduced `Fractional Index` in Loro to support this capability. You can read more about `Fractional Index` in the [Figma blog](https://www.figma.com/blog/realtime-editing-of-ordered-sequences). In simple terms, `Fractional Index` assigns a sortable value to each object, and if a new insertion occurs between two objects, the `Fractional Index` of the new object will be between the left and right values. The rust-based `Fractional Index` [implementation of Drifting-in-Space](https://github.com/drifting-in-space/fractional_index) has good design and minimal document size growth in most cases. We forked it and made a simple extension for use in Loro.

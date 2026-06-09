@@ -10,3 +10,19 @@ Choosing the right CRDT type means understanding their potential behavior in con
 For text, you can choose to represent it directly as a Value on a Map (where the Value can be a string type), or you can choose to use a Text CRDT. For the former, each operation completely overwrites the previous one, so if A and B make concurrent modifications, only one of their edits will remain in the end. For the latter, the CRDT will retain all concurrent insertions by both people, and concurrent deletions are combined to complete the deletion. For most text box edits, you might prefer the latter. But for something like editing a link, you might want to use the former.
 
 For Lists, concurrently removing the same element and inserting a single element creates a new element, differentiating from the semantics of Set on a Map (we may consider providing a list set method in the future). For representing coordinates, it's better to use a Map rather than a List. If you represent coordinates as [x, y], and the A client updates the y coordinate by deleting the y element and reinserting a new y_a, and the B client also deletes y and inserts y_b, then after merging, the array will become [x, y_a, y_b], which does not conform to the user's schema. Using a Map can prevent this problem.
+
+For nested data, also decide how the child container should get its identity:
+
+- Use a Map value, such as a string or plain object, when the field should have
+  Last-Write-Wins replacement semantics.
+- Use a regular child container with `setContainer` or `insertContainer` when
+  each creation should produce a distinct child object.
+- Use a mergeable child container with `ensureMergeableText`,
+  `ensureMergeableMap`, `ensureMergeableList`, and the other
+  `ensureMergeable*` methods when multiple peers may lazily initialize the same
+  child under the same Map key and should end up editing one shared child.
+
+This distinction matters for dynamic keys, schema migrations, date-keyed lists,
+and per-entity subdocuments. In those cases, the child identity usually should
+come from the logical position `(parent Map, key, type)` rather than from the
+operation that happened to create it first.

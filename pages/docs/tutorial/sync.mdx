@@ -44,6 +44,12 @@ expect(docA.toJSON()).toStrictEqual(docB.toJSON());
 
 Due to CRDT properties, document consistency is guaranteed when peers receive the same updates, regardless of order or duplicates.
 
+Consistency does not remove the need to choose the right child container
+identity. If two offline peers create regular child containers under the same
+Map key, sync will converge to one visible Map value and the other child can be
+hidden by the Map conflict rule. For dynamic child containers that should be
+shared by logical key, use `ensureMergeable*` when modeling the document.
+
 ### Sync Strategies
 
 1. **First Sync** (Initial synchronization between peers):
