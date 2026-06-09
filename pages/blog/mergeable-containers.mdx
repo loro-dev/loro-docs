@@ -1,0 +1,444 @@
+---
+title: "Mergeable Containers: Fixing Concurrent Child Creation"
+date: 2026/06/09
+description: "Mergeable Containers let Loro peers concurrently create the same child container under a Map key and still merge into one shared child, by deriving identity from the logical parent/key/type instead of the creation OpID."
+image: "/images/blog-mergeable-containers.png"
+---
+
+# Mergeable Containers: Fixing Concurrent Child Creation
+
+import Authors, { Author } from "../../components/authors";
+
+<Authors date="2026-06-09">
+  <Author name="Zixuan Chen" link="https://github.com/zxch3n/" />
+</Authors>
+
+![Mergeable Containers overview](/images/blog-mergeable-containers.png)
+
+Two users are offline. Both add content to the same empty note. They come back online, sync finishes, and one user's edits seem to disappear.
+
+There is no error, and the data is not actually gone from history. But `note.get("body")` can only return one Text container. The other container was created concurrently and still exists in history, but it is no longer visible in the current document state. From the application's point of view, this looks like data loss.
+
+This is a classic problem in JSON-like CRDTs. Users have run into versions of it in the Loro, Yjs, and Automerge communities. The [Appendix](#appendix-runnable-reproductions) has short scripts that reproduce it in all three.
+
+Loro now solves this with Mergeable Containers. They make a child container's identity come from its logical position in the `Map`, not from the ID of the operation that happened to create it.
+
+Special thanks to [Alexis Williams](https://github.com/typedrat) from [Synapdeck](https://synapdeck.com/) for the substantial implementation work and design discussion behind this feature.
+
+From the user's point of view, the API change is small. Instead of creating an on-demand child container like this:
+
+```ts no_run
+// Peer A
+doc.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "A");
+
+// Peer B, offline
+doc.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "B");
+
+// after sync: only one List is visible at "2026-06-08"
+```
+
+you can use a mergeable child:
+
+```ts no_run
+// Peer A
+doc.getMap("days").ensureMergeableList("2026-06-08").insert(0, "A");
+
+// Peer B, offline
+doc.getMap("days").ensureMergeableList("2026-06-08").insert(0, "B");
+
+// after sync: both peers edit the same List
+```
+
+As a rule of thumb, use `ensureMergeable*` when a child container should be identified by its logical position:
+
+```ts no_run
+map.ensureMergeableText(key);
+map.ensureMergeableMap(key);
+map.ensureMergeableList(key);
+map.ensureMergeableMovableList(key);
+map.ensureMergeableTree(key);
+map.ensureMergeableCounter(key);
+```
+
+Use them for fields that should behave like one shared child container for everyone: one shared Text, one shared List, one shared Map, and so on. It should not matter which peer creates that child first. The rest of this post walks through why the problem exists and how the new encoding works.
+
+## Why This Happens
+
+CRDTs are usually good at cases like "multiple users editing the same text at the same time" or "multiple users inserting into the same list concurrently." This issue happens one layer earlier: before the peers can edit the same List, Text, or Map, they first need to agree on which child container that key refers to.
+
+Before Mergeable Containers, the recommended workaround was to initialize all required child containers as soon as the parent `LoroMap` was created. For example, if every note always needs a `body` text, creating that `body` together with the note avoids the first-creation race.
+
+That workaround is useful, but it has limits. Some applications cannot know every child container ahead of time. A schema migration may add a new child container to existing documents. A calendar-like document may create child containers by date. A dynamic index may create one child container per user-defined key. In these cases, on-demand creation is natural, and concurrent first creation is hard to avoid.
+
+The root cause is the way regular child Container IDs are represented. A normal child Container ID includes the `OpID` that created it. Concurrent first creation therefore creates different Container IDs, and the Map conflict-resolution rule decides which one is visible.
+
+The issue is not that List insertion cannot merge. Once both peers are editing the same List, List edits merge normally. The issue is that the two peers created two different Lists at the same Map key.
+
+## Why Root Containers Are Naturally Mergeable
+
+In Loro and Yjs, top-level Root Containers are usually accessed by name:
+
+```ts no_run
+doc.getMap("state");
+doc.getText("content");
+```
+
+Here, `"state"` or `"content"` is already a stable identity. It does not depend on which peer created it or which operation created it. As long as multiple peers access the same root name, they naturally refer to the same logical Container.
+
+> Automerge has a different object identity model, so this root-container comparison is specifically about Loro and Yjs. The broader issue is still similar: when composite values are created concurrently at the same key, the system needs a rule for which object identity becomes visible.
+
+Regular child Containers are different. Their identity is tied to the operation that created them, so two concurrent "first creations" become two different objects.
+
+Mergeable Containers bring the useful part of Root Container identity to selected child Containers: the child identity comes from a deterministic name, not from the creation operation.
+
+## API: Explicitly Ensuring a Mergeable Child
+
+This feature does not change the existing `setContainer` / `insertContainer` behavior. It adds explicit `ensureMergeable*` APIs for the mergeable case. In Rust, the same methods use snake case:
+
+```rust
+map.ensure_mergeable_text("body")?;
+map.ensure_mergeable_map("profile")?;
+```
+
+The word `ensure` is intentional. It returns the child and, if needed, writes the marker that makes it visible at that key. Calling the same method again for the same type is idempotent.
+
+If the key already holds a regular scalar value or a regular child Container, the API returns an error instead of silently overwriting it.
+
+One subtle case is type changes. If one peer asks for a mergeable Text at `"field"` while another peer asks for a mergeable Map at the same key, Loro still needs one visible value at that key. The Map's normal conflict rule decides which type is visible. The non-visible mergeable child's state is still preserved under its deterministic ID, so switching back to that type can resurface it later.
+
+## Core Design: Deterministic CID + Map Slot Marker
+
+Mergeable Containers have two separate layers of representation:
+
+1. The child Container ID derived from the parent Container ID, key, and type. This decides whether peers address the same CRDT object.
+2. The parent Map slot. This decides whether that object is currently visible at a key, and which mergeable child type is active there.
+
+Keeping these two layers separate makes the behavior easier to reason about.
+
+## 1. CID: A Synthetic Root Container ID
+
+A Mergeable Container uses a synthetic `ContainerID::Root` under an internal namespace. User-created root names cannot use this prefix, so ordinary roots cannot collide with mergeable CIDs:
+
+```text
+🤝:<payload>
+```
+
+The payload is derived from the parent Map and the key. The Container type stays in `ContainerID::Root.container_type`, just like ordinary Root Containers. This lets all peers derive the same child ID without using the creation `OpID`.
+
+The current encoding keeps nested mergeable Map IDs linear in the logical path length. This change was made before release to avoid recursive CID growth for deeply nested mergeable maps.
+
+<details>
+<summary>More details: the flattened CID encoding</summary>
+
+After [PR #1002](https://github.com/loro-dev/loro/pull/1002), the payload no longer recursively embeds the full parent CID. Instead, it uses a flattened path:
+
+```text
+payload = base-parent ">" key-1 ">" key-2 ...
+```
+
+The `base-parent` is the nearest non-mergeable Map ancestor:
+
+```text
+$<escaped-root-name>
+@<peer-base36>:<counter-base36>
+```
+
+For example:
+
+```text
+Root map "state", key "note-1", child map:
+🤝:$state>note-1        type = Map
+
+Nested key "body" under that mergeable map, child text:
+🤝:$state>note-1>body   type = Text
+```
+
+Parsing the second CID gives:
+
+```text
+parent = Root("🤝:$state>note-1", Map)
+key = "body"
+type = Text
+```
+
+</details>
+
+## 2. Map Slot: A Binary Marker Controls Visibility
+
+A deterministic CID alone is not enough because Loro has multiple Container types. If one peer calls `ensureMergeableText("field")` while another peer concurrently calls `ensureMergeableMap("field")`, both deterministic child CIDs can exist. The parent Map still needs to decide which type is currently visible at `"field"`. That decision needs to be deterministic and reversible: switching the visible type should not destroy the state of the other mergeable child.
+
+So Loro stores a small activation marker in the parent Map slot. Its meaning is:
+
+```text
+At this key of this parent Map, activate a mergeable child of this type.
+```
+
+When a new Loro client reads the slot, it uses the current `parent id + key + kind` to derive the deterministic mergeable CID, then presents it through the public API as a normal Container:
+
+```ts no_run
+const body = map.get("body");
+// body is a LoroText, not the internal binary marker
+```
+
+When the key is deleted, only the marker is removed. The mergeable child state is not immediately destroyed, because the parent slot controls visibility rather than the child's stored history. Calling this again:
+
+```ts no_run
+map.ensureMergeableText("body");
+```
+
+resurfaces the same deterministic Text Container.
+
+The marker is also bound to its exact parent, key, and type. That keeps it from accidentally activating a mergeable child if the same binary value is copied somewhere else.
+
+<details>
+<summary>More details: the binary marker format</summary>
+
+The marker is a compact binary value:
+
+```text
+MAGIC[4] + KIND[1] + DIGEST[3]
+```
+
+`DIGEST` is the low 24 bits of CRC32 over `(parent_id, key, kind)`. So the marker is not a magic value that can be copied anywhere.
+
+If a user copies the marker binary from one key to another key, or from one parent Map to another, new Loro clients will not recognize it as a valid mergeable child marker. It remains an ordinary binary value.
+
+This matters because `LoroValue::Binary` is still valid user data. Without binding the marker to parent, key, and type, copying a binary value could accidentally activate a mergeable Container somewhere else.
+
+### Why Not Use a Reserved Keyword?
+
+One possible approach would be to store a special string or JSON object:
+
+```json
+{ "__loro_mergeable_container__": "Text" }
+```
+
+or:
+
+```text
+"__loro_mergeable_text__"
+```
+
+But that would take over part of the user data space. `LoroMap` is a general-purpose Map, and users may legitimately store such strings or objects. Reserved keywords would make ordinary user values suddenly have special meaning.
+
+They are also hard to bind safely to parent, key, and type. If a string marker is copied somewhere else, it still looks like a marker. Avoiding accidental activation would require extra validation fields, which would make the format longer and more fragile.
+
+A binary marker fits this role better: it is low-level structural metadata, not business data. Older clients that do not understand Mergeable Containers see it as an ordinary binary value, rather than misinterpreting it as a child Container reference.
+
+### Why Not Store the Full ContainerID in the Slot?
+
+Another possible design would be to store the full deterministic ContainerID directly in the parent Map slot.
+
+The problem is that older clients may interpret it as a regular child Container edge. That would give them the wrong view of the document structure.
+
+Mergeable Containers need more than "a pointer to a Container." The design also needs to preserve these rules:
+
+- The same `(parent, key, type)` deterministically produces the same CID.
+- Deleting the key hides the child, but does not delete the child state.
+- Conflicts between different mergeable child types still use the Map's normal LWW rule.
+- The marker must only activate at the correct parent/key/type.
+- Older clients must not mistake it for a normal child Container edge.
+
+The marker is better understood as an activation marker. New clients derive the actual child CID from the surrounding context.
+
+</details>
+
+## What This Solves for Users
+
+Mergeable Containers are especially useful when eager initialization is not practical.
+
+For example, suppose an application stores one child List per date:
+
+```ts no_run
+const days = doc.getMap("days");
+const entries = days.ensureMergeableList("2026-06-08");
+entries.insert(0, "meeting notes");
+```
+
+Or suppose a schema migration lazily adds a new child Map to existing records:
+
+```ts no_run
+const record = doc.getMap("records").ensureMergeableMap(recordId);
+const metadata = record.ensureMergeableMap("metadata_v2");
+metadata.set("migrated", true);
+```
+
+In both cases, the child container identity no longer depends on which peer created it first. It depends on the logical position in the document structure.
+
+This makes Mergeable Containers especially useful for:
+
+- date-keyed child lists or maps
+- schema migrations that add new child containers lazily
+- dynamic per-user or per-entity subdocuments
+- revision counters
+- settings maps whose keys are discovered over time
+
+## Cost and Compatibility
+
+Mergeable Containers have some metadata cost. Their CIDs carry logical path information, so deeper paths and longer keys produce larger IDs. [PR #1002](https://github.com/loro-dev/loro/pull/1002) changed the encoding so nested mergeable Map IDs grow linearly instead of recursively, but very deep mergeable Map chains are still better to avoid.
+
+The compatibility story is intentionally conservative:
+
+- Existing `setContainer` / `insertContainer` behavior is unchanged.
+- Existing documents can be read normally by new versions.
+- Mergeable Containers are introduced through new APIs, without changing existing method signatures.
+- Older clients that do not understand this feature see the parent slot marker as an ordinary binary value, not as a fake child Container edge. They can preserve and sync the data, but they will not display the mergeable child with the new semantics.
+- User-created root names that start with the internal `🤝:` prefix are rejected by Loro's root-name validator, so they cannot collide with mergeable CIDs.
+
+## Summary
+
+Mergeable Containers are for child Containers whose identity should come from their logical position, not from whichever peer created them first.
+
+Use `ensureMergeable*` when:
+
+- the key is dynamic or lazily created
+- different peers may initialize the same child while offline
+- the child should behave like one shared Text, List, Map, Tree, or Counter
+- deleting the key should hide the child without treating its internal history as immediately destroyed
+
+Keep using `setContainer` / `insertContainer` when:
+
+- each creation should produce a distinct child object
+- the parent slot should point to exactly the Container created by that operation
+- you are modeling replacement rather than shared initialization
+
+The short version: if two peers creating the same child at the same Map key should mean "we both found the same child," use a Mergeable Container.
+
+References:
+
+- Loro background: [issue #759](https://github.com/loro-dev/loro/issues/759)
+- Loro implementation: [PR #991](https://github.com/loro-dev/loro/pull/991), [PR #1002](https://github.com/loro-dev/loro/pull/1002)
+- Related Yjs discussions: [complex diagram page](https://discuss.yjs.dev/t/how-would-you-model-a-complex-diagram-page/2114), [losing data](https://discuss.yjs.dev/t/why-am-i-losing-data/2734), [nested `Y.Map`](https://discuss.yjs.dev/t/create-y-map-is-empty/1701)
+- Related Automerge discussions: [#528: failing merge for text values](https://github.com/automerge/automerge/issues/528) is the closest match; [#526: conflict resolution for replaced arrays and objects](https://github.com/automerge/automerge/issues/526) is useful background on object identity and conflict handling; the historical [automerge-classic #4](https://github.com/automerge/automerge-classic/issues/4) also covers concurrently created objects under the same key.
+
+## Appendix: Runnable Reproductions
+
+The snippets below are self-contained and run directly on Node (tested on Node 24; any Node 18+ with ESM works). Install the three libraries once:
+
+```bash
+npm install loro-crdt@^1.13 yjs @automerge/automerge
+```
+
+Save each block as a `.mjs` file and run it with `node file.mjs`. They all model the same scenario from this post: two offline peers concurrently create a child container under the same `Map` key, then sync. The Loro example also shows the `ensureMergeable*` fix.
+
+### Loro — the bug, and the fix
+
+```js no_run
+// loro.mjs  —  node loro.mjs
+// In plain Node import from "loro-crdt/nodejs"; the bare "loro-crdt" entry
+// targets a bundler. With Vite/webpack, import from "loro-crdt" instead.
+import { LoroDoc, LoroList } from "loro-crdt/nodejs";
+
+function sync(a, b) {
+  const va = a.export({ mode: "update" });
+  const vb = b.export({ mode: "update" });
+  a.import(vb);
+  b.import(va);
+}
+
+// 1. The bug: concurrent setContainer at the same key
+{
+  const a = new LoroDoc();
+  const b = new LoroDoc();
+  a.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "A");
+  b.getMap("days").setContainer("2026-06-08", new LoroList()).insert(0, "B");
+  sync(a, b);
+  console.log(
+    "setContainer ->",
+    JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+  );
+  // -> ["A"] or ["B"], never both: only one peer's List survives.
+  // (which one wins depends on the randomly-assigned peer IDs)
+}
+
+// 2. The fix: concurrent ensureMergeableList at the same key
+{
+  const a = new LoroDoc();
+  const b = new LoroDoc();
+  a.getMap("days").ensureMergeableList("2026-06-08").insert(0, "A");
+  b.getMap("days").ensureMergeableList("2026-06-08").insert(0, "B");
+  sync(a, b);
+  console.log(
+    "ensureMergeable ->",
+    JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+  );
+  // -> both entries, e.g. ["A","B"] (order may vary): both peers share one List.
+}
+```
+
+### Yjs — the same problem
+
+```js no_run
+// yjs.mjs  —  node yjs.mjs
+import * as Y from "yjs";
+
+const a = new Y.Doc();
+const b = new Y.Doc();
+
+// Peer A and Peer B each create a Y.Array at the same key, offline.
+{
+  const l = new Y.Array();
+  a.getMap("days").set("2026-06-08", l);
+  l.insert(0, ["A"]);
+}
+{
+  const l = new Y.Array();
+  b.getMap("days").set("2026-06-08", l);
+  l.insert(0, ["B"]);
+}
+
+// Sync both ways.
+Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+
+console.log(
+  "yjs ->",
+  JSON.stringify(a.getMap("days").get("2026-06-08").toArray()),
+);
+// -> ["A"] or ["B"], never both: one peer's child Y.Array wins, the other is dropped.
+```
+
+### Automerge — the same problem
+
+```js no_run
+// automerge.mjs  —  node automerge.mjs
+import * as A from "@automerge/automerge";
+
+let base = A.from({ days: {} });
+let a = A.clone(base);
+let b = A.clone(base);
+
+// Peer A and Peer B each create a list at the same key, offline.
+a = A.change(a, (d) => {
+  d.days["2026-06-08"] = ["A"];
+});
+b = A.change(b, (d) => {
+  d.days["2026-06-08"] = ["B"];
+});
+
+let merged = A.merge(A.clone(a), b);
+console.log("automerge visible ->", JSON.stringify(merged.days["2026-06-08"]));
+// -> ["A"] or ["B"], never both: one list wins.
+console.log(
+  "automerge conflicts ->",
+  JSON.stringify(A.getConflicts(merged.days, "2026-06-08")),
+);
+// -> both lists keyed by op id: the losing list is retained but hidden,
+//    reachable only via getConflicts().
+
+// Control: when the child is created ONCE up front, concurrent edits merge.
+let shared = A.from({ days: { "2026-06-08": [] } });
+let c = A.clone(shared),
+  d = A.clone(shared);
+c = A.change(c, (x) => {
+  x.days["2026-06-08"].push("A");
+});
+d = A.change(d, (x) => {
+  x.days["2026-06-08"].push("B");
+});
+let ok = A.merge(A.clone(c), d);
+console.log("automerge pre-created ->", JSON.stringify(ok.days["2026-06-08"]));
+// -> ["A","B"] (order may vary): both survive — this is the eager-init workaround.
+```
+
+Note one difference worth calling out: in Automerge the losing child is retained and can be recovered through `getConflicts()`, while Yjs overwrites the map key and drops the losing child outright. Either way, from the application's point of view it looks like data loss — which is exactly what Mergeable Containers avoid.
