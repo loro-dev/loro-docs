@@ -2,7 +2,7 @@
 title: crdt-richtext - Rust implementation of Peritext and Fugue
 date: 2023/04/20
 keywords: crdt, richtext, peritext, fugue, loro
-description: Presenting a new Rust crate that combines Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into Loro, a general-purpose CRDT library currently under development.
+description: Presenting the early Rust crate that combined Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This work later informed Loro's rich text CRDT.
 tag: richtext
 # ogImage: /images/blog/joining-vercel/x-card.png
 ---
@@ -18,7 +18,7 @@ import Authors, { Author } from "../../components/authors";
   />
 </Authors>
 
-Presenting a new Rust crate that combines [Peritext](https://inkandswitch.com/peritext) and [Fugue](https://arxiv.org/abs/2305.00583)'s power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into **[Loro](https://www.loro.dev/)**, a general-purpose CRDT library currently under development.
+Presenting an early Rust crate that combines [Peritext](https://inkandswitch.com/peritext) and [Fugue](https://arxiv.org/abs/2305.00583)'s power with impressive performance, tailored specifically for rich text. This work later informed **[Loro](https://www.loro.dev/)**'s rich text CRDT.
 
 # What’s Peritext
 
@@ -240,14 +240,14 @@ The benchmark was conducted on a 2020 M1 MacBook Pro 13-inch on 2023-05-11.
 | [B4x100] Apply real-world editing dataset 100 times (docSize)    | 12,667,753 +/- 0 bytes | 26,634,606 +/- 80 bytes | skipped             | 17,844,936 +/- 0 bytes      | 15,989,245 +/- 0 bytes       | skipped             |
 | [B4x100] Apply real-world editing dataset 100 times (parseTime)  | 1,252 +/- 14 ms        | 170 +/- 15 ms           | skipped             | 368 +/- 13 ms               | 1,335 +/- 238 ms             | skipped             |
 
-The complete benchmark result and code is available at https://github.com/https://twitter.com/zx_loro/fugue-bench.
+The complete benchmark result and code is available at https://github.com/zxch3n/fugue-bench.
 
 It is worth noting that:
 
 - The benchmark for Automerge is based on `automerge-wasm`, which is not the latest version of Automerge 2.0.
 - `crdt-richtext` and `fugue` are special-purpose CRDTs that tend to be faster and have a smaller encoding size.
 - The encoding of `yjs`, `ywasm`, and `loro-wasm` still contains redundancy that can be compressed significantly. For more details, see [the full report](https://loro.dev/docs/performance/docsize).
-- loro-wasm and fugue only support plain text for now
+- At the time of this 2023 benchmark, `loro-wasm` and `fugue` only supported plain text.
 
 # Discussion
 

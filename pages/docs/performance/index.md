@@ -99,7 +99,7 @@ and Fire" is only 1.6 million characters long (including whitespace).
 
 | N = 6000                                                                 |              yjs |           ywasm |             loro |         loro-old |        automerge |  automerge-wasm |
 | :----------------------------------------------------------------------- | ---------------: | --------------: | ---------------: | ---------------: | ---------------: | --------------: |
-| Version                                                                  |          13.6.15 |          0.17.4 |     1.0.0-beta.2 |           0.15.2 |           2.1.10 |           0.9.0 |
+| Version                                                                  |          13.6.15 |          0.17.4 | 1.0.0-beta.2 (historical) |           0.15.2 |           2.1.10 |           0.9.0 |
 | Bundle size                                                              |     84,017 bytes |   938,991 bytes |  2,919,363 bytes |  1,583,094 bytes |  1,696,176 bytes | 1,701,136 bytes |
 | Bundle size (gzipped)                                                    |     25,105 bytes |   284,616 bytes |    894,460 bytes |    592,039 bytes |    591,049 bytes |   594,071 bytes |
 | [B1.1] Append N characters (time)                                        |           141 ms |          171 ms |           164 ms |           115 ms |           279 ms |          110 ms |

@@ -221,7 +221,8 @@ yet to be widely used.
 
 Our CRDTs library is built on the brilliant concept of OT-like CRDTs from Seph
 Gentle's [Diamond-types](https://github.com/josephg/diamond-types). Joseph Gentle
-is currently writing a paper on it, which is worth looking forward to. Its
+and Martin Kleppmann later published the
+[Eg-walker paper](https://arxiv.org/abs/2409.14252) on this line of work. Its
 notable features include reducing the cost of local operations, easier
 historical data reclamation, and sometimes lower storage and memory overhead.
 However, it relies on high-performance algorithms to apply remote operations.
@@ -272,8 +273,8 @@ challenge was that
 We have recently overcome this issue. We developed a new rich text CRDT
 algorithm that can run on OT-like CRDTs and has passed the capabilities listed
 in the Peritext paper's Criteria for rich text CRDTs, with no new issues
-revealed in our current million fuzzing tests. We will write an article in the
-future specifically to introduce this algorithm.
+revealed in our current million fuzzing tests. We later introduced this work in
+the [Loro rich text article](https://loro.dev/blog/loro-richtext).
 
 #### Movable Tree
 
@@ -325,29 +326,24 @@ Internally, we've
 The state represents the current form of the document, akin to Git's HEAD
 pointer, while the document's history resembles the complete operation history
 behind Git. Hence, multiple document states can correspond to the same history.
-This structure simplifies our code and facilitates future support for version
-control.
+This structure simplifies our code and provides the foundation for Loro's
+version-control primitives.
 
 Most of our optimizations thus far have focused on text manipulations,
-historically one of the thorniest problems in CRDTs. In the future, we plan
-optimizations for a wider range of real-world scenarios.
+historically one of the thorniest problems in CRDTs. Later releases expanded
+these optimizations across more real-world scenarios.
 
-### The Future
+### Update
 
 ![Untitled](./loro-now-open-source/Untitled%202.png)
 
-We aim to reach version 1.0 by mid-next year, with much work to complete.
+Loro has since reached 1.0 and stabilized its core data format. The project now
+ships production-ready JavaScript/WASM and Rust packages, plus maintained
+bindings and examples for other platforms.
 
-Given our limited workforce, we will first provide a WASM interface for web
-developers to experiment with. Optimizing the WASM size is one of our goals for
-this phase. Much of our design work is still ongoing, and we plan to stabilize
-it in the next quarter, aiming for a simple yet powerful and flexible API. We
-welcome ideas and suggestions in our
+Documentation and developer tooling remain active areas of work. We welcome
+ideas and suggestions in our
 [community discussions](https://discord.gg/tUsBSVfqzf).
-
-There's also extensive documentation work to make working with Loro enjoyable. A
-potential indicator of success would be GPT generating sufficiently good code
-based on our documentation.
 
 Developing tools for developers is a challenging and exciting task. Many
 developer tools and visualization methods in front-end development are
@@ -355,8 +351,8 @@ exceptionally good, and we hope to bring such experiences into the world of
 CRDTs and local-first development. DevTools will reveal CRDTs' hidden states and
 simplify control, making state maintenance and debugging a breeze.
 
-We also plan to support richer CRDT semantics, including Movable Lists and
-global undo/redo operations to support more diverse application scenarios.
+Loro now supports richer CRDT semantics, including movable data structures and
+undo/redo APIs for more diverse application scenarios.
 
 ## Seeking Collaborative Project Opportunities
 

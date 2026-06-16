@@ -4,16 +4,16 @@
         <title>Loro Blog</title>
         <link>https://loro.dev/blog/</link>
         <description>Updates and stories from the Loro team.</description>
-        <lastBuildDate>Tue, 09 Jun 2026 03:58:52 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 16 Jun 2026 02:49:05 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
-            <title><![CDATA[Mergeable Containers: When Child Documents Collide]]></title>
+            <title><![CDATA[Mergeable Containers: Fixing Concurrent Child Creation]]></title>
             <link>https://loro.dev/blog/mergeable-containers</link>
             <guid>https://loro.dev/blog/mergeable-containers</guid>
-            <pubDate>Mon, 08 Jun 2026 16:00:00 GMT</pubDate>
+            <pubDate>Tue, 09 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Mergeable Containers let Loro peers concurrently create the same child container under a Map key and still merge into one shared child, by deriving identity from the logical parent/key/type instead of the creation OpID.]]></description>
-            <content:encoded><![CDATA[<h1>Mergeable Containers: When Child Documents Collide</h1>
+            <content:encoded><![CDATA[<h1>Mergeable Containers: Fixing Concurrent Child Creation</h1>
 <p><img src="/images/blog-mergeable-containers.png" alt="Mergeable Containers overview"></p>
 <p>Two users are offline. Both add content to the same empty note. They come back online, sync finishes, and one user&#39;s edits seem to disappear.</p>
 <p>There is no error, and the data is not actually gone from history. But <code>note.get(&quot;body&quot;)</code> can only return one Text container. The other container was created concurrently and still exists in history, but it is no longer visible in the current document state. From the application&#39;s point of view, this looks like data loss.</p>
@@ -330,7 +330,7 @@ console.log(&quot;automerge pre-created -&gt;&quot;, JSON.stringify(ok.days[&quo
             <title><![CDATA[Loro Protocol]]></title>
             <link>https://loro.dev/blog/loro-protocol</link>
             <guid>https://loro.dev/blog/loro-protocol</guid>
-            <pubDate>Wed, 29 Oct 2025 16:00:00 GMT</pubDate>
+            <pubDate>Thu, 30 Oct 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection and ships the open-source loro-websocket, loro-adaptors, plus Rust client and server implementations that speak the same protocol.]]></description>
             <content:encoded><![CDATA[<h2>Loro Protocol</h2>
 <p><img src="/images/blog-loro-protocol.png" alt=""></p>
@@ -416,7 +416,7 @@ ephAdaptor.getStore().set(&quot;cursor&quot;, { x: 100, y: 100 });
             <title><![CDATA[Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs]]></title>
             <link>https://loro.dev/blog/loro-mirror</link>
             <guid>https://loro.dev/blog/loro-mirror</guid>
-            <pubDate>Sun, 21 Sep 2025 16:00:00 GMT</pubDate>
+            <pubDate>Mon, 22 Sep 2025 00:00:00 GMT</pubDate>
             <description><![CDATA[Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history. ]]></description>
             <content:encoded><![CDATA[<h1>Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs</h1>
 <p><img src="/images/loro-mirror.png" alt=""></p>
@@ -619,7 +619,7 @@ const undo = useMemo(() =&gt; new UndoManager(doc), [doc]);
 <ul>
 <li>Text. Many interfaces render by lines, yet LoroText’s low‑level API is index‑based. Teams typically re‑implement line segmentation and map edits back to lines by hand. With Mirror in the middle, it becomes feasible to surface optional line‑aware events on top of LoroText so the UI receives stable, line‑based diffs without custom conversion—while retaining the underlying CRDT guarantees.</li>
 <li>Tree. LoroTree CRDT already ensures correct concurrent moves, but developers still translate tree operations into application‑state patches. Mirror carries first‑class mappings from tree events into your state shape, so consumers can work with natural “insert/move/delete node” updates.</li>
-<li>Ephemeral patches. We&#39;ll add <a href="https://github.com/loro-dev/loro-mirror/issues/35"><code>setStateWithEphemeralPatch</code></a> so Mirror can stream temporary drag or scale interactions through an <code>EphemeralStore</code>, letting collaborators see live previews while the persisted history stays clean and deduplicated once the change finalizes.</li>
+<li>Ephemeral patches. <a href="https://github.com/loro-dev/loro-mirror/issues/35"><code>setStateWithEphemeralPatch</code></a> lets Mirror stream temporary drag or scale interactions through an <code>EphemeralStore</code>, so collaborators can see live previews while the persisted history stays clean and deduplicated once the change finalizes.</li>
 </ul>
 <p>By using loro-mirror to bridge CRDTs and application state consistency, and by expressing schemas declaratively, we can let AI help developers get more done correctly. This makes Loro not only suitable for professional creative tools with real-time collaboration, but also for enabling people to build practical mini-tools for themselves and their communities.</p>
 <p>If this work helps you build collaborative, local‑first experiences, we’d be grateful for your sponsorship. You can support us via <a href="https://github.com/sponsors/loro-dev">GitHub Sponsors</a>.</p>
@@ -629,7 +629,7 @@ const undo = useMemo(() =&gt; new UndoManager(doc), [doc]);
             <title><![CDATA[Loro 1.0]]></title>
             <link>https://loro.dev/blog/v1.0</link>
             <guid>https://loro.dev/blog/v1.0</guid>
-            <pubDate>Tue, 22 Oct 2024 16:00:00 GMT</pubDate>
+            <pubDate>Wed, 23 Oct 2024 00:00:00 GMT</pubDate>
             <description><![CDATA[Announcing Loro 1.0: Introducing a stable encoding schema, 10-100x faster document import, advanced version control, and more for efficient real-time collaboration and local-first software development.]]></description>
             <content:encoded><![CDATA[<h1>Loro 1.0</h1>
 <p>Loro is a <a href="https://crdt.tech/">Conflict-free Replicated Data Type (CRDT)</a>
@@ -683,7 +683,7 @@ operation application, and network exception handling. For Loro&#39;s CRDT docum
 just two rounds of data exchange can transmit the missing operations between two
 documents to achieve final consistency:</p>
 <blockquote>
-<p>You can find all the code samples in this blog <a href="https://github.com/https://twitter.com/zx_loro/loro-blog-examples">here</a></p>
+<p>You can find all the code samples in this blog <a href="https://github.com/zxch3n/loro-blog-examples">here</a></p>
 </blockquote>
 <pre><code class="language-jsx">
 const docA = new LoroDoc();
@@ -777,13 +777,13 @@ tree after merging concurrent move operations.</li>
 </ul>
 <p>Loro also supports nesting between types, so you can model edits on JSON documents through them:</p>
 <blockquote>
-<p>You can find all the code samples in this blog <a href="https://github.com/https://twitter.com/zx_loro/loro-blog-examples">here</a></p>
+<p>You can find all the code samples in this blog <a href="https://github.com/zxch3n/loro-blog-examples">here</a></p>
 </blockquote>
 <pre><code class="language-tsx">  LoroDoc,
   LoroList,
   LoroMap,
   LoroText,
-} from &quot;npm:loro-crdt@1.0.0-beta.2&quot;;
+} from &quot;npm:loro-crdt@1.13.3&quot;;
 
 // Create a JSON structure of
 interface JsonStructure {
@@ -814,7 +814,7 @@ console.log(doc.toJSON());
 <p>Based on this operation primitive, applications can build various Git-like capabilities:</p>
 <ul>
 <li>You can merge multiple versions without needing to manually resolve conflicts</li>
-<li>You can rebase/squash updates from the current branch to the target branch (WIP)</li>
+<li>Applications can build rebase and squash workflows on top of Loro&#39;s version primitives.</li>
 </ul>
 <pre><code class="language-jsx">
 const doc = new LoroDoc();
@@ -863,7 +863,7 @@ doc.checkoutToLatest();
 console.log(doc.getText(&quot;text&quot;).toString()); // &quot;Hello, world! Alice!&quot;
 </code></pre>
 <aside>
-**Current limitations of version control in Loro**
+**Application-level version-control responsibilities**
 
 <p>The application layer still needs a lot of code to provide users with more
 complete version control capabilities, such as:</p>
@@ -1069,7 +1069,7 @@ and only needs to access historical operations when parallel edits occur&quot;.<
 
 <p>In Loro 1.0, we implemented a simple <a href="https://en.wikipedia.org/wiki/Log-structured_merge-tree">LSM (Log-structured merge-tree)</a> engine internally. LSM is a data structure often used to
 implement Key-Value Databases, and Loro 1.0 is heavily inspired by its design.
-Currently, Loro&#39;s storage implementation uses get, set, and range operations of
+At the time of Loro 1.0, Loro&#39;s storage implementation used get, set, and range operations of
 Key-Value Database as primitives. For example, Loro stores history as a series of
 ChangeBlocks, with each ChangeBlock serialized to about 4KB. Each ChangeBlock
 uses its first Op Id as the Key, and the serialized binary data of the
@@ -1150,7 +1150,7 @@ export</li>
 <aside>
 ❓ Do we still need to load the entire document blob with these optimizations?
 
-<p>We still need to load the entire document blob into memory. However, our current architecture has implemented internal block-based loading and storage, making it easier for us to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we&#39;ll assess if there are practical scenarios that require this capability. For most documents, Loro&#39;s current performance is already quite sufficient.</p>
+<p>At the time of Loro 1.0, we still needed to load the entire document blob into memory. However, the architecture already had internal block-based loading and storage, making it easier to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we planned to assess whether practical scenarios required this capability. For most documents, Loro&#39;s performance was already quite sufficient.</p>
 </aside>
 
 </details>
@@ -1159,8 +1159,8 @@ export</li>
 <blockquote>
 <p>All benchmarks results below were performed on a MacBook Pro M1 2020</p>
 </blockquote>
-<p>Below is a comparison of Snapshot import and export speeds between Loro versions
-1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
+<p>Below is a historical comparison of Snapshot import and export speeds between
+Loro versions 1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
 from the real world. Thanks to <a href="http://latch.bio">latch.bio</a> for sharing the
 document data. The benchmark code is available <a href="https://github.com/loro-dev/latch-bench">here</a>.
 The document contains 1,659,541 operations.</p>
@@ -1224,7 +1224,7 @@ the encoding of unmodified Blocks from the import.</li>
 <p>The following shows the performance on a document after applying the editing
 history from the
 <a href="https://github.com/automerge/automerge-perf/tree/master/edit-by-index">Automerge Paper</a>
-<strong>100 times</strong>. You can reproduce the results <a href="https://github.com/https://twitter.com/zx_loro/automerge-paper-bench">here</a>.
+<strong>100 times</strong>. You can reproduce the results <a href="https://github.com/zxch3n/automerge-paper-bench">here</a>.
 The document contains:</p>
 <ul>
 <li>18,231,500 single-character insertion operations</li>
@@ -1319,9 +1319,9 @@ repositories. However, how to better manage versions and seamlessly integrate wi
 </aside>
 
 <p>Loro CRDTs still have significant room for optimization in these scenarios.
-Currently, the Loro CRDTs library doesn&#39;t involve network or disk I/O, which
-enhances its ease of use but also constrains its capabilities and potential
-optimizations.
+At the time of Loro 1.0, the Loro CRDTs library didn&#39;t involve network or disk
+I/O, which enhanced its ease of use but also constrained its capabilities and
+potential optimizations.
 For example, while we&#39;ve implemented block-level storage, documents are still
 imported and exported as whole units. Adding I/O capabilities to selectively
 load/save blocks would enable significant performance optimizations.</p>
@@ -1333,18 +1333,15 @@ results on the import speed and the memory usage.</p>
 We&#39;re excited to see it being applied in various scenarios.
 If you&#39;re interested in using Loro, welcome to join our
 <a href="https://discord.gg/tUsBSVfqzf">Discord community</a> for discussions.</p>
-<aside>
-  🚀 **Want early access to our upcoming local-first apps built with Loro?**
-  [Sign up
-  here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p)
-  to be among the first to try them out!
-</aside>]]></content:encoded>
+<p>For current updates, follow the <a href="/changelog">changelog</a> or join the
+<a href="https://discord.gg/tUsBSVfqzf">Discord community</a>.</p>
+]]></content:encoded>
         </item>
         <item>
             <title><![CDATA[Movable tree CRDTs and Loro's implementation]]></title>
             <link>https://loro.dev/blog/movable-tree</link>
             <guid>https://loro.dev/blog/movable-tree</guid>
-            <pubDate>Wed, 17 Jul 2024 16:00:00 GMT</pubDate>
+            <pubDate>Thu, 18 Jul 2024 00:00:00 GMT</pubDate>
             <description><![CDATA[This article introduces the implementation difficulties and challenges of Movable Tree CRDTs when collaboration, and how Loro implements it and sorts child nodes. The algorithm has high performance and can be used in production.]]></description>
             <content:encoded><![CDATA[<h1>Movable tree CRDTs and Loro&#39;s implementation</h1>
 <p><img src="./movable-tree/movable-tree-cover.png" alt=""></p>
@@ -1628,7 +1625,7 @@ let nodeData: LoroMap = node.data;
             <title><![CDATA[Introduction to Loro's Rich Text CRDT]]></title>
             <link>https://loro.dev/blog/loro-richtext</link>
             <guid>https://loro.dev/blog/loro-richtext</guid>
-            <pubDate>Sun, 21 Jan 2024 16:00:00 GMT</pubDate>
+            <pubDate>Mon, 22 Jan 2024 00:00:00 GMT</pubDate>
             <description><![CDATA[This article presents the rich text CRDT algorithm implemented in Loro, complying with Peritext's criteria for seamless rich text collaboration. Furthermore, it can be built on top of any List CRDT algorithms and turn them into rich text CRDTs.]]></description>
             <content:encoded><![CDATA[<h1>Introduction to Loro&#39;s Rich Text CRDT</h1>
 <p><img src="./loro-richtext/cover_long.png" alt=""></p>
@@ -2330,7 +2327,7 @@ any proposals for collaboration, please reach out to <a href="mailto:zx@loro.dev
             <title><![CDATA[Loro: Reimagine State Management with CRDTs]]></title>
             <link>https://loro.dev/blog/loro-now-open-source</link>
             <guid>https://loro.dev/blog/loro-now-open-source</guid>
-            <pubDate>Sun, 12 Nov 2023 16:00:00 GMT</pubDate>
+            <pubDate>Mon, 13 Nov 2023 00:00:00 GMT</pubDate>
             <description><![CDATA[Loro, our high-performance CRDTs library, is now open source.  In this article, we share our vision for the local-first software development paradigm, why we're excited about it, and the current status of Loro.]]></description>
             <content:encoded><![CDATA[<h1>Loro: Reimagine State Management with CRDTs</h1>
 <div>
@@ -2499,7 +2496,8 @@ yet to be widely used.</p>
 </blockquote>
 <p>Our CRDTs library is built on the brilliant concept of OT-like CRDTs from Seph
 Gentle&#39;s <a href="https://github.com/josephg/diamond-types">Diamond-types</a>. Joseph Gentle
-is currently writing a paper on it, which is worth looking forward to. Its
+and Martin Kleppmann later published the
+<a href="https://arxiv.org/abs/2409.14252">Eg-walker paper</a> on this line of work. Its
 notable features include reducing the cost of local operations, easier
 historical data reclamation, and sometimes lower storage and memory overhead.
 However, it relies on high-performance algorithms to apply remote operations.
@@ -2543,8 +2541,8 @@ challenge was that
 We have recently overcome this issue. We developed a new rich text CRDT
 algorithm that can run on OT-like CRDTs and has passed the capabilities listed
 in the Peritext paper&#39;s Criteria for rich text CRDTs, with no new issues
-revealed in our current million fuzzing tests. We will write an article in the
-future specifically to introduce this algorithm.</p>
+revealed in our current million fuzzing tests. We later introduced this work in
+the <a href="https://loro.dev/blog/loro-richtext">Loro rich text article</a>.</p>
 <h4>Movable Tree</h4>
 <p>We have also supported a movable tree CRDT. Synchronizing tree movements is
 often complex due to the potential for circular references. Addressing this
@@ -2585,30 +2583,26 @@ highlighting Rust&#39;s impressive type expression capabilities.</p>
 The state represents the current form of the document, akin to Git&#39;s HEAD
 pointer, while the document&#39;s history resembles the complete operation history
 behind Git. Hence, multiple document states can correspond to the same history.
-This structure simplifies our code and facilitates future support for version
-control.</p>
+This structure simplifies our code and provides the foundation for Loro&#39;s
+version-control primitives.</p>
 <p>Most of our optimizations thus far have focused on text manipulations,
-historically one of the thorniest problems in CRDTs. In the future, we plan
-optimizations for a wider range of real-world scenarios.</p>
-<h3>The Future</h3>
+historically one of the thorniest problems in CRDTs. Later releases expanded
+these optimizations across more real-world scenarios.</p>
+<h3>Update</h3>
 <p><img src="./loro-now-open-source/Untitled%202.png" alt="Untitled"></p>
-<p>We aim to reach version 1.0 by mid-next year, with much work to complete.</p>
-<p>Given our limited workforce, we will first provide a WASM interface for web
-developers to experiment with. Optimizing the WASM size is one of our goals for
-this phase. Much of our design work is still ongoing, and we plan to stabilize
-it in the next quarter, aiming for a simple yet powerful and flexible API. We
-welcome ideas and suggestions in our
+<p>Loro has since reached 1.0 and stabilized its core data format. The project now
+ships production-ready JavaScript/WASM and Rust packages, plus maintained
+bindings and examples for other platforms.</p>
+<p>Documentation and developer tooling remain active areas of work. We welcome
+ideas and suggestions in our
 <a href="https://discord.gg/tUsBSVfqzf">community discussions</a>.</p>
-<p>There&#39;s also extensive documentation work to make working with Loro enjoyable. A
-potential indicator of success would be GPT generating sufficiently good code
-based on our documentation.</p>
 <p>Developing tools for developers is a challenging and exciting task. Many
 developer tools and visualization methods in front-end development are
 exceptionally good, and we hope to bring such experiences into the world of
 CRDTs and local-first development. DevTools will reveal CRDTs&#39; hidden states and
 simplify control, making state maintenance and debugging a breeze.</p>
-<p>We also plan to support richer CRDT semantics, including Movable Lists and
-global undo/redo operations to support more diverse application scenarios.</p>
+<p>Loro now supports richer CRDT semantics, including movable data structures and
+undo/redo APIs for more diverse application scenarios.</p>
 <h2>Seeking Collaborative Project Opportunities</h2>
 <p>Our design and optimization efforts need feedback from real-world applications.
 If you are excited about a local-first future and think Loro can help you,
@@ -2620,10 +2614,10 @@ collaboration and ready to help.</p>
             <title><![CDATA[crdt-richtext - Rust implementation of Peritext and Fugue]]></title>
             <link>https://loro.dev/blog/crdt-richtext</link>
             <guid>https://loro.dev/blog/crdt-richtext</guid>
-            <pubDate>Wed, 19 Apr 2023 16:00:00 GMT</pubDate>
-            <description><![CDATA[Presenting a new Rust crate that combines Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This crate's functionality is set to be incorporated into Loro, a general-purpose CRDT library currently under development.]]></description>
+            <pubDate>Thu, 20 Apr 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[Presenting the early Rust crate that combined Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This work later informed Loro's rich text CRDT.]]></description>
             <content:encoded><![CDATA[<h1><a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a>: Rust implementation of Peritext and Fugue</h1>
-<p>Presenting a new Rust crate that combines <a href="https://inkandswitch.com/peritext">Peritext</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>&#39;s power with impressive performance, tailored specifically for rich text. This crate&#39;s functionality is set to be incorporated into <strong><a href="https://www.loro.dev/">Loro</a></strong>, a general-purpose CRDT library currently under development.</p>
+<p>Presenting an early Rust crate that combines <a href="https://inkandswitch.com/peritext">Peritext</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>&#39;s power with impressive performance, tailored specifically for rich text. This work later informed <strong><a href="https://www.loro.dev/">Loro</a></strong>&#39;s rich text CRDT.</p>
 <h1>What’s Peritext</h1>
 <p><a href="https://inkandswitch.com/peritext">Peritext: A CRDT for Rich-Text Collaboration</a></p>
 <p>Peritext is a novel rich-text CRDT (Conflict-free Replicated Data Type) algorithm. It is capable of merging concurrent edits in rich text format while <a href="https://www.inkandswitch.com/peritext/#preserving-the-authors-intent">preserving users&#39; intent as much as possible</a>. Its primary focus is on merging the formats and annotations of rich text content, such as bold, italic, and comments.</p>
@@ -2941,13 +2935,13 @@ We simulate one client replaying all changes and storing each update. We measure
 <td>skipped</td>
 </tr>
 </tbody></table>
-<p>The complete benchmark result and code is available at <a href="https://github.com/https://twitter.com/zx_loro/fugue-bench">https://github.com/https://twitter.com/zx_loro/fugue-bench</a>.</p>
+<p>The complete benchmark result and code is available at <a href="https://github.com/zxch3n/fugue-bench">https://github.com/zxch3n/fugue-bench</a>.</p>
 <p>It is worth noting that:</p>
 <ul>
 <li>The benchmark for Automerge is based on <code>automerge-wasm</code>, which is not the latest version of Automerge 2.0.</li>
 <li><code>crdt-richtext</code> and <code>fugue</code> are special-purpose CRDTs that tend to be faster and have a smaller encoding size.</li>
 <li>The encoding of <code>yjs</code>, <code>ywasm</code>, and <code>loro-wasm</code> still contains redundancy that can be compressed significantly. For more details, see <a href="https://loro.dev/docs/performance/docsize">the full report</a>.</li>
-<li>loro-wasm and fugue only support plain text for now</li>
+<li>At the time of this 2023 benchmark, <code>loro-wasm</code> and <code>fugue</code> only supported plain text.</li>
 </ul>
 <h1>Discussion</h1>
 <p><a href="https://news.ycombinator.com/item?id=35988046">CRDT-richtext: Rust implementation of Peritext and Fugue | Hacker News</a></p>
