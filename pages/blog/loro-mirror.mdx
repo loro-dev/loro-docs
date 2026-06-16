@@ -68,7 +68,7 @@ This code is repetitive and easy to get wrong. Mirror centralizes it behind a de
 
 ### Basic Example
 
-```ts twoslash
+```ts no_run
 /**
  * As an example, you can use `useState` from React to manage the state
  *
@@ -141,7 +141,7 @@ const stop = doc.subscribeLocalUpdates((bytes) => {
 
 ### React Example
 
-```tsx twoslash
+```tsx no_run
 import React, { useMemo } from "react";
 import { LoroDoc } from "loro-crdt";
 import { schema } from "loro-mirror";
@@ -214,7 +214,7 @@ export function TodoApp() {
 Undo/Redo
 
 ```tsx
-import { UndoManageker } from "loro-crdt";
+import { UndoManager } from "loro-crdt";
 
 // Inside the same component, after creating `doc`:
 const undo = useMemo(() => new UndoManager(doc), [doc]);
@@ -257,7 +257,7 @@ Because Mirror owns the bidirectional mapping between application state and the 
 
 - Text. Many interfaces render by lines, yet LoroText’s low‑level API is index‑based. Teams typically re‑implement line segmentation and map edits back to lines by hand. With Mirror in the middle, it becomes feasible to surface optional line‑aware events on top of LoroText so the UI receives stable, line‑based diffs without custom conversion—while retaining the underlying CRDT guarantees.
 - Tree. LoroTree CRDT already ensures correct concurrent moves, but developers still translate tree operations into application‑state patches. Mirror carries first‑class mappings from tree events into your state shape, so consumers can work with natural “insert/move/delete node” updates.
-- Ephemeral patches. We'll add [`setStateWithEphemeralPatch`](https://github.com/loro-dev/loro-mirror/issues/35) so Mirror can stream temporary drag or scale interactions through an `EphemeralStore`, letting collaborators see live previews while the persisted history stays clean and deduplicated once the change finalizes.
+- Ephemeral patches. [`setStateWithEphemeralPatch`](https://github.com/loro-dev/loro-mirror/issues/35) lets Mirror stream temporary drag or scale interactions through an `EphemeralStore`, so collaborators can see live previews while the persisted history stays clean and deduplicated once the change finalizes.
 
 By using loro-mirror to bridge CRDTs and application state consistency, and by expressing schemas declaratively, we can let AI help developers get more done correctly. This makes Loro not only suitable for professional creative tools with real-time collaboration, but also for enabling people to build practical mini-tools for themselves and their communities.
 

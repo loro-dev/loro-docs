@@ -12,7 +12,7 @@ import Authors, { Author } from "../../components/authors";
 
 <Author
   name="Zixuan Chen"
-  link="https://twitter.com/https://twitter.com/zx_loro"
+  link="https://twitter.com/zx_loro"
 />
 <Author name="Liang Zhao" link="https://github.com/Leeeon233" />
 
@@ -73,10 +73,10 @@ operation application, and network exception handling. For Loro's CRDT document,
 just two rounds of data exchange can transmit the missing operations between two
 documents to achieve final consistency:
 
-> You can find all the code samples in this blog [here](https://github.com/https://twitter.com/zx_loro/loro-blog-examples)
+> You can find all the code samples in this blog [here](https://github.com/zxch3n/loro-blog-examples)
 
 ```jsx
-import { LoroDoc, VersionVector } from "npm:loro-crdt@1.0.0-beta.3";
+import { LoroDoc, VersionVector } from "npm:loro-crdt@1.13.3";
 
 const docA = new LoroDoc();
 const docB = new LoroDoc();
@@ -112,7 +112,7 @@ A minimum of one round of data exchange can ensure consistency
 </summary>
 
 ```jsx
-import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.2";
+import { LoroDoc } from "npm:loro-crdt@1.13.3";
 
 const docA = new LoroDoc();
 const docB = new LoroDoc();
@@ -180,7 +180,7 @@ We also support:
 
 Loro also supports nesting between types, so you can model edits on JSON documents through them:
 
-> You can find all the code samples in this blog [here](https://github.com/https://twitter.com/zx_loro/loro-blog-examples)
+> You can find all the code samples in this blog [here](https://github.com/zxch3n/loro-blog-examples)
 
 ```tsx
 import {
@@ -188,7 +188,7 @@ import {
   LoroList,
   LoroMap,
   LoroText,
-} from "npm:loro-crdt@1.0.0-beta.2";
+} from "npm:loro-crdt@1.13.3";
 
 // Create a JSON structure of
 interface JsonStructure {
@@ -223,10 +223,10 @@ Loro supports primitives that allow users to switch between different versions, 
 Based on this operation primitive, applications can build various Git-like capabilities:
 
 - You can merge multiple versions without needing to manually resolve conflicts
-- You can rebase/squash updates from the current branch to the target branch (WIP)
+- Applications can build rebase and squash workflows on top of Loro's version primitives.
 
 ```jsx
-import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.2";
+import { LoroDoc } from "npm:loro-crdt@1.13.3";
 
 const doc = new LoroDoc();
 doc.setPeerId("0");
@@ -257,7 +257,7 @@ console.log(doc.getText("text").toString()); // "Hello, world! Alice!"
 You can also use `doc.fork()` to create a separate doc at the current version. It is independent of the current doc, and works like a fork:
 
 ```tsx
-import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.4";
+import { LoroDoc } from "npm:loro-crdt@1.13.3";
 
 const doc = new LoroDoc();
 doc.setPeerId("0");
@@ -279,7 +279,7 @@ console.log(doc.getText("text").toString()); // "Hello, world! Alice!"
 ```
 
 <aside>
-**Current limitations of version control in Loro**
+**Application-level version-control responsibilities**
 
 The application layer still needs a lot of code to provide users with more
 complete version control capabilities, such as:
@@ -416,7 +416,7 @@ that is too old and mainly use shallow doc for collaboration. Here's
 an example usage:
 
 ```jsx
-import { LoroDoc } from "npm:loro-crdt@1.0.0-beta.2";
+import { LoroDoc } from "npm:loro-crdt@1.13.3";
 
 const doc = new LoroDoc();
 for (let i = 0; i < 10_000; i++) {
@@ -514,7 +514,7 @@ and only needs to access historical operations when parallel edits occur".
 
 In Loro 1.0, we implemented a simple [LSM (Log-structured merge-tree)](https://en.wikipedia.org/wiki/Log-structured_merge-tree) engine internally. LSM is a data structure often used to
 implement Key-Value Databases, and Loro 1.0 is heavily inspired by its design.
-Currently, Loro's storage implementation uses get, set, and range operations of
+At the time of Loro 1.0, Loro's storage implementation used get, set, and range operations of
 Key-Value Database as primitives. For example, Loro stores history as a series of
 ChangeBlocks, with each ChangeBlock serialized to about 4KB. Each ChangeBlock
 uses its first Op Id as the Key, and the serialized binary data of the
@@ -590,7 +590,7 @@ The only data that needs to be parsed in this entire process are:
 <aside>
 ❓ Do we still need to load the entire document blob with these optimizations?
 
-We still need to load the entire document blob into memory. However, our current architecture has implemented internal block-based loading and storage, making it easier for us to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we'll assess if there are practical scenarios that require this capability. For most documents, Loro's current performance is already quite sufficient.
+At the time of Loro 1.0, we still needed to load the entire document blob into memory. However, the architecture already had internal block-based loading and storage, making it easier to implement true block-based retrieval and saving from disk in the future. This could make Loro function more like a database. While theoretically feasible, we planned to assess whether practical scenarios required this capability. For most documents, Loro's performance was already quite sufficient.
 
 </aside>
 
@@ -600,8 +600,8 @@ We still need to load the entire document blob into memory. However, our current
 
 > All benchmarks results below were performed on a MacBook Pro M1 2020
 
-Below is a comparison of Snapshot import and export speeds between Loro versions
-1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
+Below is a historical comparison of Snapshot import and export speeds between
+Loro versions 1.0.0-beta.1 and 0.16.12. The benchmark is based on document editing history
 from the real world. Thanks to [latch.bio](http://latch.bio) for sharing the
 document data. The benchmark code is available [here](https://github.com/loro-dev/latch-bench).
 The document contains 1,659,541 operations.
@@ -638,7 +638,7 @@ Here are the key points of this benchmark:
 The following shows the performance on a document after applying the editing
 history from the
 [Automerge Paper](https://github.com/automerge/automerge-perf/tree/master/edit-by-index)
-**100 times**. You can reproduce the results [here](https://github.com/https://twitter.com/zx_loro/automerge-paper-bench).
+**100 times**. You can reproduce the results [here](https://github.com/zxch3n/automerge-paper-bench).
 The document contains:
 
 - 18,231,500 single-character insertion operations
@@ -704,9 +704,9 @@ repositories. However, how to better manage versions and seamlessly integrate wi
 </aside>
 
 Loro CRDTs still have significant room for optimization in these scenarios.
-Currently, the Loro CRDTs library doesn't involve network or disk I/O, which
-enhances its ease of use but also constrains its capabilities and potential
-optimizations.
+At the time of Loro 1.0, the Loro CRDTs library didn't involve network or disk
+I/O, which enhanced its ease of use but also constrained its capabilities and
+potential optimizations.
 For example, while we've implemented block-level storage, documents are still
 imported and exported as whole units. Adding I/O capabilities to selectively
 load/save blocks would enable significant performance optimizations.
@@ -722,9 +722,5 @@ We're excited to see it being applied in various scenarios.
 If you're interested in using Loro, welcome to join our
 [Discord community](https://discord.gg/tUsBSVfqzf) for discussions.
 
-<aside>
-  🚀 **Want early access to our upcoming local-first apps built with Loro?**
-  [Sign up
-  here](https://noteforms.com/forms/request-early-access-for-loro-apps-vkbt9p)
-  to be among the first to try them out!
-</aside>
+For current updates, follow the [changelog](/changelog) or join the
+[Discord community](https://discord.gg/tUsBSVfqzf).

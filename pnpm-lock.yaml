@@ -78,8 +78,8 @@ importers:
         specifier: ^2.6.0
         version: 2.13.0(@babel/core@7.28.0)(@babel/template@7.27.2)(@types/react@18.0.26)(react@18.3.1)
       loro-crdt:
-        specifier: ^1.5.10
-        version: 1.5.10
+        specifier: ^1.13.3
+        version: 1.13.3
       lucide-react:
         specifier: ^0.294.0
         version: 0.294.0(react@18.3.1)
@@ -194,10 +194,10 @@ importers:
         version: 4.2.2
       loro-mirror:
         specifier: ^1.0.0
-        version: 1.0.0(loro-crdt@1.5.10)
+        version: 1.0.0(loro-crdt@1.13.3)
       loro-mirror-react:
         specifier: ^1.0.0
-        version: 1.0.0(loro-crdt@1.5.10)(loro-mirror@1.0.0(loro-crdt@1.5.10))(react@18.3.1)
+        version: 1.0.0(loro-crdt@1.13.3)(loro-mirror@1.0.0(loro-crdt@1.13.3))(react@18.3.1)
       marked:
         specifier: ^14.1.3
         version: 14.1.4
@@ -6521,8 +6521,8 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
-  loro-crdt@1.5.10:
-    resolution: {integrity: sha512-dBAw3Hh9EJLaS5MqyNMoZRq7r01UxLWUdm3go2v2EtYIrH658IG0vcktHuZqeEwyTMvE5eUtyHhLx3lgUyDFfw==}
+  loro-crdt@1.13.3:
+    resolution: {integrity: sha512-vh+hYxvsGL9MrsUaquPpawbrL97R4Qb84nc41xTh0zEEz7tJsdioH4mhbsLi0R659LFj3/xII2ML2ScZYJTw9Q==}
 
   loro-mirror-react@1.0.0:
     resolution: {integrity: sha512-GjA2P9i6Vd3tgnAk9LyCdmsHgybMi0/AKLc8q4oCYNssz2O6Jf8zY4th6N3vl+NQgHxZ9eJC08DeilNORE9gcw==}
@@ -17492,18 +17492,18 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  loro-crdt@1.5.10: {}
+  loro-crdt@1.13.3: {}
 
-  loro-mirror-react@1.0.0(loro-crdt@1.5.10)(loro-mirror@1.0.0(loro-crdt@1.5.10))(react@18.3.1):
+  loro-mirror-react@1.0.0(loro-crdt@1.13.3)(loro-mirror@1.0.0(loro-crdt@1.13.3))(react@18.3.1):
     dependencies:
-      loro-crdt: 1.5.10
-      loro-mirror: 1.0.0(loro-crdt@1.5.10)
+      loro-crdt: 1.13.3
+      loro-mirror: 1.0.0(loro-crdt@1.13.3)
       react: 18.3.1
 
-  loro-mirror@1.0.0(loro-crdt@1.5.10):
+  loro-mirror@1.0.0(loro-crdt@1.13.3):
     dependencies:
       immer: 10.1.3
-      loro-crdt: 1.5.10
+      loro-crdt: 1.13.3
 
   lower-case@2.0.2:
     dependencies:

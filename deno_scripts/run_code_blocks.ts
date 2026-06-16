@@ -2,7 +2,12 @@ import { walk } from "jsr:@std/fs";
 import { CodeBlock, extractCodeBlocks } from "./extract_code_blocks.ts";
 import { resolve } from "https://deno.land/std@0.139.0/path/mod.ts";
 
-const LORO_VERSION = "1.5.10";
+const LORO_VERSION = "1.13.3";
+const PACKAGE_VERSIONS: Record<string, string> = {
+  "loro-crdt": LORO_VERSION,
+  "loro-mirror": "1.0.0",
+  "loro-mirror-react": "1.0.0",
+};
 
 async function scanMarkdownFiles(
   dir: string,
@@ -33,10 +38,13 @@ async function scanMarkdownFiles(
   );
 }
 
-function replaceImportVersion(input: string, targetVersion: string): string {
-  const regex = /from "loro-crdt"/g;
-  const replacement = `from "npm:loro-crdt@${targetVersion}"`;
-  return input.replace(regex, replacement);
+function replaceImportVersions(input: string): string {
+  let output = input;
+  for (const [pkg, version] of Object.entries(PACKAGE_VERSIONS)) {
+    const regex = new RegExp(`from "${pkg}"`, "g");
+    output = output.replace(regex, `from "npm:${pkg}@${version}"`);
+  }
+  return output;
 }
 
 // Parsing command-line arguments
@@ -89,7 +97,7 @@ await scanMarkdownFiles(targetDir, (block) => {
     name: `${block.filePath}:${block.lineNumber}`,
     job: async () => {
       let codeBlock = block.content;
-      codeBlock = replaceImportVersion(codeBlock, LORO_VERSION);
+      codeBlock = replaceImportVersions(codeBlock);
       if (codeBlock.includes("Loro") && !codeBlock.includes("import {")) {
         codeBlock = IMPORTS + codeBlock;
       }
@@ -142,6 +150,8 @@ await scanMarkdownFiles(targetDir, (block) => {
   });
 });
 
-for (let i = 0; i < 16; i++) {
-  runJob();
+await Promise.all(Array.from({ length: 16 }, () => runJob()));
+await processLogQueue();
+if (failed > 0) {
+  Deno.exit(1);
 }
