@@ -13,6 +13,10 @@ export default {
     title: "Docs",
     type: "page"
   },
+  kb: {
+    title: "Knowledge Base",
+    type: "page"
+  },
   blog: {
     title: "Blog",
     type: "page"

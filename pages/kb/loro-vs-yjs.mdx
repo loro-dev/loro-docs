@@ -1,0 +1,87 @@
+---
+title: "Loro vs Yjs: Which CRDT Library Fits Your Collaborative App?"
+description: "Compare Loro and Yjs for collaborative editing, local-first apps, performance trade-offs, data model design, and developer ergonomics."
+keywords: "loro vs yjs, yjs alternative, best crdt library, collaborative editing crdt"
+---
+
+# Loro vs Yjs
+
+If you are choosing a CRDT library for a collaborative app, Yjs is usually the default comparison point. That makes sense: it has a strong ecosystem, broad mindshare, and real adoption in collaborative editors.
+
+Loro is newer in ecosystem terms, but it is compelling for teams that care about richer document structure, version history, and time travel as product features rather than afterthoughts.
+
+- choose **Yjs** when ecosystem maturity and existing editor integrations matter most
+- choose **Loro** when your product needs stronger document history, richer structured data, and a more explicit local-first + versioning story
+
+## Quick answer
+
+Choose **Yjs** if:
+
+- you want the most established JavaScript collaboration ecosystem
+- you already rely on editor bindings built around Yjs
+- your team wants the safest community-default choice
+
+Choose **Loro** if:
+
+- you want collaboration **and** built-in document history to be first-class
+- your app uses more than just flat text
+- you care about trees, movable structures, and version-oriented product UX
+- you are building a new system rather than migrating a mature Yjs deployment
+
+## Ecosystem and maturity
+
+This is where Yjs is clearly stronger today: larger community footprint, broader ecosystem familiarity, more examples and editor integrations.
+
+## Data model differences
+
+Loro is especially interesting when your document model includes:
+
+- rich text
+- maps and lists
+- tree-shaped content
+- movable containers or structured document state
+
+## History and time travel
+
+This is the biggest differentiator. Many collaborative products need version history, restore points, document inspection, and replayable evolution. Loro has a much stronger story around document history and time travel.
+
+## Performance and architecture
+
+Performance depends on document size, mutation pattern, history model, and sync workload.
+
+**TODO:** Add benchmark citations or link to documented performance claims only where publicly supported by Loro/Yjs materials.
+
+## Developer experience
+
+Yjs often feels like the familiar ecosystem pick, especially for JavaScript teams already surrounded by editor tooling.
+
+Loro is attractive when:
+
+- you want a Rust-first core with JS/WASM usage
+- you care about explicit history capabilities
+- your app is not just shared text but a structured collaborative document model
+
+## Who should choose Loro
+
+Loro is a strong fit if you are:
+
+- starting a new collaborative product
+- building around structured documents, trees, or movable containers
+- treating version history as a product feature
+- optimizing for local-first architecture rather than only real-time text sync
+
+## Who should stay with Yjs
+
+Lean Yjs if:
+
+- ecosystem depth is your top priority
+- your product is already tightly bound to Yjs-specific integrations
+- your current architecture works and history/versioning is not a core gap
+
+## What to read next
+
+- [Get Started with Loro](/docs/tutorial/get_started)
+- [Learn how sync works](/docs/tutorial/sync)
+- [See the Time Travel docs](/docs/tutorial/time_travel)
+- [CRDT Library Comparison](/kb/crdt-library-comparison)
+- [What Is a CRDT?](/kb/what-is-crdt)

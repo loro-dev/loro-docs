@@ -1,0 +1,91 @@
+---
+title: "How to Build a Collaborative Editor with CRDTs"
+description: "Learn the key architecture decisions behind building a collaborative editor, including document model, sync, offline support, conflict resolution, and version history."
+keywords: "build collaborative editor, collaborative text editor architecture, real-time editor crdt, collaborative editing tutorial"
+---
+
+# How to Build a Collaborative Editor with CRDTs
+
+Building a collaborative editor is not just about broadcasting keystrokes. A real product has to survive concurrent edits, reconnect after network loss, preserve document structure, and help users recover from mistakes.
+
+CRDTs are often a strong fit because they let each client update locally and synchronize later while still converging on the same document state.
+
+## What a collaborative editor actually needs
+
+At minimum, you need:
+
+- a document model for the shared content
+- a sync layer to move updates between clients
+- a persistence layer so state survives app restarts and reconnects
+- presence / awareness for cursors, selections, and who is online
+- a history model for undo, restore, and version inspection
+- auth and permissions so not everyone can mutate everything
+
+## Why CRDTs are a good fit
+
+CRDTs help with the core document-state problem:
+
+- multiple users edit concurrently
+- clients may be offline temporarily
+- updates can arrive in different orders
+- all replicas still need to converge
+
+## What CRDTs solve — and what they do not
+
+CRDTs help with shared document state, concurrent merge behavior, offline edits that sync later, and deterministic convergence.
+
+They do **not** automatically solve authentication, authorization, presence, transport infrastructure, or product-specific permission flows.
+
+## The core architecture pieces
+
+A practical collaborative editor usually has these parts:
+
+1. Document model
+2. Local editing state
+3. Sync transport
+4. Persistence
+5. Presence / awareness
+6. Version history
+
+## Text editors vs structured editors
+
+There is a big difference between a shared text buffer and a structured collaborative editor. If the product is trending toward structured content, pick a library that will not fight you later.
+
+## Offline-first and reconnect behavior
+
+A solid collaborative editor should handle:
+
+- local edits while disconnected
+- replaying updates on reconnect
+- merging with remote edits safely
+- reloading large documents without bizarre corruption or duplicate state
+
+## Why version history matters
+
+If you stop at convergence, you get a collaborative system.
+If you add inspectable history and restore points, you start getting a trustworthy product.
+
+## A practical stack with Loro
+
+A simple architecture with Loro might look like this:
+
+- client: editor UI + Loro document in memory
+- transport: WebSocket, WebRTC, or your own sync channel
+- backend: stores snapshots and/or updates, enforces auth and permissions
+- history UX: built on top of Loro's document history / time-travel capabilities
+
+## Common mistakes when building collaborative editors
+
+- treating presence like document state
+- only testing on perfect networks
+- forgetting recovery and versioning
+- choosing a data model that is too shallow
+
+## What to read next
+
+- [Get Started with Loro](/docs/tutorial/get_started)
+- [Learn how sync works](/docs/tutorial/sync)
+- [Explore Time Travel](/docs/tutorial/time_travel)
+- [Understand the CRDT basics](/kb/what-is-crdt)
+- [Loro vs Yjs](/kb/loro-vs-yjs)
+- [CRDT Library Comparison](/kb/crdt-library-comparison)

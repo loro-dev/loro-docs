@@ -1,0 +1,139 @@
+---
+title: "What Is a CRDT? Conflict-Free Replicated Data Types Explained"
+description: "Learn what CRDTs are, how they resolve conflicts in offline and real-time apps, and why they matter for local-first software and collaborative editing."
+keywords: "what is crdt, crdt explained, conflict-free replicated data types, local-first crdt, collaborative editing"
+---
+
+# What Is a CRDT?
+
+A CRDT (Conflict-Free Replicated Data Type) is a data structure designed for concurrent updates across multiple replicas. In practice, that means two or more users can edit shared state at the same time, sync later, and still end up with the same result.
+
+If you are building collaborative or local-first software, CRDTs matter because they let clients update state locally instead of waiting for a central lock. That makes offline editing, low-latency interaction, and peer-to-peer or eventually connected sync much easier to support.
+
+This page explains what CRDTs solve, where they fit, where they do **not** fit, and how Loro uses them in real products.
+
+## The real problem CRDTs solve
+
+The core problem is not "how do I send updates over WebSocket." It is what happens when multiple users change the same document while:
+
+- editing at the same time
+- working on unstable networks
+- going offline and reconnecting later
+- syncing through different servers or peers
+
+A naive sync model often treats state like a single blob: whoever writes last wins. That sounds simple, but it tends to destroy user intent.
+
+Imagine one user inserts a paragraph while another user fixes a heading offline. If your sync model is just replacing the latest full document state, one of those edits can disappear. Users do not care that the system was simple internally. They care that their work is gone.
+
+CRDTs exist to solve exactly this class of problem: concurrent changes to shared state that still need to converge without manual conflict resolution every time.
+
+## What “conflict-free” means in practice
+
+The phrase sounds academic, but the practical idea is pretty simple.
+
+With a CRDT:
+
+- each replica can accept local updates independently
+- replicas can exchange updates later
+- the merge result converges to the same state on every replica
+
+So if Alice edits on her laptop and Bob edits on his tablet, they do not need to take turns through a central lock just to keep the document valid. Their changes can be merged according to the data type's rules.
+
+"Conflict-free" does **not** mean users never make competing edits. It means the data model is designed so those concurrent edits can be merged deterministically and converge.
+
+That is the important part: convergence without a fragile pile of custom merge code.
+
+## A simple CRDT example
+
+Say two users start from the same text:
+
+```txt
+Hello world
+```
+
+Now imagine:
+
+- User A inserts `beautiful ` after `Hello `
+- User B inserts `collaborative ` after `Hello `
+
+Both edits happen before sync.
+
+In a naive system, one update may overwrite the other depending on arrival order. In a CRDT-based text model, both insertions can be preserved, and all replicas will eventually agree on the merged result.
+
+The exact final order may depend on the CRDT's ordering rules, but the key thing is this: the system converges, and neither edit is silently dropped.
+
+## CRDT vs OT vs naive sync
+
+A lot of people first hear about CRDTs while comparing them to OT (Operational Transformation). Fair enough — both are used in collaborative systems, especially editors.
+
+### Naive sync
+
+Naive sync usually means one of these:
+
+- full-state replacement
+- last-write-wins for fields
+- app-specific merge logic glued together later
+
+This can be fine for simple forms or settings screens, but it falls apart fast when users are editing structured shared content concurrently.
+
+### OT
+
+OT is well-known from collaborative document editors. It transforms operations against each other so changes can still apply in the right order.
+
+OT can work very well, but it often depends more heavily on central coordination and carefully maintained transformation logic. For some products, that is a good trade. For others — especially offline-first or multi-topology sync — it gets messy.
+
+### CRDT
+
+CRDTs push more of the concurrency handling into the data type design itself. Instead of relying on a central authority to serialize everything, the replicated state and update rules are built to converge.
+
+That makes CRDTs especially attractive when you care about:
+
+- local-first interaction
+- intermittent connectivity
+- peer-to-peer or flexible sync topologies
+- preserving concurrent user intent
+
+## Common CRDT data types
+
+Common examples include text, list, map, and tree.
+
+This is where product reality matters. Many apps are not just shared text. They are shared structured content. If your state model includes movable blocks, nested nodes, or rich content trees, the shape of the CRDT data model matters a lot.
+
+## Where CRDTs are a good fit
+
+Typical examples:
+
+- collaborative text editors
+- local-first note apps
+- design tools and whiteboards
+- knowledge bases with shared structure
+- task or workflow apps with nested content
+- multiplayer interfaces with structured shared state
+
+## Where CRDTs are not a great fit
+
+CRDTs may be overkill when:
+
+- your data is mostly CRUD forms with low concurrency
+- you already have a strongly centralized workflow that users accept
+- your state has simple overwrite semantics and no collaboration pressure
+- storage and metadata overhead matters more than concurrent merge quality
+
+## Why CRDTs matter for local-first software
+
+A local-first app treats the local device as a primary place where work happens, not just a cache for server state. CRDTs support that model by letting local changes happen first and synchronize later.
+
+## How Loro fits in
+
+Loro is a CRDT library built for collaborative and local-first software. It gives you a shared document model that can merge concurrent changes while supporting rich data structures like text, lists, maps, and trees.
+
+What makes Loro especially interesting is that it is not only about convergence. It also has a stronger story around document history and time travel.
+
+## What to read next
+
+- [CRDT Concepts](/docs/concepts/crdt)
+- [Get Started with Loro](/docs/tutorial/get_started)
+- [Learn how sync works](/docs/tutorial/sync)
+- [See why time travel matters](/docs/tutorial/time_travel)
+- [Loro vs Yjs](/kb/loro-vs-yjs)
+- [CRDT Library Comparison](/kb/crdt-library-comparison)
