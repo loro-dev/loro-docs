@@ -162,6 +162,22 @@ export default function CustomerWall() {
                                 <p className="text-2xl font-medium pl-1">Lody</p>
                             </a>
                         </div>
+
+                        {/* Betalyra */}
+                        <div className="group">
+                            <a
+                                href="https://betalyra.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center p-6 h-24 bg-zinc-800/30 border border-zinc-700/30 rounded-xl hover:border-zinc-600/50 hover:bg-zinc-800/50 transition-all duration-300 group"
+                            >
+                                <img
+                                    src="/images/betalyra-text-dark.svg"
+                                    alt="Betalyra"
+                                    className="max-w-[120px] max-h-12 w-auto h-auto brightness-[0.9] group-hover:brightness-110 transition-all duration-300"
+                                />
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
