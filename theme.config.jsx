@@ -5,6 +5,19 @@ import Image from "next/image";
 import Footer from "./components/landing/Footer";
 import LanguageDropdown from "./components/LanguageDropdown";
 
+const DEFAULT_TITLE = "Loro – Reimagine state management with CRDTs";
+const DEFAULT_DESCRIPTION =
+  "Loro is a high-performance CRDT library for building local-first, real-time collaborative apps — with rich text, movable trees, version control, and time travel.";
+const DEFAULT_IMAGE = "https://loro.dev/og-image.jpg";
+
+function formatPageTitle(metaTitle) {
+  if (!metaTitle) return DEFAULT_TITLE;
+  const trimmed = String(metaTitle).trim();
+  if (/loro/i.test(trimmed)) return trimmed;
+  if (/[–-]\s*loro$/i.test(trimmed)) return trimmed;
+  return `${trimmed} – Loro`;
+}
+
 export default {
   logo: (
     <span
@@ -58,10 +71,13 @@ export default {
     // older content that still sets them there.
     const metaTitle = config.title ?? config.frontMatter?.title;
     const metaDescription =
-      config.description ?? config.frontMatter?.description ?? "Loro";
+      config.description ?? config.frontMatter?.description ?? DEFAULT_DESCRIPTION;
     const metaImage = config.image ?? config.frontMatter?.image;
-    const pageTitle = metaTitle ? `${metaTitle} – Loro` : "Loro";
-    const DEFAULT_IMAGE = "https://i.ibb.co/T1x1bSf/IMG-8191.jpg";
+    const pageTitle = formatPageTitle(metaTitle);
+    const ogImage = metaImage || DEFAULT_IMAGE;
+    const ogType = normalizedPath.startsWith("/blog/")
+      ? "article"
+      : "website";
 
     return (
       <>
@@ -76,14 +92,18 @@ export default {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta httpEquiv="Content-Language" content="en" />
         <meta name="description" content={metaDescription} />
-        <meta name="og:description" content={metaDescription} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content={ogType} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:image" content={ogImage} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={metaImage || DEFAULT_IMAGE} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={ogImage} />
         <meta name="twitter:site:domain" content="loro.dev" />
         <meta name="twitter:site" content="@loro_dev" />
-        <meta name="twitter:url" content="https://loro.dev" />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:image" content={metaImage || DEFAULT_IMAGE} />
+        <meta name="twitter:url" content={canonicalUrl} />
         <meta name="apple-mobile-web-app-title" content="Loro" />
         <link rel="canonical" href={canonicalUrl} />
         <link rel="alternate" hrefLang="en" href={canonicalUrl} />
@@ -95,7 +115,7 @@ export default {
   useNextSeoProps() {
     const { asPath } = useRouter();
     return {
-      titleTemplate: asPath === "/" ? undefined : "%s – Loro",
+      titleTemplate: asPath === "/" ? "%s" : "%s – Loro",
     };
   },
   sidebar: {
