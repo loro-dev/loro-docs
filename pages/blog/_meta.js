@@ -1,4 +1,10 @@
 export default {
+  "crdt-is-not-enough": {
+    theme: {
+      toc: true,
+      pagination: false,
+    },
+  },
   "mergeable-containers": {
     theme: {
       toc: true,
