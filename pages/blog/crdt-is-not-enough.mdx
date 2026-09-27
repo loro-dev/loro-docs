@@ -13,7 +13,7 @@ import Authors, { Author } from "../../components/authors";
   <Author name="Zixuan Chen" link="https://github.com/zxch3n/" />
 </Authors>
 
-Today I want to talk about "CRDTs are not enough" — that is, what's still missing if you want to build a local-first sync engine.
+A user sees a new-message notification, opens the conversation, and finds no new message. The conversation index has synced, but the message body has not. Both documents can eventually converge while the user still sees an incomplete operation. This is one of the gaps we encountered while building a local-first sync engine on top of CRDTs.
 
 ![](./crdt-is-not-enough/slide-01.png)
 
@@ -38,15 +38,14 @@ The classic example is Git. Git hasn't done the privacy part yet, but it's alrea
 
 ![](./crdt-is-not-enough/slide-06.png)
 
-Local-first and local-only are not the same thing. I've seen a lot of people in the community lump them together. But right now we're actually missing a mass-market application that delivers this kind of local-first experience end to end. A lot of apps lack the convenience of the cloud — they're really local-only, but they call themselves local-first. In practice they don't give you cloud convenience, and they don't give you P2P sync or anything like that either.
+For Lody, local storage alone was not enough. We wanted users to work across devices and collaborate without managing synchronization themselves, while retaining control of their data. That combination shaped our requirements for the sync engine.
 
-![](./crdt-is-not-enough/slide-07.png)
 
 So what do we, and the local-first community, imagine a sync engine should be?
 
 ![](./crdt-is-not-enough/slide-08.png)
 
-I can quote Martin Kleppmann's talk at this year's Local-first Conference. For developers, it means you no longer have to worry about failed requests, timeouts, whether your data actually reached the server, or how to tell the user about it. All of those messy problems should just be the sync engine's job. But in reality, we don't have a sync engine like that yet.
+I can quote Martin Kleppmann's talk at this year's Local-first Conference. For developers, it means you no longer have to worry about failed requests, timeouts, whether your data actually reached the server, or how to tell the user about it. All of those messy problems should just be the sync engine's job. In Lody, we still had to make application-level decisions about when data was ready to display and how to communicate incomplete sync to users.
 
 ![](./crdt-is-not-enough/slide-09.png)
 
@@ -58,12 +57,10 @@ From the end user's point of view, local-first delivers two very direct benefits
 
 ![](./crdt-is-not-enough/slide-11.png)
 
-But in theory, it can never be a silver bullet. There's a whole category of problems it can't solve — anything that needs strong consistency. Ticket sales, inventory management, payments, first-come-first-served meeting room booking — these are all things a local-first sync engine fundamentally can't handle. Because that whole class of problems needs strong consistency, whereas local-first sync is good at eventually consistent scenarios.
+A local-first app can support ticket sales, inventory management, payments, or room bookings. But an operation such as allocating the last available seat requires coordination before it can be confirmed; independent offline edits alone cannot guarantee that the seat is sold only once. The app can still support local reads and drafts while coordinating operations that enforce these shared constraints.
 
 
-![](./crdt-is-not-enough/slide-12.png)
-
-And a lot of those scenarios are creative work: code, documents, video editing, music, all kinds of artistic creation. That's the big category a sync engine like this can handle in a unified way.
+Creative work — code, documents, video editing, and music — often allows more edits to happen independently and merge later. That makes it a natural fit for this style of synchronization.
 
 
 ![](./crdt-is-not-enough/slide-13.png)
@@ -78,15 +75,13 @@ That's how you store things locally, what to do about timeouts, how you tell the
 
 ![](./crdt-is-not-enough/slide-15.png)
 
-Today, CRDT libraries already give you these capabilities. Loro, Yjs, and Automerge can all model structured documents like JSON and give you eventual consistency. As long as every replica ends up with the same set of updates, the final state is guaranteed to be the same. They also give you incremental sync; and for text, rich text, lists, and so on, the merge results come out as intuitive as possible. There's a lot of research behind this, and the results have been folded into these CRDT libraries. Out-of-order and duplicate updates during sync are covered too. You don't have to care when an update arrives; you can safely resend an update, and it won't be applied twice. But none of this solves all the problems I just mentioned. These libraries are essentially pure computation — they don't cover the network layer or the persistence layer, anything that involves I/O. And those are exactly the things a sync engine has to get right.
+Today, CRDT libraries already give you these capabilities. Loro, Yjs, and Automerge can all model structured documents like JSON and give you eventual consistency. As long as every replica ends up with the same set of updates, the final state is guaranteed to be the same. They also give you incremental sync; and for text, rich text, lists, and so on, the merge results come out as intuitive as possible. There's a lot of research behind this, and the results have been folded into these CRDT libraries. Out-of-order and duplicate updates during sync are covered too. You don't have to care when an update arrives; you can safely resend an update, and it won't be applied twice. These are the responsibilities of the CRDT core. The surrounding ecosystems already provide more: [automerge-repo](https://automerge.org/docs/reference/concepts/) manages multiple documents, networking, and storage, while Yjs has [connection providers](https://docs.yjs.dev/ecosystem/connection-provider) and persistence adapters such as [y-indexeddb](https://docs.yjs.dev/ecosystem/database-provider/y-indexeddb). Those building blocks still leave product decisions about which documents to discover and load, and when related updates are ready to display together.
 
 
 ![](./crdt-is-not-enough/slide-16.png)
 
-For example, how should you actually do P2P? There's still a lot missing there, and there are no answers yet. How should the sync protocol be designed? Right now it's a bit of a free-for-all. How do you design and deliver the UX, especially in a decentralized environment, so it feels intuitive to users? And how do you do authentication in a decentralized setting — and how do you present that in the UI/UX?
+For Lody, the questions were how to combine these pieces: which documents should a device fetch, what should the UI show while content is still arriving, and how should permissions appear to users? Supporting P2P would also require us to decide how identity and access control work without relying on our hosted backend.
 
-
-![](./crdt-is-not-enough/slide-17.png)
 
 We worked backwards, step by step, while building Lody, and we've accumulated some experience. So let me share a bit of it, just to get the conversation going.
 
@@ -98,7 +93,7 @@ The [Lody](https://github.com/LodyAI/Lody) project should have seven thousand-so
 
 ![](./crdt-is-not-enough/slide-20.png)
 
-Lody is an agent control plane. It needs to sync all kinds of conversation information, and in the future there'll be more document information too. That's thousands of documents whose data we need to sync. How do we do lazy loading? How do we sync the whole repo? That was the first problem we ran into. You can't load the full content of every document the moment someone opens the app. But Loro, Yjs, and Automerge — all three CRDT libraries — only give you document-level sync. To sync a whole repo, you usually have to combine them with something else.
+Lody is an agent control plane. It needs to sync all kinds of conversation information, and in the future there'll be more document information too. That's thousands of documents whose data we need to sync. How do we do lazy loading? How do we sync the whole repo? That was the first problem we ran into. You can't load the full content of every document the moment someone opens the app. Document convergence alone does not define a directory of available documents or decide which content to fetch. Multi-document tools such as automerge-repo already exist; our task was to design a metadata-first directory and loading policy for Lody on top of Loro.
 
 
 ![](./crdt-is-not-enough/slide-21.png)
@@ -133,17 +128,17 @@ CRDTs move the computational complexity from the cloud to the local device, so t
 
 ![](./crdt-is-not-enough/slide-27.png)
 
-The next problem is one we haven't solved either, but it's something you have to solve if you want to offer a local-first sync engine. In the sync engine we've built for Lody so far, there are no cross-stream transactions. For example, when you send a message, on one hand you have to update the meta I mentioned — the Flock document. The data in that document gets updated. Once the metadata is updated, I tell the user there's a new message, but actually writing the new message is a separate action. So one send turns into two actions, and there's no transactionality between them. That means in the UI/UX you can end up with this: the user gets an update, gets notified there's a new message, clicks into the conversation — and sees nothing. Because there's no transactionality, that really can happen. Maybe a stream dropped while sending, or a stream dropped while receiving. It can't bundle the updates from two streams into a single commit. This is also a place where we add a lot of complexity for the application.
+The notification example at the start comes from splitting one user action across two streams. Sending a message updates both the conversation document and the Flock metadata used by the conversation list. Our engine has no cross-stream transactions. The two streams are delivered independently, so a receiving client that shows a notification as soon as metadata arrives can lead the user to a conversation whose new message has not arrived yet.
+
+The user-visible requirement is simple: a client should not show a new-message notification until the corresponding message is available locally. Writing both updates durably on the sender, committing them together on the server, and displaying them together on the receiver are distinct guarantees. Even a server-side atomic commit would not, by itself, make clients fetching separate streams display both updates together.
 
 
 ![](./crdt-is-not-enough/slide-28.png)
 
-And this problem isn't something another CRDT can fix. It has to be solved from the sync engine's point of view.
+Convergence within each document does not provide that visibility guarantee across documents. The sync engine and application need a way to track the relationship between the updates and decide when they can be shown. We have not yet built a general mechanism for this in Lody.
 
 
-![](./crdt-is-not-enough/slide-29.png)
-
-To work around this kind of problem, both the modeling and the sync ordering pick up a lot of extra complexity. When modeling, you first try as hard as you can to avoid conflicts, and for the parts CRDTs can't cover, you build a conflict UI.
+That leaves the application with extra work in its data model, sync scheduling, and UI. Delayed delivery also needs different treatment from a genuine editing conflict: a missing message may still be on its way.
 
 
 ![](./crdt-is-not-enough/slide-30.png)
@@ -159,7 +154,6 @@ Why talk about the cloud at all? It comes back to the Git and GitHub example. Th
 ![](./crdt-is-not-enough/slide-32.png)
 
 At first we tried Cloudflare's Durable Objects. We tried to let one Durable Object manage the entire repo directly: one user or one org maps to one repo, and we forward everything through that Durable Object, syncing data in that shape. Inside the Durable Object we'd load the CRDT document, compute the version diff, and do incremental sync. But we quickly found it couldn't really carry that usage pattern or that volume. To compare versions, you either pull the relevant updates, load them into the CRDT document, and then compare — which is very expensive: high memory cost, and a lot of data to read and load. Or you store the version and other info in the SQLite inside the Durable Object, but that also has fairly high read/write costs, and you have to update the version vector on every update. And a repo also has different permissions: some people are read-only, some can write; some rooms are open to some people and not to others.
-
 
 
 With that usage pattern, either the read/write cost is very high, or the long-connection cost is high, because Durable Objects bill by connection time. However long a WebSocket connection stays alive, that's the duration cost. To avoid that cost, you can evict all memory and go into hibernation. In that state the WebSocket connection stays open, but you're not billed for that time. At the same time, the Durable Object's other in-memory state gets evicted too, so all state has to live in its built-in SQLite. So all those state updates turn back into SQLite read/write cost. At the time, we found that cost was still a bit high.
@@ -192,7 +186,7 @@ If you add end-to-end encryption, the server doesn't need to change much at all 
 
 ![](./crdt-is-not-enough/slide-38.png)
 
-But our limitation right now is that the authentication we designed is still centralized — we haven't gotten it to a decentralized state. We need to be pragmatic here, because this problem isn't solved well yet, and there's no stable, ready-to-use protocol. For the end-to-end encryption protocol, we also chose a server-based linear log — the stream I just described. That's because we haven't found a really good way to do authentication in a decentralized environment. There's Keyhive and projects like that, but they're still pretty alpha. So we went with the linear log.
+But our limitation right now is that the authentication we designed is still centralized — we haven't gotten it to a decentralized state. For the end-to-end encryption protocol, we also chose a server-based linear log — the stream I just described. Projects such as [Keyhive](https://www.inkandswitch.com/project/keyhive/) explore decentralized access control. We have not integrated such a design into Lody; the linear log is the approach we chose for our current system.
 
 
 ![](./crdt-is-not-enough/slide-39.png)
@@ -222,4 +216,4 @@ The difference users can feel — here are two comments from X: Lody's sync feel
 
 ![](./crdt-is-not-enough/slide-44.png)
 
-To sum up, the remaining challenges go beyond document convergence: authentication, end-to-end encryption, cross-document transactions, and intuitive UI/UX in decentralized systems.
+To sum up, the remaining challenges go beyond document convergence: authentication, end-to-end encryption, consistent visibility across documents, and intuitive UI/UX in decentralized systems.
