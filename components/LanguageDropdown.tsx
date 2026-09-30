@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SVGProps } from "react";
+import { useRouter } from "next/router";
+import { hasChineseTranslation } from "../lib/seo.mjs";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -57,6 +59,8 @@ function buildTargetUrl(domain: string) {
 }
 
 export default function LanguageDropdown() {
+  const { asPath } = useRouter();
+  const chineseAvailable = hasChineseTranslation(asPath);
   const [isOpen, setIsOpen] = useState(false);
   const [activeLanguage, setActiveLanguage] = useState<LanguageId>("en");
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,7 +94,7 @@ export default function LanguageDropdown() {
 
   const handleSelect = useCallback((language: LanguageId) => {
     const target = LANGUAGES.find((item) => item.id === language);
-    if (!target) {
+    if (!target || (language === "zh" && !chineseAvailable)) {
       return;
     }
 
@@ -100,7 +104,7 @@ export default function LanguageDropdown() {
     if (typeof window !== "undefined") {
       window.location.href = buildTargetUrl(target.domain);
     }
-  }, []);
+  }, [chineseAvailable]);
 
   return (
     <div
@@ -121,7 +125,7 @@ export default function LanguageDropdown() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "absolute right-0 mt-2 w-32 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg transition-opacity duration-150 dark:border-neutral-700 dark:bg-neutral-900",
+          "absolute right-0 mt-2 w-44 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg transition-opacity duration-150 dark:border-neutral-700 dark:bg-neutral-900",
           isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         )}
       >
@@ -129,15 +133,17 @@ export default function LanguageDropdown() {
           <button
             key={id}
             type="button"
+            disabled={id === "zh" && !chineseAvailable}
+            title={id === "zh" && !chineseAvailable ? "Chinese translation is not available for this page" : undefined}
             className={cn(
-              "flex w-full items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
+              "flex w-full items-center gap-2 px-3 py-2 text-sm text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
               id === activeLanguage
                 ? "bg-gray-100 font-medium text-gray-900 dark:bg-neutral-800 dark:text-gray-100"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-neutral-800 dark:hover:text-gray-100"
             )}
             onClick={() => handleSelect(id)}
           >
-            {label}
+            {label}{id === "zh" && !chineseAvailable ? "（暂无译文）" : ""}
           </button>
         ))}
       </div>

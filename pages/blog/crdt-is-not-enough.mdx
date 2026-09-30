@@ -4,8 +4,10 @@ date: 2026/09/21
 keywords: crdt, loro, local-first, sync engine, lody
 description: Drawing on five years of building Loro and Lody, this talk maps the gaps between what CRDT libraries provide and what a production local-first sync engine actually requires.
 tag: local-first, crdt, sync engine
-ogImage: /images/crdt-is-not-enough.png
+image: /images/crdt-is-not-enough.png
 ---
+
+# CRDTs are not enough: From CRDTs to a local-first sync engine
 
 import Authors, { Author } from "../../components/authors";
 
@@ -22,6 +24,8 @@ Let me introduce myself quickly. My name is Zixuan Chen. I've been working on lo
 ![](./crdt-is-not-enough/slide-02.png)
 
 First: what even is local-first software?
+
+## What local-first software promises
 
 ![](./crdt-is-not-enough/slide-03.png)
 
@@ -42,6 +46,8 @@ For Lody, local storage alone was not enough. We wanted users to work across dev
 
 
 So what do we, and the local-first community, imagine a sync engine should be?
+
+## What a local-first sync engine needs to handle
 
 ![](./crdt-is-not-enough/slide-08.png)
 
@@ -73,6 +79,8 @@ The essential complexity behind all of it has to move from the application devel
 That's how you store things locally, what to do about timeouts, how you tell the user, what events you expose, how you express the permissions underneath, how you switch backends, how you provide P2P, and how you provide end-to-end encryption at the same time. All of that becomes the sync engine's responsibility.
 
 
+## What CRDT libraries already provide
+
 ![](./crdt-is-not-enough/slide-15.png)
 
 Today, CRDT libraries already give you these capabilities. Loro, Yjs, and Automerge can all model structured documents like JSON and give you eventual consistency. As long as every replica ends up with the same set of updates, the final state is guaranteed to be the same. They also give you incremental sync; and for text, rich text, lists, and so on, the merge results come out as intuitive as possible. There's a lot of research behind this, and the results have been folded into these CRDT libraries. Out-of-order and duplicate updates during sync are covered too. You don't have to care when an update arrives; you can safely resend an update, and it won't be applied twice. These are the responsibilities of the CRDT core. The surrounding ecosystems already provide more: [automerge-repo](https://automerge.org/docs/reference/concepts/) manages multiple documents, networking, and storage, while Yjs has [connection providers](https://docs.yjs.dev/ecosystem/connection-provider) and persistence adapters such as [y-indexeddb](https://docs.yjs.dev/ecosystem/database-provider/y-indexeddb). Those building blocks still leave product decisions about which documents to discover and load, and when related updates are ready to display together.
@@ -91,6 +99,8 @@ We worked backwards, step by step, while building Lody, and we've accumulated so
 The [Lody](https://github.com/LodyAI/Lody) project should have seven thousand-something commits by now, and a lot of them are sync-related upgrades and rework.
 
 
+## Discovering and loading multiple documents
+
 ![](./crdt-is-not-enough/slide-20.png)
 
 Lody is an agent control plane. It needs to sync all kinds of conversation information, and in the future there'll be more document information too. That's thousands of documents whose data we need to sync. How do we do lazy loading? How do we sync the whole repo? That was the first problem we ran into. You can't load the full content of every document the moment someone opens the app. Document convergence alone does not define a directory of available documents or decide which content to fetch. Multi-document tools such as automerge-repo already exist; our task was to design a metadata-first directory and loading policy for Lody on top of Loro.
@@ -105,6 +115,8 @@ So we built a new CRDT called Flock, and we'll open-source it in the future. It 
 
 Flock has gone through many iterations. At the very beginning we used a fairly simple JSON format, and it quickly couldn't keep up. Then we switched to a V1 binary format, but it was over-engineered and error-prone. After that we moved to a columnar V2 data format. V1 was somewhat inspired by SQLite's in-place update storage; V2 became a different file format, inspired by database design. Its performance and stability are much better than before, and users never noticed the whole switch.
 
+
+## Local storage, search, and prefetching
 
 ![](./crdt-is-not-enough/slide-23.png)
 
@@ -126,6 +138,8 @@ And how to prefetch: we've iterated on that several times, because you can't hog
 CRDTs move the computational complexity from the cloud to the local device, so there's a real local performance cost. Right now we've moved some of the computation onto a worker.
 
 
+## Consistent visibility across documents
+
 ![](./crdt-is-not-enough/slide-27.png)
 
 The notification example at the start comes from splitting one user action across two streams. Sending a message updates both the conversation document and the Flock metadata used by the conversation list. Our engine has no cross-stream transactions. The two streams are delivered independently, so a receiving client that shows a notification as soon as metadata arrives can lead the user to a conversation whose new message has not arrived yet.
@@ -146,6 +160,8 @@ That leaves the application with extra work in its data model, sync scheduling, 
 Now let's talk about how to do the cloud.
 
 
+## Designing a hosted sync backend
+
 ![](./crdt-is-not-enough/slide-31.png)
 
 Why talk about the cloud at all? It comes back to the Git and GitHub example. These days basically every developer has a GitHub account, and GitHub is a very successful hosting service. Git itself is a local-first protocol, but most users still want a hosted product that works out of the box. That doesn't go against the local-first ideal. In the future there'll be different hosting backends under the same protocol, plus a self-host option. That way users don't have to worry about a lot of details. Things like organizations, permissions, and CI hooks on GitHub just work out of the box.
@@ -164,6 +180,8 @@ With that usage pattern, either the read/write cost is very high, or the long-co
 One counterintuitive thing: a CRDT itself requires the server to know very little. Especially once you add end-to-end encryption, the server just needs to be a relay. CRDTs let smart clients resolve conflicts and do the computation directly — unlike algorithms like OT, which need the server to do that computation. So it's very counterintuitive that the server still has to do a lot of complex computation and pay a memory cost.
 
 
+## An append-only log with Durable Streams
+
 ![](./crdt-is-not-enough/slide-34.png)
 
 Later we switched to a different model: we adopted the Durable Streams protocol from the ElectricSQL team and implemented our own backend. Durable Streams is roughly this: each stream maps to a URL, and a stream is like an append-only file. Every appended update can be broadcast out, and you can also get an offset on that stream and fetch everything after it, which is how CRDT catch-up works. Because the property of a CRDT is: as long as every replica gets the same set of updates, they all reach a consistent state. So essentially, we just need every replica to get the same set of updates. A concept like an offset is the most direct and simple thing, and it needs the least state. The server just needs to provide that kind of streaming log.
@@ -178,6 +196,8 @@ For a remote cursor, locally you just need to store an offset.
 
 On top of this dumb log, we made some extensions to Durable Streams. Clients can publish snapshots. There's a bootstrap protocol, so you can start from a snapshot and then catch up with the tail. If a CRDT only keeps updates, some metadata is hard to compress; but if you turn all the updates before a certain point into a snapshot, the snapshot can be compressed very small. So we gave clients the ability to send snapshots. Then we added an ephemeral channel for syncing cursors and presence. And on top of that, a primitive like append-CAS, which is what end-to-end encryption depends on.
 
+
+## End-to-end encryption and access control
 
 ![](./crdt-is-not-enough/slide-37.png)
 
@@ -198,6 +218,8 @@ Like I said, the cloud only handles bytes, so it's very efficient.
 
 The overall cloud architecture is roughly: client to gateway; the gateway does authentication; behind it is Raft. Each stream lands in a Raft group; hot data lives on the machines in that Raft group, and cold data goes to object storage.
 
+
+## The user experience and remaining challenges
 
 ![](./crdt-is-not-enough/slide-41.png)
 

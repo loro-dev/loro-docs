@@ -4,6 +4,7 @@ import { useConfig } from "nextra-theme-docs";
 import Image from "next/image";
 import Footer from "./components/landing/Footer";
 import LanguageDropdown from "./components/LanguageDropdown";
+import { getPageUrls } from "./lib/seo.mjs";
 
 const DEFAULT_TITLE = "Loro – Reimagine state management with CRDTs";
 const DEFAULT_DESCRIPTION =
@@ -57,15 +58,7 @@ export default {
   head: () => {
     const config = useConfig();
     const { asPath } = useRouter();
-    const rawPath =
-      !asPath || asPath === "/"
-        ? "/"
-        : asPath.startsWith("/")
-          ? asPath
-          : `/${asPath}`;
-    const normalizedPath = rawPath.split("#")[0] || "/";
-    const canonicalUrl = `https://loro.dev${normalizedPath}`;
-    const chineseUrl = `https://cn.loro.dev${normalizedPath}`;
+    const { pathname: normalizedPath, canonicalUrl, chineseUrl } = getPageUrls(asPath);
     // Nextra v3 moves reserved fields like `title`, `description`, `image`
     // out of `frontMatter` into top-level config. Fallback to frontMatter for
     // older content that still sets them there.
@@ -74,7 +67,7 @@ export default {
       config.description ?? config.frontMatter?.description ?? DEFAULT_DESCRIPTION;
     const metaImage = config.image ?? config.frontMatter?.image;
     const pageTitle = formatPageTitle(metaTitle);
-    const ogImage = metaImage || DEFAULT_IMAGE;
+    const ogImage = new URL(metaImage || DEFAULT_IMAGE, "https://loro.dev").href;
     const ogType = normalizedPath.startsWith("/blog/")
       ? "article"
       : "website";
@@ -107,7 +100,7 @@ export default {
         <meta name="apple-mobile-web-app-title" content="Loro" />
         <link rel="canonical" href={canonicalUrl} />
         <link rel="alternate" hrefLang="en" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="zh" href={chineseUrl} />
+        {chineseUrl && <link rel="alternate" hrefLang="zh" href={chineseUrl} />}
         <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
       </>
     );
