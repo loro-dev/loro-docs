@@ -5,5 +5,6 @@ module.exports = {
 
   generateRobotsTxt: true, // (optional)
 
-  // ...other options
+  // API-reference helpers are components, never indexable pages.
+  exclude: ["/docs/api/indent", "/docs/api/method"],
 };

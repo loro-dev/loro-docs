@@ -4,14 +4,118 @@
         <title>Loro Blog</title>
         <link>https://loro.dev/blog/</link>
         <description>Updates and stories from the Loro team.</description>
-        <lastBuildDate>Tue, 16 Jun 2026 02:49:05 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 30 Sep 2026 01:31:16 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[CRDTs are not enough: From CRDTs to a local-first sync engine]]></title>
+            <link>https://loro.dev/blog/crdt-is-not-enough</link>
+            <guid>https://loro.dev/blog/crdt-is-not-enough</guid>
+            <pubDate>Mon, 21 Sep 2026 07:00:00 GMT</pubDate>
+            <description><![CDATA[Drawing on five years of building Loro and Lody, this talk maps the gaps between what CRDT libraries provide and what a production local-first sync engine actually requires.]]></description>
+            <content:encoded><![CDATA[<h1>CRDTs are not enough: From CRDTs to a local-first sync engine</h1>
+<p>A user sees a new-message notification, opens the conversation, and finds no new message. The conversation index has synced, but the message body has not. Both documents can eventually converge while the user still sees an incomplete operation. This is one of the gaps we encountered while building a local-first sync engine on top of CRDTs.</p>
+<p><img src="./crdt-is-not-enough/slide-01.png" alt=""></p>
+<p>Let me introduce myself quickly. My name is Zixuan Chen. I&#39;ve been working on loro.dev since 2022. It&#39;s a CRDT library together with Leon. Then, toward the end of 2025, we started building <a href="https://lody.ai">lody.ai</a> on top of Loro. Lody is a local-first control plane for team AI agents. Through Lody, we started from real product needs and from polishing the UI/UX, and worked backwards to figure out what a local-first sync engine should actually look like these days. Along the way, we found a lot of things that are still missing. So today I want to share what we&#39;ve learned.</p>
+<p><img src="./crdt-is-not-enough/slide-02.png" alt=""></p>
+<p>First: what even is local-first software?</p>
+<h2>What local-first software promises</h2>
+<p><img src="./crdt-is-not-enough/slide-03.png" alt=""></p>
+<p>A few quick points. Users control their data, and they can freely switch between different clouds as a backup. The cloud is a backup and a helper, not the authoritative owner. In this architecture, the cloud is just a backup and an extra replica. Local-first is not the same as local-only: local-only means you can only do these things locally, whereas local-first still wants to keep the convenience of syncing across multiple devices.</p>
+<p><img src="./crdt-is-not-enough/slide-04.png" alt=""></p>
+<p>It promises users five things. Instant open, because reads and writes all happen locally. It works offline. Multi-device collaboration. You can swap out the backend, so a vendor going out of business doesn&#39;t take your software down with it. And your data is yours. That last one really has two sides. One is that the software provider can&#39;t lock me out of my own software. The other is privacy — my data can&#39;t be read by the provider whenever they feel like it.</p>
+<p><img src="./crdt-is-not-enough/slide-05.png" alt=""></p>
+<p>The classic example is Git. Git hasn&#39;t done the privacy part yet, but it&#39;s already very close to the ideal shape of local-first software. It defines, as a protocol, how the local side and the remote side exchange data. And you can switch to a different backend: if GitHub goes down, or you just don&#39;t want to use GitHub anymore, you can change the origin, switch to GitLab, or self-host it yourself.</p>
+<p><img src="./crdt-is-not-enough/slide-06.png" alt=""></p>
+<p>For Lody, local storage alone was not enough. We wanted users to work across devices and collaborate without managing synchronization themselves, while retaining control of their data. That combination shaped our requirements for the sync engine.</p>
+<p>So what do we, and the local-first community, imagine a sync engine should be?</p>
+<h2>What a local-first sync engine needs to handle</h2>
+<p><img src="./crdt-is-not-enough/slide-08.png" alt=""></p>
+<p>I can quote Martin Kleppmann&#39;s talk at this year&#39;s Local-first Conference. For developers, it means you no longer have to worry about failed requests, timeouts, whether your data actually reached the server, or how to tell the user about it. All of those messy problems should just be the sync engine&#39;s job. In Lody, we still had to make application-level decisions about when data was ready to display and how to communicate incomplete sync to users.</p>
+<p><img src="./crdt-is-not-enough/slide-09.png" alt=""></p>
+<p>What people want is one unified, general-purpose sync engine that absorbs all of this: how to handle failed requests, what to do when data doesn&#39;t reach the server, how the frontend tells the user, and how permissions are managed so that whether a user can edit something is intuitive and obvious. And also how the local side and the backend persist data, and how you switch between providers.</p>
+<p><img src="./crdt-is-not-enough/slide-10.png" alt=""></p>
+<p>From the end user&#39;s point of view, local-first delivers two very direct benefits: it&#39;s fast, and it&#39;s secure. A sync engine like this can give end users both.</p>
+<p><img src="./crdt-is-not-enough/slide-11.png" alt=""></p>
+<p>A local-first app can support ticket sales, inventory management, payments, or room bookings. But an operation such as allocating the last available seat requires coordination before it can be confirmed; independent offline edits alone cannot guarantee that the seat is sold only once. The app can still support local reads and drafts while coordinating operations that enforce these shared constraints.</p>
+<p>Creative work — code, documents, video editing, and music — often allows more edits to happen independently and merge later. That makes it a natural fit for this style of synchronization.</p>
+<p><img src="./crdt-is-not-enough/slide-13.png" alt=""></p>
+<p>The essential complexity behind all of it has to move from the application developer to the sync engine.</p>
+<p><img src="./crdt-is-not-enough/slide-14.png" alt=""></p>
+<p>That&#39;s how you store things locally, what to do about timeouts, how you tell the user, what events you expose, how you express the permissions underneath, how you switch backends, how you provide P2P, and how you provide end-to-end encryption at the same time. All of that becomes the sync engine&#39;s responsibility.</p>
+<h2>What CRDT libraries already provide</h2>
+<p><img src="./crdt-is-not-enough/slide-15.png" alt=""></p>
+<p>Today, CRDT libraries already give you these capabilities. Loro, Yjs, and Automerge can all model structured documents like JSON and give you eventual consistency. As long as every replica ends up with the same set of updates, the final state is guaranteed to be the same. They also give you incremental sync; and for text, rich text, lists, and so on, the merge results come out as intuitive as possible. There&#39;s a lot of research behind this, and the results have been folded into these CRDT libraries. Out-of-order and duplicate updates during sync are covered too. You don&#39;t have to care when an update arrives; you can safely resend an update, and it won&#39;t be applied twice. These are the responsibilities of the CRDT core. The surrounding ecosystems already provide more: <a href="https://automerge.org/docs/reference/concepts/">automerge-repo</a> manages multiple documents, networking, and storage, while Yjs has <a href="https://docs.yjs.dev/ecosystem/connection-provider">connection providers</a> and persistence adapters such as <a href="https://docs.yjs.dev/ecosystem/database-provider/y-indexeddb">y-indexeddb</a>. Those building blocks still leave product decisions about which documents to discover and load, and when related updates are ready to display together.</p>
+<p><img src="./crdt-is-not-enough/slide-16.png" alt=""></p>
+<p>For Lody, the questions were how to combine these pieces: which documents should a device fetch, what should the UI show while content is still arriving, and how should permissions appear to users? Supporting P2P would also require us to decide how identity and access control work without relying on our hosted backend.</p>
+<p>We worked backwards, step by step, while building Lody, and we&#39;ve accumulated some experience. So let me share a bit of it, just to get the conversation going.</p>
+<p><img src="./crdt-is-not-enough/slide-18.png" alt=""></p>
+<p>The <a href="https://github.com/LodyAI/Lody">Lody</a> project should have seven thousand-something commits by now, and a lot of them are sync-related upgrades and rework.</p>
+<h2>Discovering and loading multiple documents</h2>
+<p><img src="./crdt-is-not-enough/slide-20.png" alt=""></p>
+<p>Lody is an agent control plane. It needs to sync all kinds of conversation information, and in the future there&#39;ll be more document information too. That&#39;s thousands of documents whose data we need to sync. How do we do lazy loading? How do we sync the whole repo? That was the first problem we ran into. You can&#39;t load the full content of every document the moment someone opens the app. Document convergence alone does not define a directory of available documents or decide which content to fetch. Multi-document tools such as automerge-repo already exist; our task was to design a metadata-first directory and loading policy for Lody on top of Loro.</p>
+<p><img src="./crdt-is-not-enough/slide-21.png" alt=""></p>
+<p>So we built a new CRDT called Flock, and we&#39;ll open-source it in the future. It syncs a directory, essentially. Like when you open Notion, the first thing you see is which documents exist. Or when you open a Notion database, you first see all the rows and their metadata. Only after you click into a specific document do you pull its content. Flock is the CRDT responsible for syncing that directory behind the scenes. We use it to sync the titles of all the conversations in Lody — the information you need to see first.</p>
+<p><img src="./crdt-is-not-enough/slide-22.png" alt=""></p>
+<p>Flock has gone through many iterations. At the very beginning we used a fairly simple JSON format, and it quickly couldn&#39;t keep up. Then we switched to a V1 binary format, but it was over-engineered and error-prone. After that we moved to a columnar V2 data format. V1 was somewhat inspired by SQLite&#39;s in-place update storage; V2 became a different file format, inspired by database design. Its performance and stability are much better than before, and users never noticed the whole switch.</p>
+<h2>Local storage, search, and prefetching</h2>
+<p><img src="./crdt-is-not-enough/slide-23.png" alt=""></p>
+<p>Then storing data locally and deciding where to query it both became new problems. At first we tried to hook up SQLite on the web. There are practices around OPFS now, and Notion does the same thing. But we quickly found that path complicated and hard to pull off. Every browser tab is independent, and SQLite itself can only have one writer. If you have multiple tabs, it&#39;s as if every tab is fighting over the writer role. So the architecture has to become: the browser elects a leader, the leader holds SQLite, and it handles all the writes. That whole setup is very complex. We looked around at the time and couldn&#39;t find an open-source solution we could just pick up and use. That was February of this year — I don&#39;t know if anything&#39;s changed since. Later we switched to IndexedDB. But that&#39;s only a small part of the problem. Then there&#39;s full-text search: in a pure cloud architecture, that&#39;s actually an easy problem — just use Elastic, or give Postgres some full-text search extension. But doing this locally, how do you design the UX? Especially in the browser, where you don&#39;t load all the data up front. On top of that, we try to wrap as much of the cloud data as possible in end-to-end encryption. How to do that part is still unsolved, and we&#39;re still experimenting. I think in the future we might be able to use semantic search and combine it with some encryption techniques. That&#39;s another new problem.</p>
+<p><img src="./crdt-is-not-enough/slide-24.png" alt=""></p>
+<p>Metadata-first — syncing on demand, syncing the metadata first, like I said. </p>
+<p><img src="./crdt-is-not-enough/slide-25.png" alt=""></p>
+<p>And how to prefetch: we&#39;ve iterated on that several times, because you can&#39;t hog all the frontend&#39;s network and performance, but you still have to take care of the user experience. Lody syncs a lot of conversations, and if every time a conversation updates, you have to wait again after clicking in, the experience gets much worse. There&#39;s a lot of fine-tuning to do there.</p>
+<p><img src="./crdt-is-not-enough/slide-26.png" alt=""></p>
+<p>CRDTs move the computational complexity from the cloud to the local device, so there&#39;s a real local performance cost. Right now we&#39;ve moved some of the computation onto a worker.</p>
+<h2>Consistent visibility across documents</h2>
+<p><img src="./crdt-is-not-enough/slide-27.png" alt=""></p>
+<p>The notification example at the start comes from splitting one user action across two streams. Sending a message updates both the conversation document and the Flock metadata used by the conversation list. Our engine has no cross-stream transactions. The two streams are delivered independently, so a receiving client that shows a notification as soon as metadata arrives can lead the user to a conversation whose new message has not arrived yet.</p>
+<p>The user-visible requirement is simple: a client should not show a new-message notification until the corresponding message is available locally. Writing both updates durably on the sender, committing them together on the server, and displaying them together on the receiver are distinct guarantees. Even a server-side atomic commit would not, by itself, make clients fetching separate streams display both updates together.</p>
+<p><img src="./crdt-is-not-enough/slide-28.png" alt=""></p>
+<p>Convergence within each document does not provide that visibility guarantee across documents. The sync engine and application need a way to track the relationship between the updates and decide when they can be shown. We have not yet built a general mechanism for this in Lody.</p>
+<p>That leaves the application with extra work in its data model, sync scheduling, and UI. Delayed delivery also needs different treatment from a genuine editing conflict: a missing message may still be on its way.</p>
+<p><img src="./crdt-is-not-enough/slide-30.png" alt=""></p>
+<p>Now let&#39;s talk about how to do the cloud.</p>
+<h2>Designing a hosted sync backend</h2>
+<p><img src="./crdt-is-not-enough/slide-31.png" alt=""></p>
+<p>Why talk about the cloud at all? It comes back to the Git and GitHub example. These days basically every developer has a GitHub account, and GitHub is a very successful hosting service. Git itself is a local-first protocol, but most users still want a hosted product that works out of the box. That doesn&#39;t go against the local-first ideal. In the future there&#39;ll be different hosting backends under the same protocol, plus a self-host option. That way users don&#39;t have to worry about a lot of details. Things like organizations, permissions, and CI hooks on GitHub just work out of the box.</p>
+<p><img src="./crdt-is-not-enough/slide-32.png" alt=""></p>
+<p>At first we tried Cloudflare&#39;s Durable Objects. We tried to let one Durable Object manage the entire repo directly: one user or one org maps to one repo, and we forward everything through that Durable Object, syncing data in that shape. Inside the Durable Object we&#39;d load the CRDT document, compute the version diff, and do incremental sync. But we quickly found it couldn&#39;t really carry that usage pattern or that volume. To compare versions, you either pull the relevant updates, load them into the CRDT document, and then compare — which is very expensive: high memory cost, and a lot of data to read and load. Or you store the version and other info in the SQLite inside the Durable Object, but that also has fairly high read/write costs, and you have to update the version vector on every update. And a repo also has different permissions: some people are read-only, some can write; some rooms are open to some people and not to others.</p>
+<p>With that usage pattern, either the read/write cost is very high, or the long-connection cost is high, because Durable Objects bill by connection time. However long a WebSocket connection stays alive, that&#39;s the duration cost. To avoid that cost, you can evict all memory and go into hibernation. In that state the WebSocket connection stays open, but you&#39;re not billed for that time. At the same time, the Durable Object&#39;s other in-memory state gets evicted too, so all state has to live in its built-in SQLite. So all those state updates turn back into SQLite read/write cost. At the time, we found that cost was still a bit high.</p>
+<p><img src="./crdt-is-not-enough/slide-33.png" alt=""></p>
+<p>One counterintuitive thing: a CRDT itself requires the server to know very little. Especially once you add end-to-end encryption, the server just needs to be a relay. CRDTs let smart clients resolve conflicts and do the computation directly — unlike algorithms like OT, which need the server to do that computation. So it&#39;s very counterintuitive that the server still has to do a lot of complex computation and pay a memory cost.</p>
+<h2>An append-only log with Durable Streams</h2>
+<p><img src="./crdt-is-not-enough/slide-34.png" alt=""></p>
+<p>Later we switched to a different model: we adopted the Durable Streams protocol from the ElectricSQL team and implemented our own backend. Durable Streams is roughly this: each stream maps to a URL, and a stream is like an append-only file. Every appended update can be broadcast out, and you can also get an offset on that stream and fetch everything after it, which is how CRDT catch-up works. Because the property of a CRDT is: as long as every replica gets the same set of updates, they all reach a consistent state. So essentially, we just need every replica to get the same set of updates. A concept like an offset is the most direct and simple thing, and it needs the least state. The server just needs to provide that kind of streaming log.</p>
+<p><img src="./crdt-is-not-enough/slide-35.png" alt=""></p>
+<p>For a remote cursor, locally you just need to store an offset.</p>
+<p><img src="./crdt-is-not-enough/slide-36.png" alt=""></p>
+<p>On top of this dumb log, we made some extensions to Durable Streams. Clients can publish snapshots. There&#39;s a bootstrap protocol, so you can start from a snapshot and then catch up with the tail. If a CRDT only keeps updates, some metadata is hard to compress; but if you turn all the updates before a certain point into a snapshot, the snapshot can be compressed very small. So we gave clients the ability to send snapshots. Then we added an ephemeral channel for syncing cursors and presence. And on top of that, a primitive like append-CAS, which is what end-to-end encryption depends on.</p>
+<h2>End-to-end encryption and access control</h2>
+<p><img src="./crdt-is-not-enough/slide-37.png" alt=""></p>
+<p>If you add end-to-end encryption, the server doesn&#39;t need to change much at all — it&#39;s mainly the client that embeds the capability. And that gives you a nice property: even if the sync backend is compromised, the attacker can&#39;t get the data and can&#39;t forge data.</p>
+<p><img src="./crdt-is-not-enough/slide-38.png" alt=""></p>
+<p>But our limitation right now is that the authentication we designed is still centralized — we haven&#39;t gotten it to a decentralized state. For the end-to-end encryption protocol, we also chose a server-based linear log — the stream I just described. Projects such as <a href="https://www.inkandswitch.com/project/keyhive/">Keyhive</a> explore decentralized access control. We have not integrated such a design into Lody; the linear log is the approach we chose for our current system.</p>
+<p><img src="./crdt-is-not-enough/slide-39.png" alt=""></p>
+<p>Like I said, the cloud only handles bytes, so it&#39;s very efficient.</p>
+<p><img src="./crdt-is-not-enough/slide-40.png" alt=""></p>
+<p>The overall cloud architecture is roughly: client to gateway; the gateway does authentication; behind it is Raft. Each stream lands in a Raft group; hot data lives on the machines in that Raft group, and cold data goes to object storage.</p>
+<h2>The user experience and remaining challenges</h2>
+<p><img src="./crdt-is-not-enough/slide-41.png" alt=""></p>
+<p>So what user experience does this give you?</p>
+<p><img src="./crdt-is-not-enough/slide-42.png" alt=""></p>
+<p>One is fast loading, because data is always local, so it can load right away. Another is fast syncing, because CRDTs already handle incremental sync automatically. And end-to-end encryption, which is something Lody is working on — we&#39;ll probably ship it next month.</p>
+<p><img src="./crdt-is-not-enough/slide-43.png" alt=""></p>
+<p>The difference users can feel — here are two comments from X: Lody&#39;s sync feels smooth. Buttery smooth.</p>
+<p><img src="./crdt-is-not-enough/slide-44.png" alt=""></p>
+<p>To sum up, the remaining challenges go beyond document convergence: authentication, end-to-end encryption, consistent visibility across documents, and intuitive UI/UX in decentralized systems.</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Mergeable Containers: Fixing Concurrent Child Creation]]></title>
             <link>https://loro.dev/blog/mergeable-containers</link>
             <guid>https://loro.dev/blog/mergeable-containers</guid>
-            <pubDate>Tue, 09 Jun 2026 00:00:00 GMT</pubDate>
+            <pubDate>Tue, 09 Jun 2026 07:00:00 GMT</pubDate>
             <description><![CDATA[Mergeable Containers let Loro peers concurrently create the same child container under a Map key and still merge into one shared child, by deriving identity from the logical parent/key/type instead of the creation OpID.]]></description>
             <content:encoded><![CDATA[<h1>Mergeable Containers: Fixing Concurrent Child Creation</h1>
 <p><img src="/images/blog-mergeable-containers.png" alt="Mergeable Containers overview"></p>
@@ -330,7 +434,7 @@ console.log(&quot;automerge pre-created -&gt;&quot;, JSON.stringify(ok.days[&quo
             <title><![CDATA[Loro Protocol]]></title>
             <link>https://loro.dev/blog/loro-protocol</link>
             <guid>https://loro.dev/blog/loro-protocol</guid>
-            <pubDate>Thu, 30 Oct 2025 00:00:00 GMT</pubDate>
+            <pubDate>Thu, 30 Oct 2025 07:00:00 GMT</pubDate>
             <description><![CDATA[The Loro Protocol multiplexes CRDT sync workloads over one WebSocket connection and ships the open-source loro-websocket, loro-adaptors, plus Rust client and server implementations that speak the same protocol.]]></description>
             <content:encoded><![CDATA[<h2>Loro Protocol</h2>
 <p><img src="/images/blog-loro-protocol.png" alt=""></p>
@@ -416,7 +520,7 @@ ephAdaptor.getStore().set(&quot;cursor&quot;, { x: 100, y: 100 });
             <title><![CDATA[Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs]]></title>
             <link>https://loro.dev/blog/loro-mirror</link>
             <guid>https://loro.dev/blog/loro-mirror</guid>
-            <pubDate>Mon, 22 Sep 2025 00:00:00 GMT</pubDate>
+            <pubDate>Mon, 22 Sep 2025 07:00:00 GMT</pubDate>
             <description><![CDATA[Loro Mirror keeps a typed, immutable app‑state view in sync with a Loro CRDT document. Local `setState` edits become granular CRDT operations; incoming CRDT events update your state. You keep familiar React patterns and gain collaboration, offline edits, and history. ]]></description>
             <content:encoded><![CDATA[<h1>Loro Mirror: Make UI State Collaborative by Mirroring to CRDTs</h1>
 <p><img src="/images/loro-mirror.png" alt=""></p>
@@ -629,7 +733,7 @@ const undo = useMemo(() =&gt; new UndoManager(doc), [doc]);
             <title><![CDATA[Loro 1.0]]></title>
             <link>https://loro.dev/blog/v1.0</link>
             <guid>https://loro.dev/blog/v1.0</guid>
-            <pubDate>Wed, 23 Oct 2024 00:00:00 GMT</pubDate>
+            <pubDate>Wed, 23 Oct 2024 07:00:00 GMT</pubDate>
             <description><![CDATA[Announcing Loro 1.0: Introducing a stable encoding schema, 10-100x faster document import, advanced version control, and more for efficient real-time collaboration and local-first software development.]]></description>
             <content:encoded><![CDATA[<h1>Loro 1.0</h1>
 <p>Loro is a <a href="https://crdt.tech/">Conflict-free Replicated Data Type (CRDT)</a>
@@ -1341,7 +1445,7 @@ If you&#39;re interested in using Loro, welcome to join our
             <title><![CDATA[Movable tree CRDTs and Loro's implementation]]></title>
             <link>https://loro.dev/blog/movable-tree</link>
             <guid>https://loro.dev/blog/movable-tree</guid>
-            <pubDate>Thu, 18 Jul 2024 00:00:00 GMT</pubDate>
+            <pubDate>Thu, 18 Jul 2024 07:00:00 GMT</pubDate>
             <description><![CDATA[This article introduces the implementation difficulties and challenges of Movable Tree CRDTs when collaboration, and how Loro implements it and sorts child nodes. The algorithm has high performance and can be used in production.]]></description>
             <content:encoded><![CDATA[<h1>Movable tree CRDTs and Loro&#39;s implementation</h1>
 <p><img src="./movable-tree/movable-tree-cover.png" alt=""></p>
@@ -1625,7 +1729,7 @@ let nodeData: LoroMap = node.data;
             <title><![CDATA[Introduction to Loro's Rich Text CRDT]]></title>
             <link>https://loro.dev/blog/loro-richtext</link>
             <guid>https://loro.dev/blog/loro-richtext</guid>
-            <pubDate>Mon, 22 Jan 2024 00:00:00 GMT</pubDate>
+            <pubDate>Mon, 22 Jan 2024 08:00:00 GMT</pubDate>
             <description><![CDATA[This article presents the rich text CRDT algorithm implemented in Loro, complying with Peritext's criteria for seamless rich text collaboration. Furthermore, it can be built on top of any List CRDT algorithms and turn them into rich text CRDTs.]]></description>
             <content:encoded><![CDATA[<h1>Introduction to Loro&#39;s Rich Text CRDT</h1>
 <p><img src="./loro-richtext/cover_long.png" alt=""></p>
@@ -2327,7 +2431,7 @@ any proposals for collaboration, please reach out to <a href="mailto:zx@loro.dev
             <title><![CDATA[Loro: Reimagine State Management with CRDTs]]></title>
             <link>https://loro.dev/blog/loro-now-open-source</link>
             <guid>https://loro.dev/blog/loro-now-open-source</guid>
-            <pubDate>Mon, 13 Nov 2023 00:00:00 GMT</pubDate>
+            <pubDate>Mon, 13 Nov 2023 08:00:00 GMT</pubDate>
             <description><![CDATA[Loro, our high-performance CRDTs library, is now open source.  In this article, we share our vision for the local-first software development paradigm, why we're excited about it, and the current status of Loro.]]></description>
             <content:encoded><![CDATA[<h1>Loro: Reimagine State Management with CRDTs</h1>
 <div>
@@ -2614,7 +2718,7 @@ collaboration and ready to help.</p>
             <title><![CDATA[crdt-richtext - Rust implementation of Peritext and Fugue]]></title>
             <link>https://loro.dev/blog/crdt-richtext</link>
             <guid>https://loro.dev/blog/crdt-richtext</guid>
-            <pubDate>Thu, 20 Apr 2023 00:00:00 GMT</pubDate>
+            <pubDate>Thu, 20 Apr 2023 07:00:00 GMT</pubDate>
             <description><![CDATA[Presenting the early Rust crate that combined Peritext and Fugue's power with impressive performance, tailored specifically for rich text. This work later informed Loro's rich text CRDT.]]></description>
             <content:encoded><![CDATA[<h1><a href="https://github.com/loro-dev/crdt-richtext">crdt-richtext</a>: Rust implementation of Peritext and Fugue</h1>
 <p>Presenting an early Rust crate that combines <a href="https://inkandswitch.com/peritext">Peritext</a> and <a href="https://arxiv.org/abs/2305.00583">Fugue</a>&#39;s power with impressive performance, tailored specifically for rich text. This work later informed <strong><a href="https://www.loro.dev/">Loro</a></strong>&#39;s rich text CRDT.</p>

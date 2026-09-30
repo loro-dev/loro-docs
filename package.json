@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 node gen-rss.js && NODE_OPTIONS=--max-old-space-size=4096 next build",
-    "postbuild": "NODE_OPTIONS=--max-old-space-size=4096 next-sitemap && NODE_OPTIONS=--max-old-space-size=4096 opennextjs-cloudflare build --skipNextBuild",
+    "postbuild": "NODE_OPTIONS=--max-old-space-size=4096 next-sitemap && node --test scripts/seo-build.test.mjs && NODE_OPTIONS=--max-old-space-size=4096 opennextjs-cloudflare build --skipNextBuild",
     "start": "next start",
     "test": "cd deno_scripts && deno run -A ./run_code_blocks.ts ..",
     "storybook": "storybook dev -p 6006",
@@ -13,7 +13,9 @@
     "changelog": "node gen-rss.js",
     "preview": "NODE_OPTIONS=--max-old-space-size=4096 opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "NODE_OPTIONS=--max-old-space-size=4096 pnpm run build && wrangler deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "test:seo": "node --test scripts/seo.test.mjs",
+    "test:seo:build": "node --test scripts/seo-build.test.mjs"
   },
   "repository": {
     "type": "git",
