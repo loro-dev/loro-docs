@@ -35,16 +35,73 @@ pnpm install loro-crdt
 yarn add loro-crdt
 ```
 
-If you're using `Vite`, you should add the following to your vite.config.ts:
+### Vite
+
+#### Vite 8.1 and newer
+
+[Vite 8.1 introduced built-in WebAssembly ESM integration](https://vite.dev/blog/announcing-vite8-1#wasm-esm-integration-support),
+so you do not need `vite-plugin-wasm`. Keep `loro-crdt` out of dependency
+pre-bundling so its JavaScript bindings and WASM imports use the same module
+graph during development. Add this to your `vite.config.ts`, keeping any
+framework plugins you already use:
 
 ```ts no-run
-import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [...otherConfigures, wasm(), topLevelAwait()],
+  optimizeDeps: {
+    exclude: ["loro-crdt"],
+  },
 });
 ```
+
+Vite's native WASM loader uses top-level `await` (TLA). The default Vite 8.1
+browser targets support TLA, so `vite-plugin-top-level-await` is not needed
+either. If you customize `build.target`, keep it compatible with TLA; changing
+the target does not add TLA support to older browsers. See
+[Vite's WebAssembly guide](https://vite.dev/guide/features#webassembly) and
+[browser compatibility guide](https://vite.dev/guide/build#browser-compatibility).
+
+You can then import and use Loro normally:
+
+```ts twoslash
+import { LoroDoc } from "loro-crdt";
+
+const doc = new LoroDoc();
+doc.getText("text").insert(0, "Hello, Loro!");
+```
+
+#### Older Vite versions
+
+For Vite versions before 8.1, install `vite-plugin-wasm`:
+
+```bash
+npm install -D vite-plugin-wasm
+```
+
+For browsers with native TLA support, configure a compatible build target and
+add the plugin alongside your existing framework plugins:
+
+```ts no-run
+import { defineConfig } from "vite";
+import wasm from "vite-plugin-wasm";
+
+export default defineConfig({
+  plugins: [wasm()],
+  optimizeDeps: {
+    exclude: ["loro-crdt"],
+  },
+  build: {
+    target: "es2022",
+  },
+});
+```
+
+`es2022` is an example target for modern browsers, not a compatibility polyfill.
+For older browsers, the plugin also documents a
+[`vite-plugin-top-level-await` option](https://github.com/Menci/vite-plugin-wasm#usage).
+Check compatibility with your Vite version and test the production output before
+using that option; it is not required for every Vite project.
 
 <details>
 <summary>⚠️ DOMContentLoaded Timing Issue with Vite</summary>
@@ -62,7 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 ```
 
-**Reason:** This occurs because Vite loads ES modules asynchronously, and the WASM module initialization within `loro-crdt` also happens asynchronously. When you import at the top level but execute code inside `DOMContentLoaded`, the WASM module may not be fully initialized when the event fires, causing the application to fail silently.
+**Reason:** WASM initialization can delay module evaluation until after
+`DOMContentLoaded` has already fired. The listener is then registered too late
+and never runs. Static imports wait for their asynchronous dependencies before
+the importing module executes, so Loro is initialized when your module code runs.
 
 **Solutions:**
 
@@ -75,18 +135,28 @@ document.addEventListener("DOMContentLoaded", () => {
    // Your code here...
    ```
 
-2. **Use dynamic import inside the event listener**:
+2. **Check whether the DOM is already ready before registering a listener**:
    ```ts no_run twoslash
-   document.addEventListener("DOMContentLoaded", async () => {
+   async function start() {
      const { LoroDoc } = await import("loro-crdt");
      const doc = new LoroDoc();
      // Your code here...
-   });
+   }
+
+   if (document.readyState === "loading") {
+     document.addEventListener("DOMContentLoaded", () => void start(), {
+       once: true,
+     });
+   } else {
+     void start();
+   }
    ```
 
 The dynamic import ensures the module and its WASM dependencies are fully loaded before use.
 
 </details>
+
+### Next.js
 
 If you're using `Next.js`, you should add the following to your next.config.js:
 
@@ -101,6 +171,8 @@ module.exports = {
   },
 };
 ```
+
+### Browser ESM
 
 You can also use Loro directly in the browser via ESM imports. Here's a minimal
 example:
