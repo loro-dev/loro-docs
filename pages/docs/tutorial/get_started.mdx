@@ -40,10 +40,18 @@ yarn add loro-crdt
 #### Vite 8.1 and newer
 
 [Vite 8.1 introduced built-in WebAssembly ESM integration](https://vite.dev/blog/announcing-vite8-1#wasm-esm-integration-support),
-so you do not need `vite-plugin-wasm`. Keep `loro-crdt` out of dependency
-pre-bundling so its JavaScript bindings and WASM imports use the same module
-graph during development. Add this to your `vite.config.ts`, keeping any
-framework plugins you already use:
+so `vite-plugin-wasm` is no longer needed. The default browser targets also
+support top-level `await` (TLA), so `vite-plugin-top-level-await` is not needed.
+You can import from `loro-crdt` directly.
+
+If you customize `build.target`, use browser targets that support TLA. Changing
+the target does not add TLA support to older browsers. See
+[Vite's WebAssembly guide](https://vite.dev/guide/features#webassembly).
+
+**Development workaround (Vite 8.1.0 with Loro 1.16.4):** This combination can
+fail during WASM initialization with `Cannot read properties of undefined
+(reading 'memory')` when Loro is pre-bundled. If you encounter this error,
+exclude Loro from dependency pre-bundling:
 
 ```ts no-run
 import { defineConfig } from "vite";
@@ -55,53 +63,32 @@ export default defineConfig({
 });
 ```
 
-Vite's native WASM loader uses top-level `await` (TLA). The default Vite 8.1
-browser targets support TLA, so `vite-plugin-top-level-await` is not needed
-either. If you customize `build.target`, keep it compatible with TLA; changing
-the target does not add TLA support to older browsers. See
-[Vite's WebAssembly guide](https://vite.dev/guide/features#webassembly) and
-[browser compatibility guide](https://vite.dev/guide/build#browser-compatibility).
-
-You can then import and use Loro normally:
-
-```ts twoslash
-import { LoroDoc } from "loro-crdt";
-
-const doc = new LoroDoc();
-doc.getText("text").insert(0, "Hello, Loro!");
-```
+Merge this setting into your existing config. It affects development only;
+production builds still bundle Loro normally.
 
 #### Older Vite versions
 
-For Vite versions before 8.1, install `vite-plugin-wasm`:
+For Vite versions before 8.1, install the plugins:
 
 ```bash
-npm install -D vite-plugin-wasm
+npm install -D vite-plugin-wasm vite-plugin-top-level-await
 ```
 
-For browsers with native TLA support, configure a compatible build target and
-add the plugin alongside your existing framework plugins:
+Add them alongside your existing framework plugins in `vite.config.ts`:
 
 ```ts no-run
 import { defineConfig } from "vite";
 import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
-  plugins: [wasm()],
-  optimizeDeps: {
-    exclude: ["loro-crdt"],
-  },
-  build: {
-    target: "es2022",
-  },
+  plugins: [wasm(), topLevelAwait()],
 });
 ```
 
-`es2022` is an example target for modern browsers, not a compatibility polyfill.
-For older browsers, the plugin also documents a
-[`vite-plugin-top-level-await` option](https://github.com/Menci/vite-plugin-wasm#usage).
-Check compatibility with your Vite version and test the production output before
-using that option; it is not required for every Vite project.
+For targets with native TLA support, the TLA plugin can be omitted; see the
+[plugin's usage guide](https://github.com/Menci/vite-plugin-wasm#usage) for target
+configuration and compatibility details.
 
 <details>
 <summary>⚠️ DOMContentLoaded Timing Issue with Vite</summary>
@@ -119,10 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 ```
 
-**Reason:** WASM initialization can delay module evaluation until after
-`DOMContentLoaded` has already fired. The listener is then registered too late
-and never runs. Static imports wait for their asynchronous dependencies before
-the importing module executes, so Loro is initialized when your module code runs.
+**Reason:** This occurs because Vite loads ES modules asynchronously, and the WASM module initialization within `loro-crdt` also happens asynchronously. When you import at the top level but execute code inside `DOMContentLoaded`, the WASM module may not be fully initialized when the event fires, causing the application to fail silently.
 
 **Solutions:**
 
@@ -135,21 +119,13 @@ the importing module executes, so Loro is initialized when your module code runs
    // Your code here...
    ```
 
-2. **Check whether the DOM is already ready before registering a listener**:
+2. **Use dynamic import inside the event listener**:
    ```ts no_run twoslash
-   async function start() {
+   document.addEventListener("DOMContentLoaded", async () => {
      const { LoroDoc } = await import("loro-crdt");
      const doc = new LoroDoc();
      // Your code here...
-   }
-
-   if (document.readyState === "loading") {
-     document.addEventListener("DOMContentLoaded", () => void start(), {
-       once: true,
-     });
-   } else {
-     void start();
-   }
+   });
    ```
 
 The dynamic import ensures the module and its WASM dependencies are fully loaded before use.
