@@ -8,6 +8,10 @@ import { getPageUrls, hasChineseTranslation, normalizePath } from "../lib/seo.mj
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
 
+test("English document declares its language before client rendering", () => {
+  assert.match(read("pages/_document.tsx"), /<Html\s+lang="en">/);
+});
+
 test("canonical paths exclude queries, fragments, and trailing slashes", () => {
   for (const path of [undefined, "", "/", "/?utm_source=test#top"]) {
     assert.equal(normalizePath(path), "/");

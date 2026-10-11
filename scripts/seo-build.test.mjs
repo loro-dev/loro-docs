@@ -18,6 +18,7 @@ function links(html) {
 for (const route of routes) {
   test(`built metadata: ${route}`, () => {
     const html = read(`.next/server/pages${route === "/" ? "/index" : route}.html`);
+    assert.match(html, /<html\b[^>]*\slang="en"(?:\s|>)/, "English pages must declare their document language");
     const tags = links(html);
     const { canonicalUrl, chineseUrl } = getPageUrls(route);
     assert.deepEqual(tags.filter((link) => link.rel === "canonical").map((link) => link.href), [canonicalUrl]);
