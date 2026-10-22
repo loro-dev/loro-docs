@@ -8,6 +8,11 @@ operations. Here's how it works:
 3. Implement a debounce or throttle mechanism to trigger snapshot saves after a
    certain number of edits.
 
+Snapshots contain integrated operation history and state, but exclude imported operations
+waiting for missing causal dependencies. If your application receives such
+updates, retain their original bytes or use the
+[pending-import checkpoint](#persisting-pending-imports-unreleased) described below.
+
 This method simplifies initial application development but has a drawback: user
 edits are not immediately saved. Let's explore how to quickly save each user
 edit while minimizing resource consumption.
@@ -24,11 +29,97 @@ To achieve both quick saves and resource efficiency:
 - Loro validates the checksum embedded in every snapshot/update header during import, so corrupted binary payloads (for example, from bit flips in queues or object storage) are rejected before they touch your document state.
 - When loading a document, import the snapshot and all related updates to get
   the latest version.
-- After importing, export a new snapshot to replace the old one and remove
-  imported updates for faster future loading.
+- After importing, export a new snapshot for faster future loading. Remove
+  original updates only after durable storage contains everything needed to
+  recover them. A snapshot alone does not preserve pending imports: retain their
+  original bytes, or persist the snapshot together with pending bytes as below.
 - If your `LoroDoc` has grown large and older history can be safely recycled,
   use `Shallow Snapshot Encoding` to reduce snapshot size. You can archive the
   history before the shallow snapshot's start version in cold storage.
+
+### Persisting Pending Imports (Unreleased)
+
+[`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates) is an
+**unreleased** API in the development WASM and pure TypeScript implementations.
+The example requires a build containing it; `loro-crdt@1.13.3` does not have it.
+Here, pending means remote operations already imported but waiting for causal
+predecessors, not local edits waiting for `commit()`.
+
+Capture a normal snapshot and the pending bytes without allowing document
+mutations or imports between the two calls. Save both as one consistent
+checkpoint, using a storage transaction or a versioned generation. Snapshot
+export commits local edits as usual; pending export itself is read-only and does
+not consume the queue, commit edits, or advance the applied version vector.
+Replace the previous checkpoint only after both exports succeed. If the pending
+result is `undefined`, delete the previous pending record or explicitly store its
+absence; skipping the write would leave stale bytes behind. An export error is
+not an empty queue.
+
+This self-contained example delivers B before its dependency A, simulates a
+restart, then imports the real A. The `saved` object represents one checkpoint;
+an application must write it to durable storage.
+
+```ts no_run
+import { LoroDoc } from "loro-crdt";
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+const source = new LoroDoc();
+source.getText("text").insert(0, "base|");
+const base = source.export({ mode: "snapshot" });
+const beforeA = source.oplogVersion();
+source.getText("text").insert(5, "A");
+const updateA = source.export({ mode: "update", from: beforeA });
+const beforeB = source.oplogVersion();
+source.getText("text").insert(6, "B");
+const updateB = source.export({ mode: "update", from: beforeB });
+
+const receiver = new LoroDoc();
+receiver.import(base);
+const status = receiver.import(updateB); // A has not arrived.
+assert(status.pending instanceof Map && status.pending.size > 0, "B is pending");
+assert(receiver.getText("text").toString() === "base|", "B cannot apply yet");
+
+// Do not interleave document mutations/imports between these exports.
+let saved = {
+  snapshot: receiver.export({ mode: "snapshot" }),
+  pending: receiver.exportPendingUpdates(),
+};
+assert(saved.pending !== undefined, "Checkpoint must preserve B");
+assert(receiver.exportPendingUpdates() !== undefined, "Export does not consume B");
+// Durably replace BOTH fields in one storage transaction/generation here.
+
+const snapshotOnly = new LoroDoc();
+snapshotOnly.import(saved.snapshot);
+assert(snapshotOnly.exportPendingUpdates() === undefined, "Snapshot excludes B");
+
+const restored = new LoroDoc();
+restored.import(saved.snapshot);
+restored.import(saved.pending); // Ordinary import; no special restore API.
+assert(restored.getText("text").toString() === "base|", "B still needs A");
+assert(restored.exportPendingUpdates() !== undefined, "B survives restart");
+
+restored.import(updateA); // The actual missing predecessor finally arrives.
+assert(restored.getText("text").toString() === "base|AB", "A unblocks B");
+assert(restored.exportPendingUpdates() === undefined, "No pending operations remain");
+
+saved = {
+  snapshot: restored.export({ mode: "snapshot" }),
+  pending: restored.exportPendingUpdates(),
+};
+assert(saved.pending === undefined, "Clear the older pending record when saving");
+// Durably replace the checkpoint, including removing the old pending field.
+```
+
+The snapshot and pending bytes restore what was received; they cannot supply
+predecessors that the remote peer never sent. Even an empty pending queue does
+not prove synchronization is complete. Advancing a durable receive cursor or
+discarding original update bytes requires that everything needed for recovery is
+durably stored first, whether as original updates or a snapshot plus pending bytes.
+This API neither defines nor advances a transport cursor; your storage and
+transport protocol must define that boundary.
 
 For collaboration, the binary data generated by snapshot/updates can be
 transmitted through any medium, such as WebRTC, WebSocket, or HTTP.

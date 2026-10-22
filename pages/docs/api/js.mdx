@@ -596,7 +596,8 @@ type ExportMode =
 **⚠️ Important Notes:**
 
 - **Shallow snapshots**: Cannot import updates from before the shallow start point. Peers can only sync if they have versions after this point.
-- **Auto-commit**: The document automatically commits pending operations before export.
+- **Auto-commit**: The document automatically commits local uncommitted operations before export. Remote pending imports still require their missing causal dependencies.
+- **Remote pending updates**: Snapshot and update exports exclude imported operations waiting for missing causal dependencies. See [`exportPendingUpdates()`](#LoroDoc.exportPendingUpdates) to persist them separately.
 - **Performance**: Export new snapshots periodically to reduce import times for new peers.
 
 **Examples:**
@@ -627,6 +628,35 @@ const shallowSnapshot = doc.export({
 
 </Indent>
 
+<Method id="LoroDoc.exportPendingUpdates">
+```typescript no_run
+exportPendingUpdates(): Uint8Array | undefined
+```
+</Method>
+<Indent>
+**Availability: unreleased.** This method is available in the development WASM and pure TypeScript implementations. It is not available in `loro-crdt@1.13.3`; use a build containing this API.
+
+Exports imported remote operations that are waiting for missing causal predecessors. These are [pending imports](/docs/concepts/import_status#pending-operations), distinct from uncommitted local edits. Ordinary snapshot and update exports do not include them.
+
+**Returns:** `undefined` when no remote operations remain pending; otherwise, binary updates in the existing FastUpdates format. Pass these bytes to ordinary [`import()`](#LoroDoc.import) to restore them. The bytes preserve the pending operations, but need not match the original received blobs byte for byte.
+
+**Behavior and limits:**
+
+- Read-only: does not consume the pending queue, commit a local transaction, emit events, or advance the applied version vector (`appliedVV`) or frontiers.
+- Persist a normal snapshot and pending bytes as one consistent checkpoint. Prevent document mutations/imports between the two exports; the calls are not atomic. When the result is `undefined`, clear any older stored pending record. See the [persistence example](/docs/tutorial/persistence#persisting-pending-imports-unreleased).
+- Restore with `doc.import(snapshot)`, then `doc.import(pending)` if pending bytes exist. Operations still wait for their actual missing predecessors; the API cannot fetch or reconstruct predecessors never received from a remote peer.
+- Exporting pending bytes, or receiving `undefined`, does not prove the document is synced. Transport cursors, durable storage, and removal of original updates remain the application's responsibility.
+
+The corresponding Rust method is:
+
+```rust
+LoroDoc::export_pending_updates(&self) -> Result<Option<Vec<u8>>, LoroEncodeError>
+```
+
+`Ok(None)` corresponds to `undefined`; an export error must not be treated as an empty queue. See the [Rust API entry point](https://docs.rs/loro/latest/loro/struct.LoroDoc.html) (the published reference may not list this unreleased method yet) and the separate [FFI bindings](https://github.com/loro-dev/loro-ffi). Check availability in the binding you use; this development API does not imply an FFI release.
+
+</Indent>
+
 <Method id="LoroDoc.import">
 ```typescript no_run
 import(data: Uint8Array): ImportStatus
@@ -639,7 +669,7 @@ Imports updates or snapshots into the document. Returns an `ImportStatus` descri
 
 - `data` - Binary data or another LoroDoc to import from
 
-**⚠️ Important:** LoroDoc will automatically commits pending operations before import. If the doc is in detached mode, the imported operations are recorded into OpLog but not applied to DocState until you call `attach()`, see [Attached vs Detached States](/docs/concepts/attached_detached) adn [OpLog and DocState](/docs/concepts/oplog_docstate).
+**⚠️ Important:** LoroDoc automatically commits local uncommitted operations before import. Remote pending operations can apply only when their missing dependencies arrive. If the doc is in detached mode, the imported operations are recorded into OpLog but not applied to DocState until you call `attach()`, see [Attached vs Detached States](/docs/concepts/attached_detached) and [OpLog and DocState](/docs/concepts/oplog_docstate).
 
 **Example:**
 

@@ -112,27 +112,26 @@ doc1.subscribeLocalUpdates((update) => {
 
 ## Understanding the `import()` Return Value
 
-The `import()` method in Loro's JavaScript/WASM binding returns an object that provides feedback on the import operation. This object, let's call it `ImportStatusJS`, has the following structure:
+The `import()` method in both Loro's WASM binding and pure TypeScript implementation returns an `ImportStatus` with the following structure:
 
 ```ts no_run twoslash
-interface ImportStatusJS {
-  success: PeerVersionRange;
-  pending?: PeerVersionRange; // Optional: only present if there are pending operations
+interface ImportStatus {
+  success: Map<PeerID, CounterSpan>;
+  pending: Map<PeerID, CounterSpan> | null;
 }
 
-interface PeerVersionRange {
-  [peerId: string]: {
-    start: number; // Start counter (inclusive)
-    end: number; // End counter (exclusive)
-  };
-}
+type PeerID = `${number}`;
+type CounterSpan = {
+  start: number; // Start counter (inclusive)
+  end: number; // End counter (exclusive)
+};
 ```
 
 ### Fields Explained:
 
-1. **`success`** (Object, `PeerVersionRange`)
-   - **Description**: This field is always present and details the ranges of operations (changes) that were successfully imported and applied to the Loro document.
-   - **Structure**: It's an object where:
+1. **`success`** (`Map<PeerID, CounterSpan>`)
+   - **Description**: This field is always present and details the ranges of operations integrated into history by this import, including earlier pending operations whose dependencies just arrived.
+   - **Structure**: It's a JavaScript `Map` where:
      - Each **key** is a `string` representing a `PeerID` (the unique identifier of a collaborator or a source of changes).
      - Each **value** is an object `{ start: number, end: number }` defining a continuous range of operation counters for that specific peer.
        - `start`: The starting counter of the successfully imported range (inclusive).
@@ -143,34 +142,41 @@ interface PeerVersionRange {
      // Assuming importResult is the return value of doc.import(bytes)
      console.log(importResult.success);
      // Example output:
-     // {
-     //   "clientA_peerId": { "start": 0, "end": 50 },
-     //   "server_peerId": { "start": 120, "end": 150 }
+     // Map(2) {
+     //   "1" => { start: 0, end: 50 },
+     //   "2" => { start: 120, end: 150 }
      // }
-     // This means operations from clientA (counters 0-49) and
-     // operations from server (counters 120-149) were successfully imported.
+     // This means operations from peer "1" (counters 0-49) and
+     // peer "2" (counters 120-149) were successfully imported.
      ```
 
-2. **`pending`** (Object, `PeerVersionRange`, optional)
-   - **Description**: This field is only present if some operations from the imported data could not be applied because they depend on other operations that Loro has not seen yet (i.e., their causal dependencies are missing). It details these "pending" operation ranges.
-   - **Structure**: Identical to the `success` field. An object mapping `PeerID` strings to `{ start: number, end: number }` counter ranges.
+2. **`pending`** (`Map<PeerID, CounterSpan> | null`)
+   - **Description**: This field is always present. It is a `Map` of operation ranges waiting for missing causal dependencies, or `null` when the import reports no pending operations.
+   - **Structure**: When non-null, a JavaScript `Map` from `PeerID` strings to `{ start: number, end: number }` counter ranges, like `success`.
    - **Purpose**: Informs the application that certain changes are known but are "on hold" awaiting their prerequisites. To apply these pending changes, the missing prerequisite operations must be imported first. This is crucial for maintaining data consistency in collaborative scenarios.
    - **Example**:
      ```javascript
      // Assuming importResult is the return value of doc.import(bytes)
-     if (importResult.pending) {
+     if (importResult.pending !== null && importResult.pending.size > 0) {
        console.log(importResult.pending);
        // Example output:
-       // {
-       //   "clientA_peerId": { "start": 50, "end": 60 },
-       //   "clientB_peerId": { "start": 10, "end": 25 }
+       // Map(2) {
+       //   "1" => { start: 50, end: 60 },
+       //   "2" => { start: 10, end: 25 }
        // }
-       // This means operations from clientA (counters 50-59) and
-       // operations from clientB (counters 10-24) are pending due to missing dependencies.
+       // This means operations from peer "1" (counters 50-59) and
+       // peer "2" (counters 10-24) are pending due to missing dependencies.
      }
      ```
 
+`ImportStatus` reports an import result, not a complete query of the document's
+pending queue; `pending === null` does not guarantee that no earlier imports
+remain pending. Use the **unreleased** [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates)
+to export all currently received but unintegrated operations; `undefined` means
+that queue is empty, not that the document is synced.
+
 ### How to Use This Information:
 
-- Check the `success` field to confirm which updates were applied.
-- If the `pending` field exists and is not empty, it signals that further updates (dependencies) are required to fully integrate all known changes. Your application might need to fetch or request these missing updates from other peers or a central server.
+- Use `success.get(peerId)` or iterate over `success` to inspect integrated ranges; use `.size` to check whether a Map is empty. `Object.keys()` does not enumerate Map entries.
+- If `pending !== null && pending.size > 0`, further updates (dependencies) are required to integrate those pending operations. Request these missing updates from other peers or a central server.
+- To preserve pending imports across restarts, see [persisting pending imports](/docs/tutorial/persistence#persisting-pending-imports-unreleased) with the unreleased [`exportPendingUpdates()` API](/docs/api/js#LoroDoc.exportPendingUpdates). A normal snapshot alone excludes these operations; saving them does not establish that the document is synced.
