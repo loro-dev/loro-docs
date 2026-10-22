@@ -11,7 +11,7 @@ operations. Here's how it works:
 Snapshots contain integrated operation history and state, but exclude imported operations
 waiting for missing causal dependencies. If your application receives such
 updates, retain their original bytes or use the
-[pending-import checkpoint](#persisting-pending-imports-unreleased) described below.
+[pending-import checkpoint](#persisting-pending-imports) described below.
 
 This method simplifies initial application development but has a drawback: user
 edits are not immediately saved. Let's explore how to quickly save each user
@@ -37,11 +37,11 @@ To achieve both quick saves and resource efficiency:
   use `Shallow Snapshot Encoding` to reduce snapshot size. You can archive the
   history before the shallow snapshot's start version in cold storage.
 
-### Persisting Pending Imports (Unreleased)
+### Persisting Pending Imports
 
-[`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates) is an
-**unreleased** API in the development WASM and pure TypeScript implementations.
-The example requires a build containing it; `loro-crdt@1.13.3` does not have it.
+[`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates) is available
+since `loro-crdt@1.17.0` (WASM) and `loro.js@0.4.0` (pure TypeScript). The example
+below imports the WASM package; use `"loro.js"` for the pure TypeScript implementation.
 Here, pending means remote operations already imported but waiting for causal
 predecessors, not local edits waiting for `commit()`.
 

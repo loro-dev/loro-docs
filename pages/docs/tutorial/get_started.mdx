@@ -276,7 +276,7 @@ To save the document, use `doc.export({mode: "snapshot"})` to get its binary
 form. To open it again, use `doc.import(data)` to load this binary data.
 
 Snapshots exclude imported operations waiting for missing dependencies. See
-[pending-import persistence](./persistence#persisting-pending-imports-unreleased) to preserve them across restarts.
+[pending-import persistence](./persistence#persisting-pending-imports) to preserve them across restarts.
 
 ```ts twoslash
 import { LoroDoc, LoroList, LoroMap, LoroText } from "loro-crdt";
@@ -352,7 +352,7 @@ If updates accumulate, exporting a new snapshot can quicken import times and
 decrease the overall size of the exported data.
 
 Before discarding the original updates, durably store everything needed for
-recovery, including pending imports; see [persistence](./persistence#persisting-pending-imports-unreleased).
+recovery, including pending imports; see [persistence](./persistence#persisting-pending-imports).
 
 You can store the binary data exported from Loro wherever you prefer.
 

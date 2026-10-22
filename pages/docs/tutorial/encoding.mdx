@@ -14,7 +14,7 @@ Loro introduces three encoding modes to meet the needs for different use cases:
   used for delta updates of documents.
 - **Snapshot Encoding**: Encodes the document's integrated operation history and
   current state. Imported operations waiting for missing dependencies are excluded;
-  see [pending-import persistence](./persistence#persisting-pending-imports-unreleased).
+  see [pending-import persistence](./persistence#persisting-pending-imports).
 - **Shallow Snapshot Encoding**: Loro 1.0 provides a new encoding format for
   discarding useless historical operations. It is a special snapshot that
   encodes the most recent historical operations, the starting state of the
@@ -90,7 +90,7 @@ console.log(doc1.toJSON()); // { text: "hello" }
 
 Snapshot Encoding captures a document's current state and integrated operation
 history for fast loading. Like update exports, it excludes imported operations
-waiting for missing causal dependencies. See [pending-import persistence](./persistence#persisting-pending-imports-unreleased)
+waiting for missing causal dependencies. See [pending-import persistence](./persistence#persisting-pending-imports)
 to preserve those operations across restarts.
 
 ## Shallow Snapshot Encoding

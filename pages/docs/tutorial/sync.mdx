@@ -171,7 +171,7 @@ type CounterSpan = {
 
 `ImportStatus` reports an import result, not a complete query of the document's
 pending queue; `pending === null` does not guarantee that no earlier imports
-remain pending. Use the **unreleased** [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates)
+remain pending. Use [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates)
 to export all currently received but unintegrated operations; `undefined` means
 that queue is empty, not that the document is synced.
 
@@ -179,4 +179,4 @@ that queue is empty, not that the document is synced.
 
 - Use `success.get(peerId)` or iterate over `success` to inspect integrated ranges; use `.size` to check whether a Map is empty. `Object.keys()` does not enumerate Map entries.
 - If `pending !== null && pending.size > 0`, further updates (dependencies) are required to integrate those pending operations. Request these missing updates from other peers or a central server.
-- To preserve pending imports across restarts, see [persisting pending imports](/docs/tutorial/persistence#persisting-pending-imports-unreleased) with the unreleased [`exportPendingUpdates()` API](/docs/api/js#LoroDoc.exportPendingUpdates). A normal snapshot alone excludes these operations; saving them does not establish that the document is synced.
+- To preserve pending imports across restarts, see [persisting pending imports](/docs/tutorial/persistence#persisting-pending-imports) with the [`exportPendingUpdates()` API](/docs/api/js#LoroDoc.exportPendingUpdates). A normal snapshot alone excludes these operations; saving them does not establish that the document is synced.

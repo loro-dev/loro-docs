@@ -26,7 +26,7 @@ are JavaScript `Map` values: use `.size`, `.get(peerId)`, or iteration;
 
 `ImportStatus` reports an import result, not a complete query of the document's
 pending queue; `pending === null` does not guarantee that no earlier imports
-remain pending. Use the **unreleased** [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates)
+remain pending. Use [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates)
 to export all currently received but unintegrated operations; `undefined` means
 that queue is empty, not that the document is synced.
 
@@ -35,9 +35,9 @@ that queue is empty, not that the document is synced.
 
 Operations become pending when they depend on missing operations (causal dependencies).
 These are imported remote operations, not local edits waiting for `commit()`.
-Normal snapshot and update exports exclude them. The unreleased
+Normal snapshot and update exports exclude them. The
 [`exportPendingUpdates()`](/docs/api/js#LoroDoc.exportPendingUpdates) API exports
-them separately for persistence; see the [checkpoint and recovery example](/docs/tutorial/persistence#persisting-pending-imports-unreleased).
+them separately for persistence; see the [checkpoint and recovery example](/docs/tutorial/persistence#persisting-pending-imports).
 Restoring those bytes with ordinary `import()` preserves the pending operations,
 but they apply only after their actual missing dependencies arrive.
 

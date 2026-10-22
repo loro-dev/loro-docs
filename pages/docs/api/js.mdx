@@ -634,7 +634,7 @@ exportPendingUpdates(): Uint8Array | undefined
 ```
 </Method>
 <Indent>
-**Availability: unreleased.** This method is available in the development WASM and pure TypeScript implementations. It is not available in `loro-crdt@1.13.3`; use a build containing this API.
+**Availability:** [`loro-crdt@1.17.0`](https://www.npmjs.com/package/loro-crdt/v/1.17.0) (WASM) and [`loro.js@0.4.0`](https://www.npmjs.com/package/loro.js/v/0.4.0) (pure TypeScript), and later versions.
 
 Exports imported remote operations that are waiting for missing causal predecessors. These are [pending imports](/docs/concepts/import_status#pending-operations), distinct from uncommitted local edits. Ordinary snapshot and update exports do not include them.
 
@@ -643,7 +643,7 @@ Exports imported remote operations that are waiting for missing causal predecess
 **Behavior and limits:**
 
 - Read-only: does not consume the pending queue, commit a local transaction, emit events, or advance the applied version vector (`appliedVV`) or frontiers.
-- Persist a normal snapshot and pending bytes as one consistent checkpoint. Prevent document mutations/imports between the two exports; the calls are not atomic. When the result is `undefined`, clear any older stored pending record. See the [persistence example](/docs/tutorial/persistence#persisting-pending-imports-unreleased).
+- Persist a normal snapshot and pending bytes as one consistent checkpoint. Prevent document mutations/imports between the two exports; the calls are not atomic. When the result is `undefined`, clear any older stored pending record. See the [persistence example](/docs/tutorial/persistence#persisting-pending-imports).
 - Restore with `doc.import(snapshot)`, then `doc.import(pending)` if pending bytes exist. Operations still wait for their actual missing predecessors; the API cannot fetch or reconstruct predecessors never received from a remote peer.
 - Exporting pending bytes, or receiving `undefined`, does not prove the document is synced. Transport cursors, durable storage, and removal of original updates remain the application's responsibility.
 
@@ -653,7 +653,7 @@ The corresponding Rust method is:
 LoroDoc::export_pending_updates(&self) -> Result<Option<Vec<u8>>, LoroEncodeError>
 ```
 
-`Ok(None)` corresponds to `undefined`; an export error must not be treated as an empty queue. See the [Rust API entry point](https://docs.rs/loro/latest/loro/struct.LoroDoc.html) (the published reference may not list this unreleased method yet) and the separate [FFI bindings](https://github.com/loro-dev/loro-ffi). Check availability in the binding you use; this development API does not imply an FFI release.
+`Ok(None)` corresponds to `undefined`; an export error must not be treated as an empty queue. See [`LoroDoc::export_pending_updates` in Rust 1.17.0](https://docs.rs/loro/1.17.0/loro/struct.LoroDoc.html#method.export_pending_updates). The separate [FFI binding source](https://github.com/loro-dev/loro-ffi/pull/17) exposes the corresponding method; check the release of the language binding you use. A core release does not publish downstream binding packages.
 
 </Indent>
 
